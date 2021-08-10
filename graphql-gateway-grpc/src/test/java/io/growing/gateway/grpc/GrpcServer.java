@@ -1,29 +1,64 @@
 package io.growing.gateway.grpc;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
-import io.growing.gateway.GatewayDto;
+import io.growing.gateway.SchemeDto;
 import io.growing.gateway.UpstreamServiceGrpc;
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import io.grpc.stub.StreamObserver;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
 
 /**
  * @author AI
  */
 public class GrpcServer {
 
-    public static void main(final String[] args) {
+    private Server server = null;
 
+    String getServerName() {
+        return "test-in-process";
+    }
+
+    void start() throws Exception {
         try {
-            final Server server = ServerBuilder.forPort(18080)
+            server = InProcessServerBuilder.forName(getServerName())
                 .addService(ProtoReflectionService.newInstance())
                 .addService(new UpstreamServiceGrpc.UpstreamServiceImplBase() {
                     @Override
-                    public void getScheme(Empty request, StreamObserver<GatewayDto> responseObserver) {
-                        GatewayDto hello = GatewayDto.newBuilder().setKey("hello").build();
-                        responseObserver.onNext(hello);
-                        responseObserver.onCompleted();
+                    public void getScheme(Empty request, StreamObserver<SchemeDto> responseObserver) {
+                        try {
+                            SchemeDto.Builder schemeDtoBuilder = SchemeDto.newBuilder();
+                            URI uri = getClass().getResource("/graphql").toURI();
+                            Path graphqlPath = Paths.get(uri);
+                            Stream<Path> pathStream = Files.walk(graphqlPath);
+                            pathStream.forEach(path -> {
+                                try {
+                                    FileInputStream fileInputStream = new FileInputStream(path.toFile());
+                                    schemeDtoBuilder.addGraphqlDefinitions(ByteString.readFrom(fileInputStream));
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            });
+
+                            responseObserver.onNext(schemeDtoBuilder.build());
+                            responseObserver.onCompleted();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            responseObserver.onError(e);
+                        } finally {
+                            responseObserver.onCompleted();
+                        }
                     }
                 })
                 .build()
@@ -35,10 +70,19 @@ public class GrpcServer {
                     server.shutdownNow();
                 }
             });
-            server.awaitTermination();
+            server.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    void stop() {
+        try {
+            server.shutdownNow();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 }
