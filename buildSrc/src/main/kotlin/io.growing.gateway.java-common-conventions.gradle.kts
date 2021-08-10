@@ -15,11 +15,12 @@ repositories {
 dependencies {
 
     constraints {
-        implementation("io.vertx:vertx-web:4.1.1")
         implementation("org.slf4j:slf4j-api:1.7.31")
         implementation("com.typesafe:config:1.4.1")
         implementation("com.github.os72:protoc-jar:3.11.4")
         implementation("org.apache.commons:commons-text:1.9")
+        implementation("io.vertx:vertx-web:${ComponentVersions.vertx}")
+        implementation("io.vertx:vertx-core:${ComponentVersions.vertx}")
         implementation("org.apache.logging.log4j:log4j-api:${ComponentVersions.log4j}")
         implementation("org.apache.logging.log4j:log4j-core:${ComponentVersions.log4j}")
         implementation("org.apache.logging.log4j:log4j-slf4j-impl:${ComponentVersions.log4j}")
