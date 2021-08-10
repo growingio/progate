@@ -6,6 +6,8 @@ import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.Empty;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
+import io.growing.gateway.SchemeDto;
+import io.growing.gateway.UpstreamServiceGrpc;
 import io.growing.gateway.grpc.impl.FileDescriptorServiceResolver;
 import io.growing.gateway.grpc.stub.FileDescriptorProtoSetObserver;
 import io.grpc.CallOptions;
@@ -13,22 +15,56 @@ import io.grpc.ClientCall;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.MethodDescriptor;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.grpc.reflection.v1alpha.ServerReflectionRequest;
 import io.grpc.stub.ClientCalls;
 import io.grpc.stub.StreamObserver;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 /**
  * @author AI
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class GrpcClient {
 
-    public static void main(final String[] args) throws Exception {
-        final ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 18080).usePlaintext().build();
+    GrpcServer grpcServer = null;
+
+    ManagedChannel channel = null;
+
+    @BeforeAll
+    void startServer() throws Exception {
+        grpcServer = new GrpcServer();
+        channel = InProcessChannelBuilder.forName(grpcServer.getServerName()).usePlaintext().build();
+        grpcServer.start();
+    }
+
+    @AfterAll
+    void stopServer() {
+        if(Objects.nonNull(grpcServer)) {
+            grpcServer.stop();
+        }
+    }
+
+    @Test
+    void parserScheme() {
+        UpstreamServiceGrpc.UpstreamServiceBlockingStub stub = UpstreamServiceGrpc.newBlockingStub(channel);
+        SchemeDto schemeDto = stub.getScheme(Empty.getDefaultInstance());
+        assertTrue(schemeDto.getGraphqlDefinitionsCount() > 0);
+    }
+
+    @Test
+    void reflect() throws Exception {
         final ServerReflectionGrpc.ServerReflectionStub stub = ServerReflectionGrpc.newStub(channel);
         final FileDescriptorProtoSetObserver observer = new FileDescriptorProtoSetObserver();
         StreamObserver<ServerReflectionRequest> requestStreamObserver = stub.serverReflectionInfo(observer);
