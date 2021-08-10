@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package growing.graphql.gateway;
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+
+option java_package = "io.growing.gateway";
+option java_multiple_files = true;
+option java_outer_classname = "GatewayProto";
+
+message GatewayDto {
+  string key = 1;
+  google.protobuf.StringValue name = 2;
+  google.protobuf.StringValue value = 3;
+}
+
+service UpstreamService {
+
+  rpc GetScheme(google.protobuf.Empty) returns(GatewayDto){
+  }
+
+}
