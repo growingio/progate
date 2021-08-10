@@ -3,5 +3,8 @@
 
 # Ignore Gradle build output directory
 build
+logs
 
-.idea
+.idea/modules
+.idea/*.xml
+.idea/.gitignore
