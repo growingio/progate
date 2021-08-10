@@ -7,8 +7,8 @@ plugins {
 }
 
 dependencies {
-    api(project(":graphql-gateway-api"))
-    api(project(":graphql-gateway-utilities"))
+    api(project(":api"))
+    api(project(":utilities"))
     api("org.slf4j:slf4j-api")
     api("com.typesafe:config")
 

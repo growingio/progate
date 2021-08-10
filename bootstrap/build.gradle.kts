@@ -7,8 +7,8 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":graphql-gateway-core"))
-    implementation(project(":graphql-gateway-utilities"))
+    implementation(project(":core"))
+    implementation(project(":utilities"))
     implementation("io.vertx:vertx-web")
     implementation("org.slf4j:slf4j-api")
     implementation("com.typesafe:config")

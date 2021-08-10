@@ -8,7 +8,7 @@ plugins {
 
 dependencies {
 
-    implementation(project(":graphql-gateway-utilities"))
+    implementation(project(":utilities"))
     implementation("org.slf4j:slf4j-api")
     implementation("com.github.os72:protoc-jar")
 
