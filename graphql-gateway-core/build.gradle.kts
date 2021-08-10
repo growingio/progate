@@ -7,10 +7,9 @@ plugins {
 }
 
 dependencies {
+    api(project(":graphql-gateway-api"))
     api(project(":graphql-gateway-utilities"))
-    api("io.vertx:vertx-core")
     api("org.slf4j:slf4j-api")
     api("com.typesafe:config")
-    api("org.apache.commons:commons-text")
 
 }
