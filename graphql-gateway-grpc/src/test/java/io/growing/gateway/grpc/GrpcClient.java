@@ -13,7 +13,6 @@ import io.growing.gateway.grpc.stub.FileDescriptorProtoSetObserver;
 import io.grpc.CallOptions;
 import io.grpc.ClientCall;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.MethodDescriptor;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
@@ -29,7 +28,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
