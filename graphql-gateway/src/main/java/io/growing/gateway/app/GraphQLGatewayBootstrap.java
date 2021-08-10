@@ -25,12 +25,11 @@ public class GraphQLGatewayBootstrap {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             final CountDownLatch counter = new CountDownLatch(1);
             logger.info("Server on shutdown...");
-            server.close(ar -> {
+            server.close(ar ->
                 vertx.close().onSuccess(handler -> {
                     logger.info("Server shutdown success");
                     counter.countDown();
-                });
-            });
+                }));
             try {
                 counter.await();
             } catch (InterruptedException e) {
