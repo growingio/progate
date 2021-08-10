@@ -16,9 +16,11 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl")
 
+    implementation("com.graphql-java:graphql-java")
+
 }
 
 application {
     // Define the main class for the application.
-    mainClass.set("io.growing.gateway.app.App")
+    mainClass.set("io.growing.gateway.app.GraphQLGatewayBootstrap")
 }

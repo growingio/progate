@@ -34,6 +34,8 @@ dependencies {
         implementation("com.google.guava:guava:30.1.1-jre")
         implementation("org.apache.commons:commons-lang3:3.12.0")
 
+        implementation("com.graphql-java:graphql-java:17.0")
+
     }
 
     compileOnly("org.apache.tomcat:annotations-api:6.0.53")
