@@ -1,6 +1,7 @@
 package io.growing.gateway.graphql;
 
 import com.google.common.collect.Sets;
+import graphql.GraphQLContext;
 import io.growing.gateway.api.IncomingHandler;
 import io.growing.gateway.http.HttpApi;
 import io.vertx.core.http.HttpMethod;
@@ -23,7 +24,7 @@ public class GraphqlIncomingHandler implements IncomingHandler {
 
     @Override
     public void handle(HttpServerRequest request) {
-
+        final GraphQLContext context = GraphQLContext.newContext().build();
     }
 
 }

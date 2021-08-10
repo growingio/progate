@@ -1,5 +1,6 @@
 plugins {
     java
+    jacoco
 }
 
 repositories {
@@ -49,4 +50,5 @@ tasks.test {
     testLogging {
         events("passed", "skipped", "failed")
     }
+    finalizedBy(tasks.jacocoTestReport)
 }

@@ -15,6 +15,7 @@ public class CollectionUtilsTests {
     public void test() {
         Assertions.assertTrue(CollectionUtils.isEmpty(null));
         Assertions.assertTrue(CollectionUtils.isEmpty(new HashSet<>()));
+        Assertions.assertFalse(CollectionUtils.isNotEmpty(null));
         Assertions.assertTrue(CollectionUtils.isNotEmpty(Sets.newHashSet("")));
     }
 

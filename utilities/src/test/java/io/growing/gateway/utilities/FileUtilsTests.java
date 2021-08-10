@@ -1,5 +1,6 @@
 package io.growing.gateway.utilities;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,12 @@ public class FileUtilsTests {
         try (Stream<Path> stream = paths.stream()) {
             Assertions.assertTrue(stream.anyMatch(path -> "FileUtils.java".equals(path.getFileName().toString())));
         }
+    }
+
+    @Test
+    public void testEmpty() throws IOException {
+        final Set<Path> paths = FileUtils.listAllFiles(Sets.newHashSet());
+        Assertions.assertTrue(paths.isEmpty());
     }
 
 }
