@@ -9,7 +9,6 @@ plugins {
 dependencies {
 
     implementation(project(":graphql-gateway-core"))
-
     implementation("com.graphql-java:graphql-java")
 
 }
