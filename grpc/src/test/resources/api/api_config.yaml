@@ -1,0 +1,22 @@
+api_rules:
+  - get: /projects/{project}/segments/{segment}
+    proxy:
+      protocal: gRPC
+      next: growing.gateway.SegmentService.GetSegment
+
+  - post: /projects/{project}/segments
+    body: segment # 将 body 赋值给 segment 字段，再转发给下一跳
+    proxy:
+      protocal: gRPC
+      next: growing.gateway.SegmentService.GetSegment
+
+  - delete: /projects/{project}/segments/{segment}
+    proxy:
+      protocal: gRPC
+      next: growing.gateway.SegmentService.DeleteSegment
+
+  - put: /projects/{project}/segments/{segment}
+    body: segment
+    proxy:
+      protocal: gRPC
+      next: growing.gateway.SegmentService.UpdateSegment
