@@ -8,5 +8,6 @@ include(
     "utilities",
     "compiler",
     "grpc",
-    "grpc-libs"
+    "grpc-libs",
+    "examples:grpc-example"
 )

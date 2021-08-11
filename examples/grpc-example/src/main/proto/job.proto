@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package growing.graphql.example;
+
+option java_package = "io.growing.gateway.example";
+option java_multiple_files = true;
+option java_outer_classname = "JobProto";
+
+message JobDto {
+  string name = 1;
+}
+
+service JobService {
+
+  rpc GetJobs(GetJobsRequest) returns (stream JobDto){
+  }
+
+  rpc CreateJob(CreateJobRequest) returns (JobDto){
+  }
+
+}
+
+message GetJobsRequest {
+
+}
+
+message CreateJobRequest {
+  JobDto job = 1;
+}

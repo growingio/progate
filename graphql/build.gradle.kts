@@ -9,6 +9,11 @@ plugins {
 dependencies {
 
     implementation(project(":core"))
+    implementation("com.google.code.gson:gson")
     implementation("com.graphql-java:graphql-java")
+    // We use implementation instead of api for better compilation performance
+    // https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_separation
+    implementation("com.google.dagger:dagger")
+    annotationProcessor("com.google.dagger:dagger-compiler")
 
 }

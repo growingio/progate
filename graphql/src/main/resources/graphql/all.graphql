@@ -1,0 +1,24 @@
+directive @grpc(endpoint: String!) on FIELD_DEFINITION
+directive @dubbo(endpoint: String!) on FIELD_DEFINITION
+
+type Job {
+    name: String!
+}
+
+input JobInput {
+    name: String!
+}
+
+type Query {
+
+    jobs: [Job]! @grpc(endpoint: "growing.jobs.JobService/GetJobs")
+
+    legacyJobs: [Job]! @dubbo(endpoint: "io.growing.dubbo.job.JobServce/GetJobs")
+
+}
+
+type Mutation {
+
+    createJob(projectId: Int, job: JobInput): Job! @grpc(endpoint: "growing.jobs.JobService/CreateJob")
+
+}

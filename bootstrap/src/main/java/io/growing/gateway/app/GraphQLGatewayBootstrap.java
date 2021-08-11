@@ -1,5 +1,9 @@
 package io.growing.gateway.app;
 
+import io.growing.gateway.api.IncomingHandler;
+import io.growing.gateway.graphql.GraphqlIncomingHandler;
+import io.growing.gateway.graphql.GraphqlSchemaScanner;
+import io.growing.gateway.graphql.internal.ClassPathGraphqlSchemaScanner;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
@@ -18,8 +22,14 @@ public class GraphQLGatewayBootstrap {
         final Vertx vertx = Vertx.vertx();
         final HttpServer server = vertx.createHttpServer();
         final Router router = Router.router(vertx);
-        router.route().handler(ctx -> {
-            ctx.response().end("Hello");
+        final GraphqlSchemaScanner scanner = new ClassPathGraphqlSchemaScanner("/graphql/all.graphql");
+        final GraphqlIncomingHandler incoming = new GraphqlIncomingHandler();
+        incoming.setScanner(scanner);
+
+        incoming.api().ifPresent(api -> {
+            api.getMethods().forEach(method -> {
+                router.route(method, api.getPath()).handler(event -> incoming.handle(event.request()));
+            });
         });
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

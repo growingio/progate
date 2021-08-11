@@ -9,6 +9,6 @@ public interface OutgoingHandler<ReqT, RespT> {
 
     Protocol type();
 
-    Future<RespT> handle(ServiceRef ref, ReqT req);
+    Future<RespT> handle(String endpoint, ReqT req);
 
 }

@@ -38,9 +38,10 @@ dependencies {
 
         implementation("com.graphql-java:graphql-java:17.0")
 
-    }
+        implementation("com.google.dagger:dagger:${ComponentVersions.dagger}")
+        annotationProcessor("com.google.dagger:dagger-compiler:${ComponentVersions.dagger}")
 
-    compileOnly("org.apache.tomcat:annotations-api:6.0.53")
+    }
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
 }
