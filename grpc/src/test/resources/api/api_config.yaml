@@ -1,22 +1,63 @@
-api_rules:
+rules:
   - get: /projects/{project}/segments/{segment}
-    proxy:
-      protocal: gRPC
-      next: growing.gateway.SegmentService.GetSegment
+    protocal: gRPC
+    endpoint: growing.gateway.SegmentService/GetSegment
+    parameter:
+      transcoders:
+        - project: HashId
+    response:
+      fields:
+        - id
+        - projectId
+        - name
+      transcoders:
+        - "$.obj1.obj2.id": HashId
 
   - post: /projects/{project}/segments
-    body: segment # 将 body 赋值给 segment 字段，再转发给下一跳
-    proxy:
-      protocal: gRPC
-      next: growing.gateway.SegmentService.GetSegment
+    body: segment # 将 body 赋值给 segment 字段，再转发给 rpc
+    protocal: gRPC
+    endpoint: growing.gateway.SegmentService/GetSegment
+
+    parameter:
+      transcoders:
+        - project: HashId
+    request:
+      transcoders:
+        - "$.obj1.obj2.id": HashId
+
+    response:
+      fields:
+        - id
+        - projectId
+        - name
+      transcoders:
+        - "$.obj1.obj2.id": HashId
 
   - delete: /projects/{project}/segments/{segment}
-    proxy:
-      protocal: gRPC
-      next: growing.gateway.SegmentService.DeleteSegment
+    protocal: gRPC
+    endpoint: growing.gateway.SegmentService/DeleteSegment
+    parameter:
+      transcoders:
+        - project: HashId
+        - segment: HashId
 
   - put: /projects/{project}/segments/{segment}
     body: segment
-    proxy:
-      protocal: gRPC
-      next: growing.gateway.SegmentService.UpdateSegment
+    protocal: gRPC
+    endpoint: growing.gateway.SegmentService/UpdateSegment
+    parameter:
+      transcoders:
+        - project: HashId
+        - segment: HashId
+
+    request:
+      transcoders:
+        - "$.obj1.obj2.id": HashId
+
+    response:
+      fields:
+        - id
+        - projectId
+        - name
+      transcoders:
+        - "$.obj1.obj2.id": HashId

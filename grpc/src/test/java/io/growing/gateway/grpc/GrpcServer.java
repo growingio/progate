@@ -36,17 +36,32 @@ public class GrpcServer {
                     public void getScheme(Empty request, StreamObserver<SchemeDto> responseObserver) {
                         try {
                             SchemeDto.Builder schemeDtoBuilder = SchemeDto.newBuilder();
-                            URI uri = getClass().getResource("/graphql").toURI();
-                            Path graphqlPath = Paths.get(uri);
-                            Stream<Path> pathStream = Files.walk(graphqlPath);
-                            pathStream.forEach(path -> {
-                                try {
-                                    FileInputStream fileInputStream = new FileInputStream(path.toFile());
-                                    schemeDtoBuilder.addGraphqlDefinitions(ByteString.readFrom(fileInputStream));
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            });
+                            {
+                                URI uri = getClass().getResource("/graphql").toURI();
+                                Path graphqlPath = Paths.get(uri);
+                                Stream<Path> pathStream = Files.walk(graphqlPath);
+                                pathStream.forEach(path -> {
+                                    try {
+                                        FileInputStream fileInputStream = new FileInputStream(path.toFile());
+                                        schemeDtoBuilder.addGraphqlDefinitions(ByteString.readFrom(fileInputStream));
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                });
+                            }
+                            {
+                                URI uri = getClass().getResource("/api").toURI();
+                                Path graphqlPath = Paths.get(uri);
+                                Stream<Path> pathStream = Files.walk(graphqlPath);
+                                pathStream.forEach(path -> {
+                                    try {
+                                        FileInputStream fileInputStream = new FileInputStream(path.toFile());
+                                        schemeDtoBuilder.addRestfulDefinitions(ByteString.readFrom(fileInputStream));
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                });
+                            }
 
                             responseObserver.onNext(schemeDtoBuilder.build());
                             responseObserver.onCompleted();

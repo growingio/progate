@@ -60,6 +60,7 @@ public class GrpcClient {
         UpstreamServiceGrpc.UpstreamServiceBlockingStub stub = UpstreamServiceGrpc.newBlockingStub(channel);
         SchemeDto schemeDto = stub.getScheme(Empty.getDefaultInstance());
         assertTrue(schemeDto.getGraphqlDefinitionsCount() > 0);
+        assertTrue(schemeDto.getRestfulDefinitionsCount() > 0);
     }
 
     @Test
