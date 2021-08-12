@@ -5,6 +5,7 @@ include(
     "core",
     "protocol",
     "graphql",
+    "restful",
     "utilities",
     "compiler",
     "grpc",
