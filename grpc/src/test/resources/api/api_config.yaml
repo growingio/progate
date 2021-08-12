@@ -4,7 +4,7 @@ rules:
     endpoint: growing.gateway.SegmentService/GetSegment
     parameter:
       transcoders:
-        - project: HashId
+        project: HashId
     response:
       fields:
         - id
@@ -20,10 +20,10 @@ rules:
 
     parameter:
       transcoders:
-        - project: HashId
+        project: HashId
     request:
       transcoders:
-        - "$.obj1.obj2.id": HashId
+        "$.obj1.obj2.id": HashId
 
     response:
       fields:

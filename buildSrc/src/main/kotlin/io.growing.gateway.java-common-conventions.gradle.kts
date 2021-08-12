@@ -33,6 +33,9 @@ dependencies {
         implementation("com.google.protobuf:protobuf-java-util:3.17.3")
         implementation("io.grpc:grpc-netty-shaded:${ComponentVersions.grpc}")
 
+        implementation("com.jayway.jsonpath:json-path:2.6.0")
+        implementation("org.yaml:snakeyaml:1.28")
+
         implementation("com.google.guava:guava:30.1.1-jre")
         implementation("org.apache.commons:commons-lang3:3.12.0")
 

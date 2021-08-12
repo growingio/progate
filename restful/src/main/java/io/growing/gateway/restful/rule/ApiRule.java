@@ -4,18 +4,6 @@ import io.vertx.core.http.HttpMethod;
 
 public class ApiRule {
 
-    static class RequestRule {
-
-    }
-
-    static class PathParameterRule {
-
-    }
-
-    static class ResponseRule {
-
-    }
-
     private HttpMethod method = null;
     private String path = null;
     private RequestRule requestRule = null;
@@ -24,8 +12,8 @@ public class ApiRule {
 
     public ApiRule(HttpMethod method,
                    String path,
-                   RequestRule requestRule,
                    PathParameterRule pathParameterRule,
+                   RequestRule requestRule,
                    ResponseRule responseRule) {
         this.method = method;
         this.path = path;
