@@ -58,11 +58,11 @@ public class GraphqlIncomingHandler implements IncomingHandler {
     }
 
     @Override
-    public Optional<HttpApi> api() {
+    public Set<HttpApi> apis() {
         final HttpApi httpApi = new HttpApi();
         httpApi.setPath("/graphql");
         httpApi.setMethods(Sets.newHashSet(HttpMethod.POST));
-        return Optional.of(httpApi);
+        return Sets.newHashSet(httpApi);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package io.growing.gateway.app;
 
-import io.growing.gateway.api.IncomingHandler;
 import io.growing.gateway.graphql.GraphqlIncomingHandler;
 import io.growing.gateway.graphql.GraphqlSchemaScanner;
 import io.growing.gateway.graphql.internal.ClassPathGraphqlSchemaScanner;
@@ -22,16 +21,19 @@ public class GraphQLGatewayBootstrap {
         final Vertx vertx = Vertx.vertx();
         final HttpServer server = vertx.createHttpServer();
         final Router router = Router.router(vertx);
+        router.route().handler(ctx -> {
+
+        });
         final GraphqlSchemaScanner scanner = new ClassPathGraphqlSchemaScanner("/graphql/all.graphql");
         final GraphqlIncomingHandler incoming = new GraphqlIncomingHandler();
         incoming.setScanner(scanner);
 
-        incoming.api().ifPresent(api -> {
+        incoming.apis().forEach(api -> {
             api.getMethods().forEach(method -> {
                 router.route(method, api.getPath()).handler(event -> incoming.handle(event.request()));
             });
         });
-
+        
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             final CountDownLatch counter = new CountDownLatch(1);
             logger.info("Server on shutdown...");
