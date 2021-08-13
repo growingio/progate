@@ -3,7 +3,7 @@ package io.growing.gateway.grpc;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Empty;
 import io.growing.gateway.SchemeDto;
-import io.growing.gateway.UpstreamServiceGrpc;
+import io.growing.gateway.SchemeServiceGrpc;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
@@ -31,7 +31,7 @@ public class GrpcServer {
         try {
             server = InProcessServerBuilder.forName(getServerName())
                 .addService(ProtoReflectionService.newInstance())
-                .addService(new UpstreamServiceGrpc.UpstreamServiceImplBase() {
+                .addService(new SchemeServiceGrpc.SchemeServiceImplBase() {
                     @Override
                     public void getScheme(Empty request, StreamObserver<SchemeDto> responseObserver) {
                         try {

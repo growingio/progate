@@ -1,30 +1,29 @@
 package io.growing.gateway.graphql.fetcher;
 
-import com.google.common.collect.ImmutableMap;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import io.growing.gateway.api.OutgoingHandler;
+import io.growing.gateway.api.Upstream;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.CompletionStage;
 
 /**
  * @author AI
  */
-public class OutgoingDataFetcher implements DataFetcher<Object> {
-    private final String protocol;
+public class OutgoingDataFetcher implements DataFetcher<CompletionStage<? extends Object>> {
     private final String endpoint;
+    private final Upstream upstream;
+    private final OutgoingHandler outgoing;
 
-    public OutgoingDataFetcher(String protocol, String endpoint) {
-        this.protocol = protocol;
+    public OutgoingDataFetcher(String endpoint, Upstream upstream, OutgoingHandler outgoing) {
         this.endpoint = endpoint;
+        this.upstream = upstream;
+        this.outgoing = outgoing;
     }
 
     @Override
-    public Object get(DataFetchingEnvironment environment) throws Exception {
-        final List<Map<String, String>> data = new LinkedList<>();
-        data.add(ImmutableMap.of("name", "Hello"));
-        return data;
+    public CompletionStage<? extends Object> get(DataFetchingEnvironment environment) throws Exception {
+        return outgoing.handle(upstream, endpoint, null);
     }
 
 }

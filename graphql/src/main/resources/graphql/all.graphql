@@ -11,7 +11,7 @@ input JobInput {
 
 type Query {
 
-    jobs: [Job]! @grpc(endpoint: "growing.jobs.JobService/GetJobs")
+    jobs: [Job]! @grpc(endpoint: "growing.graphql.example.JobService/GetJobs")
 
     legacyJobs: [Job]! @dubbo(endpoint: "io.growing.dubbo.job.JobServce/GetJobs")
 

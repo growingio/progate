@@ -1,14 +1,9 @@
 package io.growing.gateway.restful.rule.config;
 
-import io.growing.gateway.context.GatewayContext;
-import io.growing.gateway.restful.rule.JsonPathTranscoder;
+import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.restful.rule.PathParameterRule;
-import io.growing.gateway.transcoder.Transcoder;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ParameterConfig {
     Map<String, String> transcoders;
@@ -21,7 +16,7 @@ public class ParameterConfig {
         this.transcoders = transcoders;
     }
 
-    public PathParameterRule toRule(GatewayContext context) {
+    public PathParameterRule toRule(RequestContext context) {
         return new PathParameterRule(ConfigUtils.makeTranscoders(transcoders, context));
     }
 }

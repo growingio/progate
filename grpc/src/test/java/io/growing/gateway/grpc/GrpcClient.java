@@ -7,9 +7,9 @@ import com.google.protobuf.Empty;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import io.growing.gateway.SchemeDto;
-import io.growing.gateway.UpstreamServiceGrpc;
+import io.growing.gateway.SchemeServiceGrpc;
 import io.growing.gateway.grpc.impl.FileDescriptorServiceResolver;
-import io.growing.gateway.grpc.stub.FileDescriptorProtoSetObserver;
+import io.growing.gateway.grpc.observer.FileDescriptorProtoSetObserver;
 import io.grpc.CallOptions;
 import io.grpc.ClientCall;
 import io.grpc.ManagedChannel;
@@ -50,14 +50,14 @@ public class GrpcClient {
 
     @AfterAll
     void stopServer() {
-        if(Objects.nonNull(grpcServer)) {
+        if (Objects.nonNull(grpcServer)) {
             grpcServer.stop();
         }
     }
 
     @Test
     void parserScheme() {
-        UpstreamServiceGrpc.UpstreamServiceBlockingStub stub = UpstreamServiceGrpc.newBlockingStub(channel);
+        SchemeServiceGrpc.SchemeServiceBlockingStub stub = SchemeServiceGrpc.newBlockingStub(channel);
         SchemeDto schemeDto = stub.getScheme(Empty.getDefaultInstance());
         assertTrue(schemeDto.getGraphqlDefinitionsCount() > 0);
         assertTrue(schemeDto.getRestfulDefinitionsCount() > 0);
@@ -77,7 +77,7 @@ public class GrpcClient {
         final ServiceResolver resolver = FileDescriptorServiceResolver.fromFileDescriptorProtoSet(fileDescriptorProtoSet);
 
 
-        final Descriptors.MethodDescriptor methodDescriptor = resolver.getMethodDescriptor(fullServiceName, "GetScheme");
+        final Descriptors.MethodDescriptor methodDescriptor = resolver.getMethodDescriptor(fullServiceName + "/" + "GetScheme");
         final MethodDescriptor<DynamicMessage, DynamicMessage> grpcMethodDescriptor = resolver.resolveMethod(methodDescriptor);
         try {
 

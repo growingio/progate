@@ -20,6 +20,7 @@ dependencies {
         implementation("com.typesafe:config:1.4.1")
         implementation("com.github.os72:protoc-jar:3.11.4")
         implementation("org.apache.commons:commons-text:1.9")
+        implementation("com.github.ben-manes.caffeine:caffeine:3.0.3")
         implementation("io.vertx:vertx-web:${ComponentVersions.vertx}")
         implementation("io.vertx:vertx-core:${ComponentVersions.vertx}")
         implementation("org.apache.logging.log4j:log4j-api:${ComponentVersions.log4j}")

@@ -9,8 +9,11 @@ public class JobServiceImpl extends JobServiceGrpc.JobServiceImplBase {
 
     @Override
     public void getJobs(GetJobsRequest request, StreamObserver<JobDto> responseObserver) {
-        final JobDto job = JobDto.newBuilder().setName("Hello").build();
+        System.out.println("invoke getJobs method");
+//        for (int i = 0; i < 100; i++) {
+        final JobDto job = JobDto.newBuilder().setName("Hello: ").build();
         responseObserver.onNext(job);
+//        }
         responseObserver.onCompleted();
     }
 

@@ -47,7 +47,6 @@ public class JdkJavaCompiler implements Compiler<JavaCompileSpec> {
         return compiler.getTask(null, fileManager, null, options, options, compilationUnits);
     }
 
-
     private List<String> createCompileOptions(final JavaCompileSpec spec) throws IOException {
         final List<String> options = new LinkedList<>();
         if (Objects.nonNull(spec.getDestination())) {

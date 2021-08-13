@@ -9,10 +9,9 @@ import io.grpc.MethodDescriptor;
  */
 public interface ServiceResolver {
 
-    Descriptors.MethodDescriptor getMethodDescriptor(String fullServiceName, String methodName);
+    Descriptors.MethodDescriptor getMethodDescriptor(String endpoint);
 
     MethodDescriptor<DynamicMessage, DynamicMessage> resolveMethod(Descriptors.MethodDescriptor descriptor);
 
-    MethodDescriptor<DynamicMessage, DynamicMessage> resolveMethod(String fullServiceName, String methodName);
 
 }

@@ -1,14 +1,19 @@
 package io.growing.gateway.api;
 
-import io.vertx.core.Future;
+import io.growing.gateway.context.RequestContext;
+import io.growing.gateway.module.ModuleLoader;
+
+import java.util.concurrent.CompletionStage;
 
 /**
  * @author AI
  */
-public interface OutgoingHandler<ReqT, RespT> {
+public interface OutgoingHandler {
 
-    Protocol type();
+    String protocol();
 
-    Future<RespT> handle(String endpoint, ReqT req);
+    ModuleLoader loader();
+
+    CompletionStage< ? extends Object> handle(Upstream upstream, String endpoint, RequestContext request);
 
 }

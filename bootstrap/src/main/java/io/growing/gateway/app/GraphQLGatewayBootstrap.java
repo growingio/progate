@@ -1,14 +1,20 @@
 package io.growing.gateway.app;
 
+import com.google.common.collect.Sets;
+import io.growing.gateway.api.OutgoingHandler;
+import io.growing.gateway.api.Upstream;
+import io.growing.gateway.discovery.UpstreamDiscovery;
 import io.growing.gateway.graphql.GraphqlIncomingHandler;
-import io.growing.gateway.graphql.GraphqlSchemaScanner;
-import io.growing.gateway.graphql.internal.ClassPathGraphqlSchemaScanner;
+import io.growing.gateway.grpc.GrpcOutgoingHandler;
+import io.growing.gateway.internal.ConfigUpstreamDiscovery;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -21,19 +27,19 @@ public class GraphQLGatewayBootstrap {
         final Vertx vertx = Vertx.vertx();
         final HttpServer server = vertx.createHttpServer();
         final Router router = Router.router(vertx);
-        router.route().handler(ctx -> {
-
-        });
-        final GraphqlSchemaScanner scanner = new ClassPathGraphqlSchemaScanner("/graphql/all.graphql");
+        final UpstreamDiscovery discovery = new ConfigUpstreamDiscovery();
+        final List<Upstream> upstreams = discovery.discover();
         final GraphqlIncomingHandler incoming = new GraphqlIncomingHandler();
-        incoming.setScanner(scanner);
 
         incoming.apis().forEach(api -> {
             api.getMethods().forEach(method -> {
                 router.route(method, api.getPath()).handler(event -> incoming.handle(event.request()));
             });
         });
-        
+        final Set<OutgoingHandler> outgoings = Sets.newHashSet(new GrpcOutgoingHandler());
+
+        incoming.reload(upstreams, outgoings);
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             final CountDownLatch counter = new CountDownLatch(1);
             logger.info("Server on shutdown...");

@@ -12,12 +12,17 @@ plugins {
 
 dependencies {
 
+    api(project(":api"))
+    implementation(project(":utilities"))
+//    implementation("io.vertx:vertx-grpc")
     implementation("io.grpc:grpc-stub")
     implementation("io.grpc:grpc-protobuf")
     implementation("io.grpc:grpc-services")
     implementation("io.grpc:grpc-netty-shaded")
     implementation("com.google.code.gson:gson")
     implementation("com.google.protobuf:protobuf-java-util")
+    implementation("com.github.ben-manes.caffeine:caffeine")
+
 
     if (JavaVersion.current().isJava9Compatible) {
         compileOnly("javax.annotation:javax.annotation-api:1.3.2")

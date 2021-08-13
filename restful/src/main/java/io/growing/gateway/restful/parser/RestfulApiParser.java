@@ -1,7 +1,6 @@
 package io.growing.gateway.restful.parser;
 
-import com.google.common.base.MoreObjects;
-import io.growing.gateway.context.GatewayContext;
+import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.restful.rule.ApiRule;
 import io.growing.gateway.restful.rule.PathParameterRule;
 import io.growing.gateway.restful.rule.RequestRule;
@@ -16,7 +15,7 @@ import java.util.*;
 
 public class RestfulApiParser {
 
-    Set<ApiRule> parse(GatewayContext context, InputStream inputStream) {
+    Set<ApiRule> parse(RequestContext context, InputStream inputStream) {
         Yaml yaml = new Yaml();
 
         ApiRuleConfigs apiRuleConfigs = yaml.loadAs(inputStream, ApiRuleConfigs.class);

@@ -8,6 +8,7 @@ import io.growing.gateway.grpc.ServiceResolveException;
 import io.growing.gateway.grpc.ServiceResolver;
 import io.growing.gateway.grpc.marshaller.DynamicMessageMarshaller;
 import io.grpc.MethodDescriptor;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +44,10 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
     }
 
     @Override
-    public Descriptors.MethodDescriptor getMethodDescriptor(String fullServiceName, String methodName) {
+    public Descriptors.MethodDescriptor getMethodDescriptor(String endpoint) {
+        final Pair<String, String> part = partition(endpoint, '/');
+        final String fullServiceName = part.getLeft();
+        final String methodName = part.getRight();
         final Optional<Descriptors.ServiceDescriptor> serviceDescriptorOpt = findService(fullServiceName);
         if (serviceDescriptorOpt.isEmpty()) {
             throw new ServiceResolveException("Cannot found service: " + fullServiceName);
@@ -70,16 +74,10 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
             .setResponseMarshaller(new DynamicMessageMarshaller(descriptor.getOutputType())).build();
     }
 
-    @Override
-    public MethodDescriptor<DynamicMessage, DynamicMessage> resolveMethod(String fullServiceName, String methodName) {
-        final Descriptors.MethodDescriptor methodDescriptor = getMethodDescriptor(fullServiceName, methodName);
-        return resolveMethod(methodDescriptor);
-    }
-
     private Optional<Descriptors.ServiceDescriptor> findService(final String fullServiceName) {
-        final int splitIndex = fullServiceName.lastIndexOf('.');
-        final String packageName = fullServiceName.substring(0, splitIndex);
-        final String serviceName = fullServiceName.substring(splitIndex + 1);
+        final Pair<String, String> part = partition(fullServiceName, '.');
+        final String packageName = part.getLeft();
+        final String serviceName = part.getRight();
         Descriptors.ServiceDescriptor serviceDescriptor = null;
         for (Map.Entry<String, Descriptors.FileDescriptor> entry : fileDescriptors.entrySet()) {
             final Descriptors.FileDescriptor fileDescriptor = entry.getValue();
@@ -118,6 +116,16 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
         } else {
             return MethodDescriptor.MethodType.UNARY;
         }
+    }
+
+    private Pair<String, String> partition(final String str, final char separator) {
+        final int index = str.lastIndexOf(separator);
+        if (index < 0) {
+            throw new IllegalArgumentException(str + " cannot be partition");
+        }
+        final String l = str.substring(0, index);
+        final String r = str.substring(index + 1);
+        return Pair.of(l, r);
     }
 
 }

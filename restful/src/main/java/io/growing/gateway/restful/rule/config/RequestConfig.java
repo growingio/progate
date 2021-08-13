@@ -1,6 +1,6 @@
 package io.growing.gateway.restful.rule.config;
 
-import io.growing.gateway.context.GatewayContext;
+import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.restful.rule.RequestRule;
 
 import java.util.Map;
@@ -16,7 +16,7 @@ public class RequestConfig {
         return transcoders;
     }
 
-    public RequestRule toRule(GatewayContext context) {
+    public RequestRule toRule(RequestContext context) {
         return new RequestRule(ConfigUtils.makeJsonPathTranscoders(transcoders, context));
     }
 }
