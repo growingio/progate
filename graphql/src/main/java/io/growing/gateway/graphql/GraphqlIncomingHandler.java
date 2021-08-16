@@ -72,10 +72,12 @@ public class GraphqlIncomingHandler implements IncomingHandler {
         request.body(ar -> {
             if (ar.succeeded()) {
                 final Gson gson = new Gson();
+                //
                 final GraphqlRelayRequest graphqlRequest = gson.fromJson(ar.result().toString(StandardCharsets.UTF_8), GraphqlRelayRequest.class);
                 final GraphQLContext context = GraphQLContext.newContext().build();
                 final ExecutionInput execution = ExecutionInput.newExecutionInput(graphqlRequest.getQuery()).localContext(context).build();
                 final CompletableFuture<ExecutionResult> future = graphQLReference.get().executeAsync(execution);
+                //
                 future.whenComplete((r, t) -> {
                     if (Objects.nonNull(t)) {
                         request.response().setStatusCode(500).end("Error");

@@ -3,11 +3,12 @@ package io.growing.gateway.grpc;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.Empty;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
 import io.growing.gateway.api.OutgoingHandler;
 import io.growing.gateway.api.Upstream;
 import io.growing.gateway.api.UpstreamNode;
@@ -16,6 +17,7 @@ import io.growing.gateway.grpc.impl.FileDescriptorServiceResolver;
 import io.growing.gateway.grpc.internal.ClassPathResource;
 import io.growing.gateway.grpc.observer.CollectionObserver;
 import io.growing.gateway.grpc.observer.FileDescriptorProtoSetObserver;
+import io.growing.gateway.grpc.observer.UnaryObserver;
 import io.growing.gateway.module.ModuleLoader;
 import io.growing.gateway.module.ModuleScheme;
 import io.grpc.CallOptions;
@@ -76,74 +78,42 @@ public class GrpcOutgoingHandler implements OutgoingHandler {
     }
 
     @Override
-    public CompletionStage<? extends Object> handle(Upstream upstream, String endpoint, RequestContext request) {
+    public CompletionStage<?> handle(Upstream upstream, String endpoint, RequestContext request) {
         final ServiceResolver resolver = resolvers.get(upstream);
         final Descriptors.MethodDescriptor methodDescriptor = resolver.getMethodDescriptor(endpoint);
         final MethodDescriptor<DynamicMessage, DynamicMessage> grpcMethodDescriptor = resolver.resolveMethod(methodDescriptor);
         final UpstreamNode node = upstream.getNodes()[0];
         final ManagedChannel channel = ManagedChannelBuilder.forAddress(node.getHost(), node.getPort()).usePlaintext().build();
         final ClientCall<DynamicMessage, DynamicMessage> call = channel.newCall(grpcMethodDescriptor, CallOptions.DEFAULT);
+        DynamicMessage message;
         try {
-            final CollectionObserver<DynamicMessage> observer = new CollectionObserver<>();
-            final DynamicMessage message = DynamicMessage.parseFrom(methodDescriptor.getInputType(), Empty.newBuilder().build().toByteArray());
-            ClientCalls.asyncUnaryCall(call, message, observer);
-            return observer.toCompletionStage().thenApply(list -> {
-                final List<Map<String, Object>> entries = new LinkedList<>();
-                for (DynamicMessage dm : list) {
-                    entries.add(new HashMap<>() {
-                        @Override
-                        public Object get(Object key) {
-                            for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : dm.getAllFields().entrySet()) {
-                                if (entry.getKey().getName().equals(key)) {
-                                    return entry.getValue();
-                                }
-                            }
-                            return super.get(key);
-                        }
-                    });
-                }
-                return entries;
-            });
+            message = transcode(request, methodDescriptor.getInputType());
         } catch (InvalidProtocolBufferException e) {
-            e.printStackTrace();
             return CompletableFuture.failedFuture(e);
+        }
+        if (methodDescriptor.isServerStreaming()) {
+            final CollectionObserver<DynamicMessage> observer = new CollectionObserver<>();
+            ClientCalls.asyncServerStreamingCall(call, message, observer);
+            return observer.toCompletionStage().thenApply(collection -> {
+                final List<DynamicMessageWrapper> wrappers = new LinkedList<>();
+                for (DynamicMessage dm : collection) {
+                    wrappers.add(new DynamicMessageWrapper(dm));
+                }
+                return wrappers;
+            });
+        } else {
+            final UnaryObserver<DynamicMessage> observer = new UnaryObserver<>();
+            ClientCalls.asyncUnaryCall(call, message, observer);
+            return observer.toCompletionStage().thenApply(DynamicMessageWrapper::new);
         }
     }
 
-
-//    private Future<ModuleScheme> loadScheme(final Upstream upstream) {
-//        final UpstreamNode node = upstream.getNodes()[0];
-//        final ManagedChannel channel = ManagedChannelBuilder.forAddress(node.getHost(), node.getPort()).usePlaintext().build();
-//        final SchemeServiceGrpc.SchemeServiceStub stub = SchemeServiceGrpc.newStub(channel);
-//        final UnaryObserver<SchemeDto> observer = new UnaryObserver<>();
-//        stub.getScheme(Empty.newBuilder().build(), observer);
-//        return observer.toFuture().map(scheme -> new ModuleScheme() {
-//            @Override
-//            public String name() {
-//                return scheme.getName();
-//            }
-//
-//            @Override
-//            public List<byte[]> graphqlDefinitions() {
-//                if (scheme.getGraphqlDefinitionsCount() > 0) {
-//                    try (final Stream<ByteString> stream = scheme.getGraphqlDefinitionsList().stream()) {
-//                        return stream.map(ByteString::toByteArray).collect(Collectors.toList());
-//                    }
-//                }
-//                return Collections.emptyList();
-//            }
-//
-//            @Override
-//            public List<byte[]> restfulDefinitions() {
-//                if (scheme.getRestfulDefinitionsCount() > 0) {
-//                    try (final Stream<ByteString> stream = scheme.getRestfulDefinitionsList().stream()) {
-//                        return stream.map(ByteString::toByteArray).collect(Collectors.toList());
-//                    }
-//                }
-//                return Collections.emptyList();
-//            }
-//        });
-//    }
+    private DynamicMessage transcode(final RequestContext context, final Descriptors.Descriptor type) throws InvalidProtocolBufferException {
+        final DynamicMessage.Builder builder = DynamicMessage.newBuilder(type);
+        final String json = new Gson().toJson(context.getArguments());
+        JsonFormat.parser().ignoringUnknownFields().merge(json, builder);
+        return builder.build();
+    }
 
     private ServiceResolver createServiceResolver(final Upstream upstream) throws ExecutionException, InterruptedException {
         final UpstreamNode node = upstream.getNodes()[0];
@@ -155,6 +125,24 @@ public class GrpcOutgoingHandler implements OutgoingHandler {
         requestObserver.onCompleted();
         final Set<DescriptorProtos.FileDescriptorProto> fileDescriptorProtos = observer.getCompletionFuture().get();
         return FileDescriptorServiceResolver.fromFileDescriptorProtoSet(fileDescriptorProtos);
+    }
+
+    private static class DynamicMessageWrapper extends HashMap<String, Object> {
+        private final DynamicMessage message;
+
+        public DynamicMessageWrapper(final DynamicMessage message) {
+            this.message = message;
+        }
+
+        @Override
+        public Object get(Object key) {
+            for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : message.getAllFields().entrySet()) {
+                if (entry.getKey().getName().equals(key)) {
+                    return entry.getValue();
+                }
+            }
+            return null;
+        }
     }
 
 }

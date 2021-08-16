@@ -1,5 +1,9 @@
 directive @grpc(endpoint: String!) on FIELD_DEFINITION
 directive @dubbo(endpoint: String!) on FIELD_DEFINITION
+directive @acl(permission: String!, resource: String!) on FIELD_DEFINITION
+
+# dashboard.read
+#
 
 type Job {
     name: String!
@@ -19,6 +23,6 @@ type Query {
 
 type Mutation {
 
-    createJob(projectId: Int, job: JobInput): Job! @grpc(endpoint: "growing.jobs.JobService/CreateJob")
+    createJob(projectId: Int, job: JobInput): Job! @grpc(endpoint: "growing.graphql.example.JobService/CreateJob")
 
 }

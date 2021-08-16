@@ -4,13 +4,14 @@ import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.growing.gateway.api.OutgoingHandler;
 import io.growing.gateway.api.Upstream;
+import io.growing.gateway.context.RequestContext;
 
 import java.util.concurrent.CompletionStage;
 
 /**
  * @author AI
  */
-public class OutgoingDataFetcher implements DataFetcher<CompletionStage<? extends Object>> {
+public class OutgoingDataFetcher implements DataFetcher<CompletionStage<?>> {
     private final String endpoint;
     private final Upstream upstream;
     private final OutgoingHandler outgoing;
@@ -22,8 +23,11 @@ public class OutgoingDataFetcher implements DataFetcher<CompletionStage<? extend
     }
 
     @Override
-    public CompletionStage<? extends Object> get(DataFetchingEnvironment environment) throws Exception {
-        return outgoing.handle(upstream, endpoint, null);
+    public CompletionStage<?> get(DataFetchingEnvironment environment) throws Exception {
+        //
+        final RequestContext context = new DataFetchingEnvironmentContext(environment);
+        return outgoing.handle(upstream, endpoint, context);
+        //
     }
 
 }

@@ -13,5 +13,4 @@ public interface ServiceResolver {
 
     MethodDescriptor<DynamicMessage, DynamicMessage> resolveMethod(Descriptors.MethodDescriptor descriptor);
 
-
 }
