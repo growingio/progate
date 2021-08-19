@@ -54,7 +54,7 @@ public class GraphqlIncomingHandler implements IncomingHandler {
         outgoings.forEach(handler -> handlers.put(handler.protocol(), handler));
         upstreams.forEach(upstream -> {
             final OutgoingHandler handler = handlers.get(upstream.getProtocol());
-            final ModuleScheme module = handler.loader().load(upstream);
+            final ModuleScheme module = handler.load(upstream);
             graphQLReference.set(createGraphql(upstream, module, handler));
         });
     }
@@ -100,7 +100,8 @@ public class GraphqlIncomingHandler implements IncomingHandler {
 
     private GraphQL createGraphql(final Upstream upstream, final ModuleScheme scheme, final OutgoingHandler handler) {
 
-        final TypeDefinitionRegistry registry = new SchemaParser().parse(new String(scheme.graphqlDefinitions().get(0)));
+        final TypeDefinitionRegistry registry = new SchemaParser().parse(new String());
+
         final RuntimeWiring.Builder runtimeWiringBuilder = RuntimeWiring.newRuntimeWiring();
 
         final Set<String> fetcherTypes = Sets.newHashSet("Query", "Mutation");

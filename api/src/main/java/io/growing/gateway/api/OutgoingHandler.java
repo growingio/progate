@@ -1,7 +1,7 @@
 package io.growing.gateway.api;
 
 import io.growing.gateway.context.RequestContext;
-import io.growing.gateway.module.ModuleLoader;
+import io.growing.gateway.module.ModuleScheme;
 
 import java.util.concurrent.CompletionStage;
 
@@ -12,7 +12,7 @@ public interface OutgoingHandler {
 
     String protocol();
 
-    ModuleLoader loader();
+    ModuleScheme load(Upstream upstream);
 
     CompletionStage< ? extends Object> handle(Upstream upstream, String endpoint, RequestContext request);
 

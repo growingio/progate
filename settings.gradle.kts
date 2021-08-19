@@ -9,6 +9,8 @@ include(
     "utilities",
     "compiler",
     "grpc",
+    "grpc-proto",
+    "grpc-client",
     "grpc-libs",
     "examples:grpc-example"
 )

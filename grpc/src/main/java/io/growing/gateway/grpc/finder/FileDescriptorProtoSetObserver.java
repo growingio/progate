@@ -1,4 +1,4 @@
-package io.growing.gateway.grpc.observer;
+package io.growing.gateway.grpc.finder;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;

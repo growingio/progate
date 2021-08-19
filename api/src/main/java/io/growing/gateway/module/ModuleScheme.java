@@ -9,8 +9,8 @@ public interface ModuleScheme {
 
     String name();
 
-    List<byte[]> graphqlDefinitions();
+    List<EndpointDefinition> graphqlDefinitions();
 
-    List<byte[]> restfulDefinitions();
+    List<EndpointDefinition> restfulDefinitions();
 
 }

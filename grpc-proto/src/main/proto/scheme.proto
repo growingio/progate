@@ -8,11 +8,15 @@ option java_package = "io.growing.gateway";
 option java_multiple_files = true;
 option java_outer_classname = "SchemeProto";
 
+message FileDescriptorDto {
+  string name = 1;
+  bytes content = 2;
+}
+
 message SchemeDto {
 
-  string name = 1;
-  repeated bytes graphql_definitions = 2;
-  repeated bytes restful_definitions = 3;
+  repeated FileDescriptorDto graphql_definitions = 1;
+  repeated FileDescriptorDto restful_definitions = 2;
 
 }
 
