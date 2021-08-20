@@ -3,6 +3,7 @@
  */
 
 plugins {
+    `maven-publish`
     id("io.growing.gateway.java-library-conventions")
 }
 

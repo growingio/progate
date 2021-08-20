@@ -16,6 +16,8 @@ import io.growing.gateway.http.HttpApi;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class GraphqlIncomingHandler implements IncomingHandler {
 
     private final AtomicReference<GraphQL> graphQLReference = new AtomicReference<>();
+    private final Logger logger = LoggerFactory.getLogger(GraphqlIncomingHandler.class);
 
     @Override
     public void reload(final List<Upstream> upstreams, final Set<OutgoingHandler> outgoings) {
@@ -67,6 +70,7 @@ public class GraphqlIncomingHandler implements IncomingHandler {
                             String chunk = gson.toJson(r);
                             response.end(chunk);
                         } catch (Exception e) {
+                            logger.error(e.getLocalizedMessage(), e);
                             request.response().setStatusCode(500).end("Error");
                         }
                     }

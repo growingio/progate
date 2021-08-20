@@ -12,6 +12,7 @@ import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import io.growing.gateway.api.OutgoingHandler;
 import io.growing.gateway.api.Upstream;
+import io.growing.gateway.graphql.fetcher.NotFoundFetcher;
 import io.growing.gateway.graphql.fetcher.OutgoingDataFetcher;
 import io.growing.gateway.module.ModuleScheme;
 
@@ -83,6 +84,8 @@ public class GraphqlBuilder {
                         final OutgoingHandler handler = handlers.get(endpointDirective.getName());
                         final DataFetcher<CompletionStage<?>> fetcher = new OutgoingDataFetcher(endpoint, upstream, handler);
                         register.type(type, builder -> builder.dataFetcher(field.getName(), fetcher));
+                    } else {
+                        register.type(type, builder -> builder.dataFetcher(field.getName(), new NotFoundFetcher()));
                     }
                 }
             });

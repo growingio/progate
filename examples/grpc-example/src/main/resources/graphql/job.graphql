@@ -18,6 +18,8 @@ type Query {
 
     legacyJobs: [Job]! @dubbo(endpoint: "io.growing.dubbo.job.JobServce/GetJobs")
 
+    jobNames: [String]
+
 }
 
 type Mutation {

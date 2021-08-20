@@ -43,6 +43,11 @@ public class GraphQLGatewayBootstrap {
         });
         final Set<OutgoingHandler> outgoings = Sets.newHashSet(new GrpcOutgoingHandler());
 
+        router.get("/reload").handler(ctx -> {
+            incoming.reload(upstreams, outgoings);
+            ctx.response().end();
+        });
+
         incoming.reload(upstreams, outgoings);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
