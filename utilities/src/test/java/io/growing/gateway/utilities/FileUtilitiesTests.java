@@ -14,19 +14,19 @@ import java.util.stream.Stream;
 /**
  * @author AI
  */
-public class FileUtilsTests {
+public class FileUtilitiesTests {
 
     @Test
     public void testListFiles() throws IOException {
-        final Set<Path> paths = FileUtils.listAllFiles(Paths.get(SystemUtils.getUserDir().getAbsolutePath()));
+        final Set<Path> paths = FileUtilities.listAllFiles(Paths.get(SystemUtils.getUserDir().getAbsolutePath()));
         try (Stream<Path> stream = paths.stream()) {
-            Assertions.assertTrue(stream.anyMatch(path -> "FileUtils.java".equals(path.getFileName().toString())));
+            Assertions.assertTrue(stream.anyMatch(path -> "FileUtilities.java".equals(path.getFileName().toString())));
         }
     }
 
     @Test
     public void testEmpty() throws IOException {
-        final Set<Path> paths = FileUtils.listAllFiles(Sets.newHashSet());
+        final Set<Path> paths = FileUtilities.listAllFiles(Sets.newHashSet());
         Assertions.assertTrue(paths.isEmpty());
     }
 

@@ -6,9 +6,9 @@ import java.util.Objects;
 /**
  * @author AI
  */
-public final class CollectionUtils {
+public final class CollectionUtilities {
 
-    private CollectionUtils() {
+    private CollectionUtilities() {
     }
 
     public static boolean isNotEmpty(final Collection<?> source) {

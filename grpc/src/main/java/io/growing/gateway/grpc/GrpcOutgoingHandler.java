@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
 
 /**
  * @author AI
@@ -45,8 +44,8 @@ public class GrpcOutgoingHandler implements OutgoingHandler {
 
     @Override
     public ModuleScheme load(Upstream upstream) {
-
-        return null;
+        final ManagedChannel channel = finder.createChannel(upstream);
+        return finder.loadScheme(channel);
     }
 
     @Override
@@ -87,7 +86,7 @@ public class GrpcOutgoingHandler implements OutgoingHandler {
         return builder.build();
     }
 
-    private ServiceResolver createServiceResolver(final Upstream upstream) throws ExecutionException, InterruptedException {
+    private ServiceResolver createServiceResolver(final Upstream upstream) {
         final ManagedChannel channel = finder.createChannel(upstream);
         return finder.createServiceResolver(channel);
     }

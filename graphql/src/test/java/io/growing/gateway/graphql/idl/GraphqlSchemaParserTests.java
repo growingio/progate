@@ -29,7 +29,8 @@ public class GraphqlSchemaParserTests {
                 new EndpointDefinition("test", "type TestQuery { \n test: String \n }".getBytes()),
                 new EndpointDefinition("demo", "type DemoQuery { \n demo: String \n}".getBytes()),
                 new EndpointDefinition("testMutation", "type Test {\n field: String \n } \ntype testMutation { \n createTest: String \n}".getBytes()),
-                new EndpointDefinition("test.schema.graphql", "type TestQuery {\n field: String \n }".getBytes())
+                new EndpointDefinition("test.schema.graphql", "type TestQuery {\n field: String \n }".getBytes()),
+                new EndpointDefinition("job.graphql", "type Query {\n jobs: [String] \n }".getBytes())
             );
         }
 
@@ -78,8 +79,8 @@ public class GraphqlSchemaParserTests {
         Assertions.assertTrue(types.containsKey("Mutation"));
         ObjectTypeDefinition query = (ObjectTypeDefinition) types.get("Query");
         final List<FieldDefinition> fieldDefinitions = query.getFieldDefinitions();
-        Assertions.assertEquals(2, fieldDefinitions.size());
-        final Set<String> queryNames = Sets.newHashSet("test", "demo");
+        Assertions.assertEquals(3, fieldDefinitions.size());
+        final Set<String> queryNames = Sets.newHashSet("test", "demo", "jobs");
         fieldDefinitions.forEach(def -> {
             Assertions.assertTrue(queryNames.contains(def.getName()));
         });

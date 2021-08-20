@@ -12,6 +12,7 @@ dependencies {
     api(project(":utilities"))
     api("org.slf4j:slf4j-api")
     api("com.typesafe:config")
+    implementation("org.yaml:snakeyaml")
     implementation("com.google.dagger:dagger")
     annotationProcessor("com.google.dagger:dagger-compiler")
 

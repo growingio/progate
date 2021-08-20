@@ -16,8 +16,8 @@ import java.util.Set;
 /**
  * @author AI
  */
-public final class FileUtils {
-    private FileUtils() {
+public final class FileUtilities {
+    private FileUtilities() {
     }
 
     public static Set<Path> listAllFiles(final Path directory) throws IOException {
@@ -27,7 +27,7 @@ public final class FileUtils {
     }
 
     public static Set<Path> listAllFiles(final Set<Path> directories) throws IOException {
-        if (CollectionUtils.isEmpty(directories)) {
+        if (CollectionUtilities.isEmpty(directories)) {
             return Collections.emptySet();
         }
         final Set<Path> paths = new HashSet<>();

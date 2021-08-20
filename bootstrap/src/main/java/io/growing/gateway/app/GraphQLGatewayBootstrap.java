@@ -10,9 +10,11 @@ import io.growing.gateway.internal.ConfigUpstreamDiscovery;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
+import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -27,7 +29,10 @@ public class GraphQLGatewayBootstrap {
         final Vertx vertx = Vertx.vertx();
         final HttpServer server = vertx.createHttpServer();
         final Router router = Router.router(vertx);
-        final UpstreamDiscovery discovery = new ConfigUpstreamDiscovery();
+
+        final String configPath = getApplicationConfigFile();
+
+        final UpstreamDiscovery discovery = new ConfigUpstreamDiscovery(configPath);
         final List<Upstream> upstreams = discovery.discover();
         final GraphqlIncomingHandler incoming = new GraphqlIncomingHandler();
 
@@ -56,6 +61,10 @@ public class GraphQLGatewayBootstrap {
         }));
 
         server.requestHandler(router).listen(8080).onSuccess(handler -> logger.info("Server listening on 8080"));
+    }
+
+    private static String getApplicationConfigFile() {
+        return Paths.get(SystemUtils.getUserDir().getAbsolutePath(), "conf", "gateway.yaml").toAbsolutePath().toString();
     }
 
 }

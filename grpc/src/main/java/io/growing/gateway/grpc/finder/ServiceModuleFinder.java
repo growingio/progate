@@ -47,7 +47,7 @@ public class ServiceModuleFinder {
 
     public ManagedChannel createChannel(final Upstream upstream) {
         final UpstreamNode node = upstream.getNodes()[0];
-        return ManagedChannelBuilder.forAddress(node.getHost(), node.getPort()).build();
+        return ManagedChannelBuilder.forAddress(node.getHost(), node.getPort()).usePlaintext().build();
     }
 
 }

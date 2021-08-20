@@ -19,8 +19,6 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl")
 
-    implementation("com.graphql-java:graphql-java")
-
     implementation("com.google.dagger:dagger")
     annotationProcessor("com.google.dagger:dagger-compiler")
 

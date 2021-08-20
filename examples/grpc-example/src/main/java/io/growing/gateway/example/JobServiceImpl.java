@@ -11,7 +11,7 @@ public class JobServiceImpl extends JobServiceGrpc.JobServiceImplBase {
     public void getJobs(GetJobsRequest request, StreamObserver<JobDto> responseObserver) {
         System.out.println("invoke getJobs method");
         for (int i = 0; i < 100; i++) {
-            final JobDto job = JobDto.newBuilder().setName("Hello: ").build();
+            final JobDto job = JobDto.newBuilder().setName("Hello: " + i).build();
             responseObserver.onNext(job);
         }
         responseObserver.onCompleted();

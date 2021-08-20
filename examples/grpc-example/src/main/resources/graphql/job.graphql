@@ -1,6 +1,5 @@
 directive @grpc(endpoint: String!) on FIELD_DEFINITION
 directive @dubbo(endpoint: String!) on FIELD_DEFINITION
-directive @acl(permission: String!, resource: String!) on FIELD_DEFINITION
 
 # dashboard.read
 #

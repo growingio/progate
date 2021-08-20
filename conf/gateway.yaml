@@ -1,0 +1,7 @@
+upstreams:
+  - name: metadata
+    protocol: grpc
+    nodes:
+      - host: localhost
+        port: 18080
+        weight: 1

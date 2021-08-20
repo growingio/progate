@@ -13,10 +13,10 @@ public class CollectionUtilsTests {
 
     @Test
     public void test() {
-        Assertions.assertTrue(CollectionUtils.isEmpty(null));
-        Assertions.assertTrue(CollectionUtils.isEmpty(new HashSet<>()));
-        Assertions.assertFalse(CollectionUtils.isNotEmpty(null));
-        Assertions.assertTrue(CollectionUtils.isNotEmpty(Sets.newHashSet("")));
+        Assertions.assertTrue(CollectionUtilities.isEmpty(null));
+        Assertions.assertTrue(CollectionUtilities.isEmpty(new HashSet<>()));
+        Assertions.assertFalse(CollectionUtilities.isNotEmpty(null));
+        Assertions.assertTrue(CollectionUtilities.isNotEmpty(Sets.newHashSet("")));
     }
 
 }

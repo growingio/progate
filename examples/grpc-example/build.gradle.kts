@@ -12,6 +12,7 @@ plugins {
 
 dependencies {
 
+    implementation(project(":grpc-client"))
     implementation("io.grpc:grpc-stub")
     implementation("io.grpc:grpc-protobuf")
     implementation("io.grpc:grpc-services")

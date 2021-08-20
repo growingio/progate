@@ -7,7 +7,7 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 import io.growing.gateway.graphql.function.TriConsumer;
 import io.growing.gateway.module.EndpointDefinition;
 import io.growing.gateway.module.ModuleScheme;
-import io.growing.gateway.utilities.CollectionUtils;
+import io.growing.gateway.utilities.CollectionUtilities;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +20,8 @@ import java.util.regex.Pattern;
 public class GraphqlSchemaParser {
 
     private final char end = '}';
-    private final Pattern queryPattern = Pattern.compile("type +\\w+Query +\\{ ?");
-    private final Pattern mutationPattern = Pattern.compile("type +\\w+Mutation +\\{ ?");
+    private final Pattern queryPattern = Pattern.compile("type +\\w*Query +\\{ ?");
+    private final Pattern mutationPattern = Pattern.compile("type +\\w*Mutation +\\{ ?");
     private final Logger logger = LoggerFactory.getLogger(GraphqlSchemaParser.class);
 
     public TypeDefinitionRegistry parse(final List<ModuleScheme> schemes) {
@@ -48,7 +48,7 @@ public class GraphqlSchemaParser {
     }
 
     private void appendGraphqlDefinition(final ModuleScheme scheme, final StringBuilder schemas, final StringBuilder queries, final StringBuilder mutations) {
-        if (CollectionUtils.isNotEmpty(scheme.graphqlDefinitions())) {
+        if (CollectionUtilities.isNotEmpty(scheme.graphqlDefinitions())) {
             try {
                 for (EndpointDefinition def : scheme.graphqlDefinitions()) {
                     final CharSource source = ByteSource.wrap(def.getContent()).asCharSource(StandardCharsets.UTF_8);

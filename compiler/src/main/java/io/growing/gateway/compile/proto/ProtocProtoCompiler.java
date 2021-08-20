@@ -5,8 +5,8 @@ import com.github.os72.protocjar.Protoc;
 import com.google.common.collect.Sets;
 import io.growing.gateway.compile.CompilationFailedException;
 import io.growing.gateway.compile.Compiler;
-import io.growing.gateway.utilities.CollectionUtils;
-import io.growing.gateway.utilities.FileUtils;
+import io.growing.gateway.utilities.CollectionUtilities;
+import io.growing.gateway.utilities.FileUtilities;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,10 +35,10 @@ public class ProtocProtoCompiler implements Compiler<ProtocCompileSpec> {
             if (Files.notExists(spec.getJavaOut())) {
                 Files.createDirectories(spec.getJavaOut());
             }
-            final Set<Path> sources = FileUtils.listAllFiles(spec.getSource());
+            final Set<Path> sources = FileUtilities.listAllFiles(spec.getSource());
             Protoc.runProtoc(createProtobufCompileArgs(spec, sources));
             final Set<Path> grpcSources = selectGrpcSources(sources);
-            if (CollectionUtils.isNotEmpty(grpcSources)) {
+            if (CollectionUtilities.isNotEmpty(grpcSources)) {
                 Protoc.runProtoc(createGrpcCompileArgs(spec, grpcSources));
             }
         } catch (IOException | InterruptedException e) {

@@ -2,8 +2,8 @@ package io.growing.gateway.compile.java;
 
 import io.growing.gateway.compile.CompilationFailedException;
 import io.growing.gateway.compile.Compiler;
-import io.growing.gateway.utilities.CollectionUtils;
-import io.growing.gateway.utilities.FileUtils;
+import io.growing.gateway.utilities.CollectionUtilities;
+import io.growing.gateway.utilities.FileUtilities;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.tools.JavaCompiler;
@@ -41,7 +41,7 @@ public class JdkJavaCompiler implements Compiler<JavaCompileSpec> {
     private JavaCompiler.CompilationTask createCompileTask(final JavaCompileSpec spec) throws IOException {
         final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, StandardCharsets.UTF_8);
-        final Set<Path> sources = FileUtils.listAllFiles(spec.getSources());
+        final Set<Path> sources = FileUtilities.listAllFiles(spec.getSources());
         final Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromPaths(sources);
         final List<String> options = createCompileOptions(spec);
         return compiler.getTask(null, fileManager, null, options, options, compilationUnits);
@@ -53,8 +53,8 @@ public class JdkJavaCompiler implements Compiler<JavaCompileSpec> {
             options.add("-d");
             options.add(spec.getDestination().toString());
         }
-        final Set<Path> libs = FileUtils.listAllFiles(spec.getLibs());
-        if (CollectionUtils.isNotEmpty(libs)) {
+        final Set<Path> libs = FileUtilities.listAllFiles(spec.getLibs());
+        if (CollectionUtilities.isNotEmpty(libs)) {
             try (final Stream<Path> stream = libs.stream()) {
                 final String classpath = stream.map(path -> path.toAbsolutePath().toString()).collect(Collectors.joining(File.pathSeparator));
                 options.add("-cp");
