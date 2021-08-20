@@ -25,7 +25,6 @@ public class SchemeService extends SchemeServiceGrpc.SchemeServiceImplBase {
             responseObserver.onNext(scheme);
         } catch (IOException e) {
             responseObserver.onError(e);
-
         }
         responseObserver.onCompleted();
     }

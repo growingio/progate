@@ -42,8 +42,12 @@ public class GraphqlSchemaParser {
 
     private String toGraphqlSchema(final StringBuilder schemas, final StringBuilder queries, final StringBuilder mutations) {
         final StringBuilder results = new StringBuilder(schemas);
-        results.append("type Query {\n").append(queries).append(StringUtils.LF).append(end).append(StringUtils.LF)
-            .append("type Mutation {\n").append(mutations).append(StringUtils.LF).append(end);
+        if (queries.length() > 0) {
+            results.append("type Query {\n").append(queries).append(StringUtils.LF).append(end).append(StringUtils.LF);
+        }
+        if (mutations.length() > 0) {
+            results.append("type Mutation {\n").append(mutations).append(StringUtils.LF).append(end);
+        }
         return results.toString();
     }
 
