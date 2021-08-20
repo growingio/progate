@@ -1,5 +1,6 @@
 package io.growing.gateway.graphql;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
@@ -13,6 +14,7 @@ import io.growing.gateway.api.Upstream;
 import io.growing.gateway.graphql.idl.GraphqlBuilder;
 import io.growing.gateway.graphql.request.GraphqlRelayRequest;
 import io.growing.gateway.http.HttpApi;
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
@@ -31,6 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class GraphqlIncomingHandler implements IncomingHandler {
 
+    private final String contentType = "application/json;charset=utf-8";
     private final AtomicReference<GraphQL> graphQLReference = new AtomicReference<>();
     private final Logger logger = LoggerFactory.getLogger(GraphqlIncomingHandler.class);
 
@@ -52,8 +55,8 @@ public class GraphqlIncomingHandler implements IncomingHandler {
     @Override
     public void handle(HttpServerRequest request) {
         request.body(ar -> {
+            final Gson gson = new Gson();
             if (ar.succeeded()) {
-                final Gson gson = new Gson();
                 //
                 final GraphqlRelayRequest graphqlRequest = gson.fromJson(ar.result().toString(StandardCharsets.UTF_8), GraphqlRelayRequest.class);
                 final GraphQLContext context = GraphQLContext.newContext().build();
@@ -62,23 +65,31 @@ public class GraphqlIncomingHandler implements IncomingHandler {
                 //
                 future.whenComplete((r, t) -> {
                     if (Objects.nonNull(t)) {
-                        request.response().setStatusCode(500).end("Error");
+                        endForError(request.response(), t, gson);
                     } else {
                         HttpServerResponse response = request.response();
-                        response.headers().set(HttpHeaders.CONTENT_TYPE, "application/json;charset=utf-8");
-                        try {
-                            String chunk = gson.toJson(r);
-                            response.end(chunk);
-                        } catch (Exception e) {
-                            logger.error(e.getLocalizedMessage(), e);
-                            request.response().setStatusCode(500).end("Error");
-                        }
+                        response.headers().set(HttpHeaders.CONTENT_TYPE, contentType);
+                        String chunk = gson.toJson(r.toSpecification());
+                        response.end(chunk);
                     }
                 });
             } else {
-                request.response().setStatusCode(500).end("Error");
+                endForError(request.response(), ar.cause(), gson);
             }
         });
+    }
+
+    private void endForError(final HttpServerResponse response, final Throwable cause, final Gson gson) {
+        logger.error(cause.getLocalizedMessage(), cause);
+        response.headers().set(HttpHeaders.CONTENT_TYPE, contentType);
+        response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
+        final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+        String message = cause.getLocalizedMessage();
+        if (Objects.isNull(message)) {
+            message = cause.getClass().getSimpleName();
+        }
+        builder.put("errors", Sets.newHashSet(ImmutableMap.of("message", message)));
+        response.end(gson.toJson(builder.build()));
     }
 
 }
