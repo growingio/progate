@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
@@ -69,6 +70,9 @@ public class GraphqlBuilder {
         final Set<String> protocols = handlers.keySet();
         final Consumer<String> bind = (final String type) -> {
             final ObjectTypeDefinition typeDef = (ObjectTypeDefinition) registry.types().get(type);
+            if (Objects.isNull(typeDef)) {
+                return;
+            }
             final List<FieldDefinition> fields = typeDef.getFieldDefinitions();
             fields.forEach(field -> {
                 try (final Stream<Directive> stream = field.getDirectives().stream()) {
