@@ -14,6 +14,7 @@ import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.grpc.finder.ServiceModuleFinder;
 import io.growing.gateway.grpc.observer.CollectionObserver;
 import io.growing.gateway.grpc.observer.UnaryObserver;
+import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
 import io.growing.gateway.module.ModuleScheme;
 import io.grpc.CallOptions;
 import io.grpc.ClientCall;
@@ -22,10 +23,8 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.MethodDescriptor;
 import io.grpc.stub.ClientCalls;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -89,24 +88,6 @@ public class GrpcOutgoingHandler implements OutgoingHandler {
     private ServiceResolver createServiceResolver(final Upstream upstream) {
         final ManagedChannel channel = finder.createChannel(upstream);
         return finder.createServiceResolver(channel);
-    }
-
-    private static class DynamicMessageWrapper extends HashMap<String, Object> {
-        private final DynamicMessage message;
-
-        public DynamicMessageWrapper(final DynamicMessage message) {
-            this.message = message;
-        }
-
-        @Override
-        public Object get(Object key) {
-            for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : message.getAllFields().entrySet()) {
-                if (entry.getKey().getName().equals(key)) {
-                    return entry.getValue();
-                }
-            }
-            return null;
-        }
     }
 
 }

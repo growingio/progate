@@ -6,6 +6,8 @@ directive @dubbo(endpoint: String!) on FIELD_DEFINITION
 
 type Job {
     name: String!
+    description: String
+    tags: [String]
 }
 
 input JobInput {

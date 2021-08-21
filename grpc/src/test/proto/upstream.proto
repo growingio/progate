@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package growing.graphql;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/wrappers.proto";
+
+option java_package = "io.growing.gateway";
+option java_multiple_files = true;
+option java_outer_classname = "UpstreamProto";
+
+message UpstreamDto {
+  string name = 1;
+  google.protobuf.StringValue description = 2;
+  repeated string tags = 3;
+  MetadataDto metadata = 4;
+  google.protobuf.Any value = 5;
+}
+
+message MetadataDto {
+  string value = 1;
+}
+
+message AnyValueDto {
+  string name = 1;
+  string value = 2;
+}

@@ -2,12 +2,16 @@ syntax = "proto3";
 
 package growing.graphql.example;
 
+import "google/protobuf/wrappers.proto";
+
 option java_package = "io.growing.gateway.example";
 option java_multiple_files = true;
 option java_outer_classname = "JobProto";
 
 message JobDto {
   string name = 1;
+  google.protobuf.StringValue description = 2;
+  repeated string tags = 3;
 }
 
 service JobService {

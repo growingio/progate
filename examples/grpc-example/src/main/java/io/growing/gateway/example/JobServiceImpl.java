@@ -1,5 +1,7 @@
 package io.growing.gateway.example;
 
+import com.google.common.collect.Sets;
+import com.google.protobuf.StringValue;
 import io.grpc.stub.StreamObserver;
 
 /**
@@ -11,8 +13,13 @@ public class JobServiceImpl extends JobServiceGrpc.JobServiceImplBase {
     public void getJobs(GetJobsRequest request, StreamObserver<JobDto> responseObserver) {
         System.out.println("invoke getJobs method");
         for (int i = 0; i < 100; i++) {
-            final JobDto job = JobDto.newBuilder().setName("Hello: " + i).build();
-            responseObserver.onNext(job);
+            final JobDto.Builder builder = JobDto.newBuilder();
+            builder.setName("Hello: " + i);
+            if (i % 2 == 0) {
+                builder.setDescription(StringValue.of("hello example"));
+            }
+            builder.addAllTags(Sets.newHashSet("new", "gateway"));
+            responseObserver.onNext(builder.build());
         }
         responseObserver.onCompleted();
     }
