@@ -67,14 +67,14 @@ public class GrpcOutgoingHandler implements OutgoingHandler {
             return observer.toCompletionStage().thenApply(collection -> {
                 final List<DynamicMessageWrapper> wrappers = new LinkedList<>();
                 for (DynamicMessage dm : collection) {
-                    wrappers.add(new DynamicMessageWrapper(dm));
+                    wrappers.add(new DynamicMessageWrapper(dm, resolver.getTypeDescriptors()));
                 }
                 return wrappers;
             });
         } else {
             final UnaryObserver<DynamicMessage> observer = new UnaryObserver<>();
             ClientCalls.asyncUnaryCall(call, message, observer);
-            return observer.toCompletionStage().thenApply(DynamicMessageWrapper::new);
+            return observer.toCompletionStage().thenApply(dm -> new DynamicMessageWrapper(dm, resolver.getTypeDescriptors()));
         }
     }
 

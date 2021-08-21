@@ -1,6 +1,7 @@
 package io.growing.gateway.grpc.impl;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
@@ -21,6 +22,7 @@ import java.util.Set;
  */
 public class FileDescriptorServiceResolver implements ServiceResolver {
 
+    private final Set<Descriptors.Descriptor> typeDescriptors;
     private final Map<String, Descriptors.FileDescriptor> fileDescriptors;
 
     public static FileDescriptorServiceResolver fromFileDescriptorProtoSet(final Set<DescriptorProtos.FileDescriptorProto> fileDescriptorProtoSet) {
@@ -33,14 +35,22 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
 
     public FileDescriptorServiceResolver(final Map<String, DescriptorProtos.FileDescriptorProto> fileDescriptorProtoSet) {
         this.fileDescriptors = new HashMap<>(fileDescriptorProtoSet.size());
+        final ImmutableSet.Builder<Descriptors.Descriptor> typeSet = ImmutableSet.builder();
         try {
             for (Map.Entry<String, DescriptorProtos.FileDescriptorProto> entry : fileDescriptorProtoSet.entrySet()) {
                 final Descriptors.FileDescriptor fileDescriptor = buildFormProto(entry.getValue(), fileDescriptorProtoSet, fileDescriptors);
+                typeSet.addAll(fileDescriptor.getMessageTypes());
                 fileDescriptors.put(fileDescriptor.getName(), fileDescriptor);
             }
+            typeDescriptors = typeSet.build();
         } catch (Descriptors.DescriptorValidationException e) {
             throw new ServiceResolveException("Cannot build service descriptor: " + e.getLocalizedMessage(), e);
         }
+    }
+
+    @Override
+    public Set<Descriptors.Descriptor> getTypeDescriptors() {
+        return typeDescriptors;
     }
 
     @Override

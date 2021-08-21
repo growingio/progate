@@ -14,7 +14,7 @@ message UpstreamDto {
   google.protobuf.StringValue description = 2;
   repeated string tags = 3;
   MetadataDto metadata = 4;
-  google.protobuf.Any value = 5;
+  repeated google.protobuf.Any values = 5;
 }
 
 message MetadataDto {

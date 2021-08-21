@@ -12,13 +12,19 @@ import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.FloatValue;
 import com.google.protobuf.Int32Value;
 import com.google.protobuf.Int64Value;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
 import com.google.protobuf.UInt32Value;
 import com.google.protobuf.UInt64Value;
+import io.growing.gateway.utilities.CollectionUtilities;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DynamicMessageWrapper extends HashMap<String, Object> {
     private static final Set<String> WELL_KNOWN_VALUE_FIELDS = Sets.newHashSet(
@@ -39,41 +45,35 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
     }
 
     private final Map<String, Object> values;
+    private final Set<Descriptors.Descriptor> descriptors;
 
-    public DynamicMessageWrapper(DynamicMessage message) {
-        final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+    public DynamicMessageWrapper(DynamicMessage message, Set<Descriptors.Descriptor> descriptors) {
+        final ImmutableMap.Builder<String, Object> valuesBuilder = ImmutableMap.builder();
         for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : message.getAllFields().entrySet()) {
-            builder.put(entry.getKey().getName(), entry.getValue());
+            valuesBuilder.put(entry.getKey().getName(), entry.getValue());
             if (!entry.getKey().getName().equals(entry.getKey().getJsonName())) {
-                builder.put(entry.getKey().getJsonName(), entry.getValue());
+                valuesBuilder.put(entry.getKey().getJsonName(), entry.getValue());
             }
         }
-        this.values = builder.build();
+        this.values = valuesBuilder.build();
+        this.descriptors = descriptors;
     }
 
     @Override
     public Object get(Object key) {
         if (containsKey(key)) {
             final Object value = values.get(key);
-            if (value instanceof DynamicMessage) {
-                final DynamicMessage field = (DynamicMessage) value;
-                if (field.getAllFields().size() == 1) {
-                    for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : field.getAllFields().entrySet()) {
-                        if (WELL_KNOWN_VALUE_FIELDS.contains(entry.getKey().getFullName())) {
-                            return entry.getValue();
-                        }
-                    }
-                } else if (field.getAllFields().size() == 2) {
-                    for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : field.getAllFields().entrySet()) {
-                        if (WELL_KNOWN_ANY.equals(entry.getKey().getFullName())) {
-                            final DynamicMessageWrapper any = new DynamicMessageWrapper(field);
-                            return Any.newBuilder().setTypeUrl((String) any.get("type_url")).setValue((ByteString) entry.getValue()).build();
-                        }
+            if (value instanceof Collection<?>) {
+                final Collection<?> collection = (Collection<?>) value;
+                if (CollectionUtilities.isNotEmpty(collection) && collection.iterator().next() instanceof DynamicMessage) {
+                    try (final Stream<?> stream = collection.stream()) {
+                        return stream.map(this::wrapObject).collect(Collectors.toList());
                     }
                 }
-                return new DynamicMessageWrapper(field);
+                return collection;
+            } else {
+                return wrapObject(value);
             }
-            return value;
         }
         return null;
     }
@@ -81,6 +81,47 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
     @Override
     public boolean containsKey(Object key) {
         return values.containsKey(key);
+    }
+
+    private Object wrapObject(final Object value) {
+        if (value instanceof DynamicMessage) {
+            final DynamicMessage field = (DynamicMessage) value;
+            if (field.getAllFields().size() == 1) {
+                for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : field.getAllFields().entrySet()) {
+                    if (WELL_KNOWN_VALUE_FIELDS.contains(entry.getKey().getFullName())) {
+                        return entry.getValue();
+                    }
+                }
+            } else if (field.getAllFields().size() == 2) {
+                for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : field.getAllFields().entrySet()) {
+                    if (WELL_KNOWN_ANY.equals(entry.getKey().getFullName()) && CollectionUtilities.isNotEmpty(descriptors)) {
+                        final DynamicMessageWrapper any = new DynamicMessageWrapper(field, null);
+                        final String typeUrl = (String) any.get("type_url");
+                        final int index = typeUrl.lastIndexOf('/');
+                        final String fullName = typeUrl.substring(index + 1);
+                        Descriptors.Descriptor typeDescriptor = null;
+                        for (Descriptors.Descriptor descriptor : descriptors) {
+                            if (fullName.equals(descriptor.getFullName())) {
+                                typeDescriptor = descriptor;
+                                break;
+                            }
+                        }
+                        if (Objects.nonNull(typeDescriptor)) {
+                            try {
+                                final DynamicMessage message = DynamicMessage.parseFrom(typeDescriptor, ((ByteString) entry.getValue()));
+                                return new DynamicMessageWrapper(message, null);
+                            } catch (InvalidProtocolBufferException e) {
+                                // ignore
+                            }
+                        }
+                        return Any.newBuilder().setTypeUrl(typeUrl).setValue((ByteString) entry.getValue()).build();
+
+                    }
+                }
+            }
+            return new DynamicMessageWrapper(field, descriptors);
+        }
+        return value;
     }
 
 }
