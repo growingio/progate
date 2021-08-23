@@ -3,7 +3,6 @@ include(
     "bootstrap",
     "api",
     "core",
-    "protocol",
     "graphql",
     "restful",
     "utilities",
