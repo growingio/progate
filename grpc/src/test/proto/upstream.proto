@@ -24,4 +24,5 @@ message MetadataDto {
 message AnyValueDto {
   string name = 1;
   string value = 2;
+  bool is_system = 3;
 }

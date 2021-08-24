@@ -1,6 +1,5 @@
 package io.growing.gateway.grpc.transcode;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.protobuf.Any;
 import com.google.protobuf.BoolValue;
@@ -54,14 +53,24 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
         if (anyOpt.isPresent()) {
             message = anyOpt.get();
         }
-        final ImmutableMap.Builder<String, Object> valuesBuilder = ImmutableMap.builder();
+        this.values = new HashMap<>();
         for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : message.getAllFields().entrySet()) {
-            valuesBuilder.put(entry.getKey().getName(), entry.getValue());
+            values.put(entry.getKey().getName(), entry.getValue());
             if (!entry.getKey().getName().equals(entry.getKey().getJsonName())) {
-                valuesBuilder.put(entry.getKey().getJsonName(), entry.getValue());
+                values.put(entry.getKey().getJsonName(), entry.getValue());
             }
         }
-        this.values = valuesBuilder.build();
+        message.getDescriptorForType().getFields().forEach(field -> {
+            if (field.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE) {
+                final Object defaultValue = field.getDefaultValue();
+                if (!values.containsKey(field.getName())) {
+                    values.put(field.getName(), defaultValue);
+                }
+                if (!values.containsKey(field.getJsonName())) {
+                    values.put(field.getJsonName(), defaultValue);
+                }
+            }
+        });
         this.descriptors = descriptors;
     }
 

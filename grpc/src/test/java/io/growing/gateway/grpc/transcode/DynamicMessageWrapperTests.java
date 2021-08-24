@@ -50,6 +50,7 @@ public class DynamicMessageWrapperTests {
         final DynamicMessageWrapper wrapper = new DynamicMessageWrapper(dynamicMessage, descriptors);
         Assertions.assertEquals("type", wrapper.get("name"));
         Assertions.assertEquals("json", wrapper.get("value"));
+        Assertions.assertEquals(false, wrapper.get("isSystem"));
     }
 
 }
