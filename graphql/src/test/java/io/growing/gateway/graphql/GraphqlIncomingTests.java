@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author AI
  */
-public class GraphqlIncomingHandlerTests {
+public class GraphqlIncomingTests {
 
     @Test
     public void test() {

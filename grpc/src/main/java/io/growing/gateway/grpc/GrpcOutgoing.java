@@ -7,7 +7,7 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
-import io.growing.gateway.api.OutgoingHandler;
+import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.api.Upstream;
 import io.growing.gateway.api.UpstreamNode;
 import io.growing.gateway.context.RequestContext;
@@ -31,7 +31,7 @@ import java.util.concurrent.CompletionStage;
 /**
  * @author AI
  */
-public class GrpcOutgoingHandler implements OutgoingHandler {
+public class GrpcOutgoing implements Outgoing {
 
     private final ServiceModuleFinder finder = new ServiceModuleFinder();
     private final LoadingCache<Upstream, ServiceResolver> resolvers = Caffeine.newBuilder().build(this::createServiceResolver);

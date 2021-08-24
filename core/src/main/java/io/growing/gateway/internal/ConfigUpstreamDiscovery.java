@@ -4,7 +4,10 @@ import com.google.common.io.Files;
 import io.growing.gateway.api.Upstream;
 import io.growing.gateway.config.UpstreamConfig;
 import io.growing.gateway.discovery.UpstreamDiscovery;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.representer.Representer;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,10 +28,12 @@ public class ConfigUpstreamDiscovery implements UpstreamDiscovery {
 
     @Override
     public List<Upstream> discover() {
-        final Yaml yaml = new Yaml();
+        final Representer representer = new Representer();
+        representer.getPropertyUtils().setSkipMissingProperties(true);
+        final Yaml yaml = new Yaml(new Constructor(AppConfig.class), representer);
         try {
             BufferedReader reader = Files.newReader(new File(configPath), StandardCharsets.UTF_8);
-            final AppConfig config = yaml.loadAs(reader, AppConfig.class);
+            final AppConfig config = yaml.load(reader);
             return config.upstreams.stream().map(UpstreamConfig::toUpstream).collect(Collectors.toList());
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e.getLocalizedMessage(), e);

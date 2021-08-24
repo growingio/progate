@@ -10,7 +10,7 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
-import io.growing.gateway.api.OutgoingHandler;
+import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.api.Upstream;
 import io.growing.gateway.graphql.fetcher.NotFoundFetcher;
 import io.growing.gateway.graphql.fetcher.OutgoingDataFetcher;
@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 public class GraphqlBuilder {
 
     private List<Upstream> upstreams;
-    private Set<OutgoingHandler> outgoings;
+    private Set<Outgoing> outgoings;
     private final GraphqlSchemaParser parser = new GraphqlSchemaParser();
 
     public static GraphqlBuilder newBuilder() {
@@ -42,18 +42,18 @@ public class GraphqlBuilder {
         return this;
     }
 
-    public GraphqlBuilder outgoings(final Set<OutgoingHandler> outgoings) {
+    public GraphqlBuilder outgoings(final Set<Outgoing> outgoings) {
         this.outgoings = outgoings;
         return this;
     }
 
     public GraphQL build() {
         final RuntimeWiring.Builder runtimeWiringBuilder = RuntimeWiring.newRuntimeWiring();
-        final Map<String, OutgoingHandler> handlers = new HashMap<>(outgoings.size());
+        final Map<String, Outgoing> handlers = new HashMap<>(outgoings.size());
         outgoings.forEach(handler -> handlers.put(handler.protocol(), handler));
         final List<ModuleScheme> schemes = new LinkedList<>();
         upstreams.forEach(upstream -> {
-            final OutgoingHandler handler = handlers.get(upstream.getProtocol());
+            final Outgoing handler = handlers.get(upstream.getProtocol());
             final ModuleScheme module = handler.load(upstream);
             bindDataFetcher(runtimeWiringBuilder, module, upstream, handlers);
             schemes.add(module);
@@ -66,7 +66,7 @@ public class GraphqlBuilder {
     }
 
     private void bindDataFetcher(final RuntimeWiring.Builder register, final ModuleScheme module,
-                                 final Upstream upstream, final Map<String, OutgoingHandler> handlers) {
+                                 final Upstream upstream, final Map<String, Outgoing> handlers) {
         final TypeDefinitionRegistry registry = parser.parse(module);
         final Set<String> protocols = handlers.keySet();
         final Consumer<String> bind = (final String type) -> {
@@ -81,7 +81,7 @@ public class GraphqlBuilder {
                     if (endpointDirectiveOpt.isPresent()) {
                         final Directive endpointDirective = endpointDirectiveOpt.get();
                         final String endpoint = ((StringValue) endpointDirective.getArgument("endpoint").getValue()).getValue();
-                        final OutgoingHandler handler = handlers.get(endpointDirective.getName());
+                        final Outgoing handler = handlers.get(endpointDirective.getName());
                         final DataFetcher<CompletionStage<?>> fetcher = new OutgoingDataFetcher(endpoint, upstream, handler);
                         register.type(type, builder -> builder.dataFetcher(field.getName(), fetcher));
                     } else {

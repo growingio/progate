@@ -8,12 +8,12 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
-import io.growing.gateway.api.IncomingHandler;
-import io.growing.gateway.api.OutgoingHandler;
 import io.growing.gateway.api.Upstream;
 import io.growing.gateway.graphql.idl.GraphqlBuilder;
 import io.growing.gateway.graphql.request.GraphqlRelayRequest;
 import io.growing.gateway.http.HttpApi;
+import io.growing.gateway.pipeline.Incoming;
+import io.growing.gateway.pipeline.Outgoing;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
@@ -31,14 +31,14 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * @author AI
  */
-public class GraphqlIncomingHandler implements IncomingHandler {
+public class GraphqlIncoming implements Incoming {
 
     private final String contentType = "application/json;charset=utf-8";
     private final AtomicReference<GraphQL> graphQLReference = new AtomicReference<>();
-    private final Logger logger = LoggerFactory.getLogger(GraphqlIncomingHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(GraphqlIncoming.class);
 
     @Override
-    public void reload(final List<Upstream> upstreams, final Set<OutgoingHandler> outgoings) {
+    public void reload(final List<Upstream> upstreams, final Set<Outgoing> outgoings) {
         final GraphqlBuilder builder = GraphqlBuilder.newBuilder();
         builder.outgoings(outgoings).upstreams(upstreams);
         graphQLReference.set(builder.build());
@@ -54,14 +54,19 @@ public class GraphqlIncomingHandler implements IncomingHandler {
 
     @Override
     public void handle(HttpServerRequest request) {
+        final GraphQL graphql = graphQLReference.get();
+        final Gson gson = new Gson();
+        if (Objects.isNull(graphql)) {
+            endForError(request.response(), new RuntimeException("Bad geteway"), gson);
+            return;
+        }
         request.body(ar -> {
-            final Gson gson = new Gson();
             if (ar.succeeded()) {
                 //
                 final GraphqlRelayRequest graphqlRequest = gson.fromJson(ar.result().toString(StandardCharsets.UTF_8), GraphqlRelayRequest.class);
                 final GraphQLContext context = GraphQLContext.newContext().build();
                 final ExecutionInput execution = ExecutionInput.newExecutionInput(graphqlRequest.getQuery()).localContext(context).build();
-                final CompletableFuture<ExecutionResult> future = graphQLReference.get().executeAsync(execution);
+                final CompletableFuture<ExecutionResult> future = graphql.executeAsync(execution);
                 //
                 future.whenComplete((r, t) -> {
                     if (Objects.nonNull(t)) {

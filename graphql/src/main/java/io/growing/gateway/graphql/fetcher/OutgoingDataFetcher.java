@@ -2,7 +2,7 @@ package io.growing.gateway.graphql.fetcher;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
-import io.growing.gateway.api.OutgoingHandler;
+import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.api.Upstream;
 import io.growing.gateway.context.RequestContext;
 
@@ -14,9 +14,9 @@ import java.util.concurrent.CompletionStage;
 public class OutgoingDataFetcher implements DataFetcher<CompletionStage<?>> {
     private final String endpoint;
     private final Upstream upstream;
-    private final OutgoingHandler outgoing;
+    private final Outgoing outgoing;
 
-    public OutgoingDataFetcher(String endpoint, Upstream upstream, OutgoingHandler outgoing) {
+    public OutgoingDataFetcher(String endpoint, Upstream upstream, Outgoing outgoing) {
         this.endpoint = endpoint;
         this.upstream = upstream;
         this.outgoing = outgoing;

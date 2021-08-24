@@ -1,13 +1,14 @@
 package io.growing.gateway.app;
 
 import com.google.common.collect.Sets;
-import io.growing.gateway.api.OutgoingHandler;
 import io.growing.gateway.api.Upstream;
 import io.growing.gateway.discovery.UpstreamDiscovery;
-import io.growing.gateway.graphql.GraphqlIncomingHandler;
-import io.growing.gateway.grpc.GrpcOutgoingHandler;
+import io.growing.gateway.graphql.GraphqlIncoming;
+import io.growing.gateway.grpc.GrpcOutgoing;
 import io.growing.gateway.internal.ConfigUpstreamDiscovery;
+import io.growing.gateway.pipeline.Outgoing;
 import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 import org.apache.commons.lang3.SystemUtils;
@@ -34,21 +35,19 @@ public class GraphQLGatewayBootstrap {
 
         final UpstreamDiscovery discovery = new ConfigUpstreamDiscovery(configPath);
         final List<Upstream> upstreams = discovery.discover();
-        final GraphqlIncomingHandler incoming = new GraphqlIncomingHandler();
+        final GraphqlIncoming incoming = new GraphqlIncoming();
 
         incoming.apis().forEach(api -> {
             api.getMethods().forEach(method -> {
                 router.route(method, api.getPath()).handler(event -> incoming.handle(event.request()));
             });
         });
-        final Set<OutgoingHandler> outgoings = Sets.newHashSet(new GrpcOutgoingHandler());
+        final Set<Outgoing> outgoings = Sets.newHashSet(new GrpcOutgoing());
 
         router.get("/reload").handler(ctx -> {
             incoming.reload(upstreams, outgoings);
             ctx.response().end();
         });
-
-        incoming.reload(upstreams, outgoings);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             final CountDownLatch counter = new CountDownLatch(1);
@@ -66,6 +65,23 @@ public class GraphQLGatewayBootstrap {
         }));
 
         server.requestHandler(router).listen(8080).onSuccess(handler -> logger.info("Server listening on 8080"));
+
+        final EventBus eventBus = vertx.eventBus();
+
+        vertx.setPeriodic(1000, id -> {
+            try {
+                incoming.reload(upstreams, outgoings);
+                eventBus.publish("timers.cancel", id);
+            } catch (Exception e) {
+                logger.error(e.getLocalizedMessage(), e);
+            }
+        });
+
+        eventBus.consumer("timers.cancel", message -> {
+            long id = (long) message.body();
+            vertx.cancelTimer(id);
+        });
+
     }
 
     private static String getApplicationConfigFile() {
