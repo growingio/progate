@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,7 +48,12 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
     private final Map<String, Object> values;
     private final Set<Descriptors.Descriptor> descriptors;
 
-    public DynamicMessageWrapper(DynamicMessage message, Set<Descriptors.Descriptor> descriptors) {
+    public DynamicMessageWrapper(DynamicMessage origin, Set<Descriptors.Descriptor> descriptors) {
+        final Optional<DynamicMessage> anyOpt = extractAny(origin, descriptors);
+        DynamicMessage message = origin;
+        if (anyOpt.isPresent()) {
+            message = anyOpt.get();
+        }
         final ImmutableMap.Builder<String, Object> valuesBuilder = ImmutableMap.builder();
         for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : message.getAllFields().entrySet()) {
             valuesBuilder.put(entry.getKey().getName(), entry.getValue());
@@ -92,36 +98,44 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
                         return entry.getValue();
                     }
                 }
-            } else if (field.getAllFields().size() == 2) {
-                for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : field.getAllFields().entrySet()) {
-                    if (WELL_KNOWN_ANY.equals(entry.getKey().getFullName()) && CollectionUtilities.isNotEmpty(descriptors)) {
-                        final DynamicMessageWrapper any = new DynamicMessageWrapper(field, null);
-                        final String typeUrl = (String) any.get("type_url");
-                        final int index = typeUrl.lastIndexOf('/');
-                        final String fullName = typeUrl.substring(index + 1);
-                        Descriptors.Descriptor typeDescriptor = null;
-                        for (Descriptors.Descriptor descriptor : descriptors) {
-                            if (fullName.equals(descriptor.getFullName())) {
-                                typeDescriptor = descriptor;
-                                break;
-                            }
-                        }
-                        if (Objects.nonNull(typeDescriptor)) {
-                            try {
-                                final DynamicMessage message = DynamicMessage.parseFrom(typeDescriptor, ((ByteString) entry.getValue()));
-                                return new DynamicMessageWrapper(message, null);
-                            } catch (InvalidProtocolBufferException e) {
-                                // ignore
-                            }
-                        }
-                        return Any.newBuilder().setTypeUrl(typeUrl).setValue((ByteString) entry.getValue()).build();
-
-                    }
+            } else {
+                final Optional<DynamicMessage> anyOpt = extractAny(field, descriptors);
+                if (anyOpt.isPresent()) {
+                    return new DynamicMessageWrapper(anyOpt.get(), descriptors);
                 }
             }
             return new DynamicMessageWrapper(field, descriptors);
         }
         return value;
+    }
+
+    private Optional<DynamicMessage> extractAny(final DynamicMessage field, final Set<Descriptors.Descriptor> descriptors) {
+        if (field.getAllFields().size() == 2) {
+            for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : field.getAllFields().entrySet()) {
+                if (WELL_KNOWN_ANY.equals(entry.getKey().getFullName()) && CollectionUtilities.isNotEmpty(descriptors)) {
+                    final DynamicMessageWrapper any = new DynamicMessageWrapper(field, null);
+                    final String typeUrl = (String) any.get("type_url");
+                    final int index = typeUrl.lastIndexOf('/');
+                    final String fullName = typeUrl.substring(index + 1);
+                    Descriptors.Descriptor typeDescriptor = null;
+                    for (Descriptors.Descriptor descriptor : descriptors) {
+                        if (fullName.equals(descriptor.getFullName())) {
+                            typeDescriptor = descriptor;
+                            break;
+                        }
+                    }
+                    if (Objects.nonNull(typeDescriptor)) {
+                        try {
+                            final DynamicMessage message = DynamicMessage.parseFrom(typeDescriptor, ((ByteString) entry.getValue()));
+                            return Optional.of(message);
+                        } catch (InvalidProtocolBufferException e) {
+                            // ignore
+                        }
+                    }
+                }
+            }
+        }
+        return Optional.empty();
     }
 
 }

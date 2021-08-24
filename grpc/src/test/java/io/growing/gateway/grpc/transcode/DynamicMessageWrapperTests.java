@@ -42,8 +42,14 @@ public class DynamicMessageWrapperTests {
     }
 
     @Test
-    public void testSer() {
-
+    public void testAny() throws InvalidProtocolBufferException {
+        final Set<Descriptors.Descriptor> descriptors = Sets.newHashSet(AnyValueDto.getDescriptor());
+        final AnyValueDto value = AnyValueDto.newBuilder().setName("type").setValue("json").build();
+        final Any any = Any.pack(value);
+        final DynamicMessage dynamicMessage = DynamicMessage.parseFrom(Any.getDescriptor(), any.toByteArray());
+        final DynamicMessageWrapper wrapper = new DynamicMessageWrapper(dynamicMessage, descriptors);
+        Assertions.assertEquals("type", wrapper.get("name"));
+        Assertions.assertEquals("json", wrapper.get("value"));
     }
 
 }
