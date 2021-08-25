@@ -1,4 +1,4 @@
-package io.growing.gateway.module;
+package io.growing.gateway.meta;
 
 public class EndpointDefinition {
     private final String name;

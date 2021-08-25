@@ -6,5 +6,4 @@ package io.growing.gateway;
 public class OutgoingHandlerFactory {
 
 
-
 }

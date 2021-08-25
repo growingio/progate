@@ -5,8 +5,8 @@ import com.google.common.io.CharSource;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import io.growing.gateway.graphql.function.TriConsumer;
-import io.growing.gateway.module.EndpointDefinition;
-import io.growing.gateway.module.ModuleScheme;
+import io.growing.gateway.meta.EndpointDefinition;
+import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.utilities.CollectionUtilities;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -24,12 +24,12 @@ public class GraphqlSchemaParser {
     private final Pattern mutationPattern = Pattern.compile("type +\\w*Mutation +\\{ ?");
     private final Logger logger = LoggerFactory.getLogger(GraphqlSchemaParser.class);
 
-    public TypeDefinitionRegistry parse(final List<ModuleScheme> schemes) {
-        return parse((schemas, queries, mutations) -> schemes.forEach(scheme -> appendGraphqlDefinition(scheme, schemas, queries, mutations)));
+    public TypeDefinitionRegistry parse(final List<ServiceMetadata> services) {
+        return parse((schemas, queries, mutations) -> services.forEach(service -> appendGraphqlDefinition(service, schemas, queries, mutations)));
     }
 
-    public TypeDefinitionRegistry parse(final ModuleScheme scheme) {
-        return parse((schemas, queries, mutations) -> appendGraphqlDefinition(scheme, schemas, queries, mutations));
+    public TypeDefinitionRegistry parse(final ServiceMetadata service) {
+        return parse((schemas, queries, mutations) -> appendGraphqlDefinition(service, schemas, queries, mutations));
     }
 
     private TypeDefinitionRegistry parse(final TriConsumer<StringBuilder, StringBuilder, StringBuilder> function) {
@@ -51,10 +51,10 @@ public class GraphqlSchemaParser {
         return results.toString();
     }
 
-    private void appendGraphqlDefinition(final ModuleScheme scheme, final StringBuilder schemas, final StringBuilder queries, final StringBuilder mutations) {
-        if (CollectionUtilities.isNotEmpty(scheme.graphqlDefinitions())) {
+    private void appendGraphqlDefinition(final ServiceMetadata service, final StringBuilder schemas, final StringBuilder queries, final StringBuilder mutations) {
+        if (CollectionUtilities.isNotEmpty(service.graphqlDefinitions())) {
             try {
-                for (EndpointDefinition def : scheme.graphqlDefinitions()) {
+                for (EndpointDefinition def : service.graphqlDefinitions()) {
                     final CharSource source = ByteSource.wrap(def.getContent()).asCharSource(StandardCharsets.UTF_8);
                     if (def.getName().contains(".schema.")) {
                         schemas.append(source.read());
@@ -89,7 +89,7 @@ public class GraphqlSchemaParser {
 
                 }
             } catch (IOException e) {
-                logger.warn("Cannot load endpoint definition: " + scheme.name(), e);
+                logger.warn("Cannot load endpoint definition: " + service.upstream().name(), e);
             }
         }
     }

@@ -11,7 +11,7 @@ import graphql.GraphQLContext;
 import io.growing.gateway.graphql.idl.GraphqlBuilder;
 import io.growing.gateway.graphql.request.GraphqlRelayRequest;
 import io.growing.gateway.http.HttpApi;
-import io.growing.gateway.meta.Upstream;
+import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -38,9 +38,9 @@ public class GraphqlIncoming implements Incoming {
     private final Logger logger = LoggerFactory.getLogger(GraphqlIncoming.class);
 
     @Override
-    public void reload(final List<Upstream> upstreams, final Set<Outgoing> outgoings) {
+    public void reload(final List<ServiceMetadata> services, final Set<Outgoing> outgoings) {
         final GraphqlBuilder builder = GraphqlBuilder.newBuilder();
-        builder.outgoings(outgoings).upstreams(upstreams);
+        builder.outgoings(outgoings).services(services);
         graphQLReference.set(builder.build());
     }
 

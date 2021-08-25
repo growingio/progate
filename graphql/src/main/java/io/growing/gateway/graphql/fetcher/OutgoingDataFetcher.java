@@ -2,9 +2,9 @@ package io.growing.gateway.graphql.fetcher;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
-import io.growing.gateway.pipeline.Outgoing;
-import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.context.RequestContext;
+import io.growing.gateway.meta.Upstream;
+import io.growing.gateway.pipeline.Outgoing;
 
 import java.util.concurrent.CompletionStage;
 

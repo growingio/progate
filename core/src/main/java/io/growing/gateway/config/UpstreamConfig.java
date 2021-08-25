@@ -1,14 +1,18 @@
 package io.growing.gateway.config;
 
+import io.growing.gateway.cluster.LoadBalance;
 import io.growing.gateway.cluster.RoundRobin;
 import io.growing.gateway.meta.ServerNode;
 import io.growing.gateway.meta.Upstream;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class UpstreamConfig {
 
     private String name;
     private String protocol;
-    private Node[] nodes;
+    private List<Node> nodes;
     private String balancer;
 
     public String getName() {
@@ -27,12 +31,20 @@ public class UpstreamConfig {
         this.protocol = protocol;
     }
 
-    public Node[] getNodes() {
+    public List<Node> getNodes() {
         return nodes;
     }
 
-    public void setNodes(Node[] nodes) {
+    public void setNodes(List<Node> nodes) {
         this.nodes = nodes;
+    }
+
+    public String getBalancer() {
+        return balancer;
+    }
+
+    public void setBalancer(String balancer) {
+        this.balancer = balancer;
     }
 
     public static class Node {
@@ -64,27 +76,60 @@ public class UpstreamConfig {
             this.weight = weight;
         }
 
-        ServerNode toUpstreamNode() {
-            final ServerNode node = new ServerNode();
-            node.setHost(host);
-            node.setPort(port);
-            node.setWeight(weight);
-            return node;
+        ServerNode toServerNode() {
+            return new ServerNode() {
+                @Override
+                public String id() {
+                    return host + ":" + port;
+                }
+
+                @Override
+                public String host() {
+                    return host;
+                }
+
+                @Override
+                public int port() {
+                    return port;
+                }
+
+                @Override
+                public int weight() {
+                    return weight;
+                }
+
+                @Override
+                public boolean isAvailable() {
+                    return true;
+                }
+            };
         }
     }
 
     public Upstream toUpstream() {
-        final ServerNode[] serverNodes = new ServerNode[this.nodes.length];
-        for (int i = 0; i < this.nodes.length; i++) {
-            final UpstreamConfig.Node node = this.nodes[i];
-            serverNodes[i] = node.toUpstreamNode();
-        }
-        final Upstream upstream = new Upstream();
-        upstream.setName(name);
-        upstream.setProtocol(protocol);
-        upstream.setNodes(serverNodes);
-        upstream.setBalancer(new RoundRobin());
-        return upstream;
+        final List<ServerNode> servers = new LinkedList<>();
+        nodes.forEach(node -> servers.add(node.toServerNode()));
+        return new Upstream() {
+            @Override
+            public String name() {
+                return name;
+            }
+
+            @Override
+            public String protocol() {
+                return protocol;
+            }
+
+            @Override
+            public List<ServerNode> nodes() {
+                return servers;
+            }
+
+            @Override
+            public LoadBalance balancer() {
+                return new RoundRobin();
+            }
+        };
     }
 
 }

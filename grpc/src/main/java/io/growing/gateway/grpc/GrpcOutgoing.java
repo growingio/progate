@@ -7,19 +7,16 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
-import io.growing.gateway.pipeline.Outgoing;
-import io.growing.gateway.meta.Upstream;
-import io.growing.gateway.meta.ServerNode;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.grpc.finder.ServiceModuleFinder;
 import io.growing.gateway.grpc.observer.CollectionObserver;
 import io.growing.gateway.grpc.observer.UnaryObserver;
 import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
-import io.growing.gateway.module.ModuleScheme;
+import io.growing.gateway.meta.Upstream;
+import io.growing.gateway.pipeline.Outgoing;
 import io.grpc.CallOptions;
 import io.grpc.ClientCall;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.MethodDescriptor;
 import io.grpc.stub.ClientCalls;
 
@@ -42,18 +39,11 @@ public class GrpcOutgoing implements Outgoing {
     }
 
     @Override
-    public ModuleScheme load(Upstream upstream) {
-        final ManagedChannel channel = finder.createChannel(upstream);
-        return finder.loadScheme(channel);
-    }
-
-    @Override
     public CompletionStage<?> handle(Upstream upstream, String endpoint, RequestContext request) {
         final ServiceResolver resolver = resolvers.get(upstream);
         final Descriptors.MethodDescriptor methodDescriptor = resolver.getMethodDescriptor(endpoint);
         final MethodDescriptor<DynamicMessage, DynamicMessage> grpcMethodDescriptor = resolver.resolveMethod(methodDescriptor);
-        final ServerNode node = upstream.getNodes()[0];
-        final ManagedChannel channel = ManagedChannelBuilder.forAddress(node.getHost(), node.getPort()).usePlaintext().build();
+        final ManagedChannel channel = ChannelFactory.get(upstream, request);
         final ClientCall<DynamicMessage, DynamicMessage> call = channel.newCall(grpcMethodDescriptor, CallOptions.DEFAULT);
         DynamicMessage message;
         try {
@@ -86,7 +76,7 @@ public class GrpcOutgoing implements Outgoing {
     }
 
     private ServiceResolver createServiceResolver(final Upstream upstream) {
-        final ManagedChannel channel = finder.createChannel(upstream);
+        final ManagedChannel channel = ChannelFactory.get(upstream, null);
         return finder.createServiceResolver(channel);
     }
 

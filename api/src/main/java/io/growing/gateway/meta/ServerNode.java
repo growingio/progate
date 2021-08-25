@@ -3,32 +3,16 @@ package io.growing.gateway.meta;
 /**
  * @author AI
  */
-public class ServerNode {
-    private String host;
-    private int port;
-    private int weight;
+public interface ServerNode {
 
-    public String getHost() {
-        return host;
-    }
+    String id();
 
-    public void setHost(String host) {
-        this.host = host;
-    }
+    String host();
 
-    public int getPort() {
-        return port;
-    }
+    int port();
 
-    public void setPort(int port) {
-        this.port = port;
-    }
+    int weight();
 
-    public int getWeight() {
-        return weight;
-    }
+    boolean isAvailable();
 
-    public void setWeight(int weight) {
-        this.weight = weight;
-    }
 }

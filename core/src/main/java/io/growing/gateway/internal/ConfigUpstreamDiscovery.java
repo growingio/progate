@@ -1,9 +1,9 @@
 package io.growing.gateway.internal;
 
 import com.google.common.io.Files;
-import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.config.UpstreamConfig;
 import io.growing.gateway.discovery.UpstreamDiscovery;
+import io.growing.gateway.meta.Upstream;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.representer.Representer;

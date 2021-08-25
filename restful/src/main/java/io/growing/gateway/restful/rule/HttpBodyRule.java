@@ -17,7 +17,7 @@ public abstract class HttpBodyRule {
     }
 
     public void AddTranscoder(String jsonPath, Transcoder transcoder) {
-        if(Objects.isNull(transcoders)) {
+        if (Objects.isNull(transcoders)) {
             transcoders = new ArrayList<>();
         }
         transcoders.add(new JsonPathTranscoder(jsonPath, transcoder));
@@ -25,7 +25,7 @@ public abstract class HttpBodyRule {
 
     public Object transcodeBody(Object body) {
         DocumentContext result = JsonPath.parse(body);
-        for (JsonPathTranscoder transcoder: transcoders) {
+        for (JsonPathTranscoder transcoder : transcoders) {
             MapFunction mapFunction = (currentValue, configuration) -> transcoder.getTranscoder().transcode(currentValue);
             result = result.map(transcoder.getJsonPath(), mapFunction);
         }

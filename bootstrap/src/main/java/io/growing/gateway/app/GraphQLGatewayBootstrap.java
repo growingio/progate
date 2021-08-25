@@ -1,11 +1,14 @@
 package io.growing.gateway.app;
 
 import com.google.common.collect.Sets;
-import io.growing.gateway.meta.Upstream;
+import io.growing.gateway.discovery.ServiceDiscovery;
 import io.growing.gateway.discovery.UpstreamDiscovery;
 import io.growing.gateway.graphql.GraphqlIncoming;
 import io.growing.gateway.grpc.GrpcOutgoing;
+import io.growing.gateway.grpc.discovery.GrpcReflectionServiceDiscovery;
 import io.growing.gateway.internal.ConfigUpstreamDiscovery;
+import io.growing.gateway.meta.ServiceMetadata;
+import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Outgoing;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
@@ -16,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Paths;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -37,6 +41,7 @@ public class GraphQLGatewayBootstrap {
         final List<Upstream> upstreams = discovery.discover();
         final GraphqlIncoming incoming = new GraphqlIncoming();
 
+
         incoming.apis().forEach(api -> {
             api.getMethods().forEach(method -> {
                 router.route(method, api.getPath()).handler(event -> incoming.handle(event.request()));
@@ -45,7 +50,7 @@ public class GraphQLGatewayBootstrap {
         final Set<Outgoing> outgoings = Sets.newHashSet(new GrpcOutgoing());
 
         router.get("/reload").handler(ctx -> {
-            incoming.reload(upstreams, outgoings);
+            incoming.reload(loadServices(upstreams), outgoings);
             ctx.response().end();
         });
 
@@ -70,7 +75,7 @@ public class GraphQLGatewayBootstrap {
 
         vertx.setPeriodic(1000, id -> {
             try {
-                incoming.reload(upstreams, outgoings);
+                incoming.reload(loadServices(upstreams), outgoings);
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
                 logger.error(e.getLocalizedMessage(), e);
@@ -86,6 +91,15 @@ public class GraphQLGatewayBootstrap {
 
     private static String getApplicationConfigFile() {
         return Paths.get(SystemUtils.getUserDir().getAbsolutePath(), "conf", "gateway.yaml").toAbsolutePath().toString();
+    }
+
+    private static List<ServiceMetadata> loadServices(final List<Upstream> upstreams) {
+        final ServiceDiscovery discovery = new GrpcReflectionServiceDiscovery();
+        final List<ServiceMetadata> services = new LinkedList<>();
+        upstreams.forEach(upstream -> {
+            services.add(discovery.discover(upstream));
+        });
+        return services;
     }
 
 }

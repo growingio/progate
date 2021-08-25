@@ -6,7 +6,6 @@ import io.growing.gateway.FileDescriptorDto;
 import io.growing.gateway.SchemeDto;
 import io.growing.gateway.SchemeServiceGrpc;
 import io.growing.gateway.grpc.ServiceResolver;
-import io.growing.gateway.module.ModuleScheme;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
@@ -49,9 +48,9 @@ public class ServiceModuleFinderTests {
     @Test
     public void testLoadScheme() {
         final ServiceModuleFinder finder = new ServiceModuleFinder();
-        final ModuleScheme scheme = finder.loadScheme(InProcessChannelBuilder.forName(serverName).build());
-        Assertions.assertEquals(1, scheme.graphqlDefinitions().size());
-        Assertions.assertEquals(GRAPHQL_NAME, scheme.graphqlDefinitions().get(0).getName());
+        final SchemeDto scheme = finder.loadScheme(InProcessChannelBuilder.forName(serverName).build());
+        Assertions.assertEquals(1, scheme.getGraphqlDefinitionsCount());
+        Assertions.assertEquals(GRAPHQL_NAME, scheme.getGraphqlDefinitions(0).getName());
     }
 
     @Test

@@ -6,8 +6,9 @@ import graphql.language.FieldDefinition;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.TypeDefinition;
 import graphql.schema.idl.TypeDefinitionRegistry;
-import io.growing.gateway.module.EndpointDefinition;
-import io.growing.gateway.module.ModuleScheme;
+import io.growing.gateway.meta.EndpointDefinition;
+import io.growing.gateway.meta.ServiceMetadata;
+import io.growing.gateway.meta.Upstream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -17,9 +18,9 @@ import java.util.Set;
 
 public class GraphqlSchemaParserTests {
 
-    private final ModuleScheme scheme = new ModuleScheme() {
+    private final ServiceMetadata service = new ServiceMetadata() {
         @Override
-        public String name() {
+        public Upstream upstream() {
             return null;
         }
 
@@ -45,16 +46,16 @@ public class GraphqlSchemaParserTests {
     @Test
     public void test() {
         final GraphqlSchemaParser parser = new GraphqlSchemaParser();
-        final TypeDefinitionRegistry registry = parser.parse(scheme);
+        final TypeDefinitionRegistry registry = parser.parse(service);
         assertResult(registry);
     }
 
     @Test
     public void testParseSchemes() {
         final GraphqlSchemaParser parser = new GraphqlSchemaParser();
-        final List<ModuleScheme> schemes = Lists.newArrayList(scheme, new ModuleScheme() {
+        final List<ServiceMetadata> services = Lists.newArrayList(service, new ServiceMetadata() {
             @Override
-            public String name() {
+            public Upstream upstream() {
                 return null;
             }
 
@@ -68,7 +69,7 @@ public class GraphqlSchemaParserTests {
                 return null;
             }
         });
-        final TypeDefinitionRegistry registry = parser.parse(schemes);
+        final TypeDefinitionRegistry registry = parser.parse(services);
         assertResult(registry);
     }
 

@@ -3,22 +3,25 @@ package io.growing.gateway.grpc.dto;
 import com.google.common.collect.ImmutableList;
 import io.growing.gateway.FileDescriptorDto;
 import io.growing.gateway.SchemeDto;
-import io.growing.gateway.module.EndpointDefinition;
-import io.growing.gateway.module.ModuleScheme;
+import io.growing.gateway.meta.EndpointDefinition;
+import io.growing.gateway.meta.ServiceMetadata;
+import io.growing.gateway.meta.Upstream;
 
 import java.util.Collections;
 import java.util.List;
 
-public class GrpcModuleScheme implements ModuleScheme {
+public class GrpcServiceMetadata implements ServiceMetadata {
 
+    private final Upstream upstream;
     private final List<EndpointDefinition> graphqlSet;
     private final List<EndpointDefinition> restfulSet;
 
-    public static GrpcModuleScheme form(final SchemeDto scheme) {
-        return new GrpcModuleScheme(scheme);
+    public static GrpcServiceMetadata form(final SchemeDto scheme, final Upstream upstream) {
+        return new GrpcServiceMetadata(scheme, upstream);
     }
 
-    private GrpcModuleScheme(final SchemeDto scheme) {
+    private GrpcServiceMetadata(final SchemeDto scheme, final Upstream upstream) {
+        this.upstream = upstream;
         if (scheme.getGraphqlDefinitionsCount() > 0) {
             final ImmutableList.Builder<EndpointDefinition> builder = new ImmutableList.Builder<>();
             scheme.getGraphqlDefinitionsList().forEach(file -> builder.add(convert(file)));
@@ -36,8 +39,8 @@ public class GrpcModuleScheme implements ModuleScheme {
     }
 
     @Override
-    public String name() {
-        return null;
+    public Upstream upstream() {
+        return upstream;
     }
 
     @Override

@@ -2,45 +2,26 @@ package io.growing.gateway.meta;
 
 import io.growing.gateway.cluster.LoadBalance;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 /**
  * @author AI
  */
-public class Upstream {
-    private String name;
-    private String protocol;
-    private ServerNode[] nodes;
-    private LoadBalance balancer;
+public interface Upstream {
+    String name();
 
-    public String getName() {
-        return name;
-    }
+    String protocol();
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    List<ServerNode> nodes();
 
-    public String getProtocol() {
-        return protocol;
-    }
+    LoadBalance balancer();
 
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
-    }
-
-    public ServerNode[] getNodes() {
-        return nodes;
-    }
-
-    public void setNodes(ServerNode[] nodes) {
-        this.nodes = nodes;
-    }
-
-    public LoadBalance getBalancer() {
-        return balancer;
-    }
-
-    public void setBalancer(LoadBalance balancer) {
-        this.balancer = balancer;
+    default List<ServerNode> getAvailableNodes() {
+        try (Stream<ServerNode> stream = nodes().stream()) {
+            return stream.filter(ServerNode::isAvailable).collect(Collectors.toList());
+        }
     }
 
 }

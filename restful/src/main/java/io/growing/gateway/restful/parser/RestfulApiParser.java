@@ -23,14 +23,14 @@ public class RestfulApiParser {
 
         Set<ApiRule> apiRules = new HashSet<>();
 
-        for (ApiRuleConfig apiRuleConfig: apiRuleConfigs.getRules()) {
+        for (ApiRuleConfig apiRuleConfig : apiRuleConfigs.getRules()) {
             HttpMethod httpMethod = apiRuleConfig.getHttpMethod();
             String path = apiRuleConfig.getPath();
             RequestRule requestRule = apiRuleConfig.getRequest().toRule(context);
             ResponseRule responseRule = apiRuleConfig.getResponse().toRule(context);
             PathParameterRule pathParameterRule = apiRuleConfig.getParameter().toRule(context);
 
-            ApiRule apiRule = new ApiRule(httpMethod, path,pathParameterRule, requestRule, responseRule);
+            ApiRule apiRule = new ApiRule(httpMethod, path, pathParameterRule, requestRule, responseRule);
             apiRules.add(apiRule);
         }
 
