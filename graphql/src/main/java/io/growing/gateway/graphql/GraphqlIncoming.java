@@ -57,7 +57,7 @@ public class GraphqlIncoming implements Incoming {
         final GraphQL graphql = graphQLReference.get();
         final Gson gson = new Gson();
         if (Objects.isNull(graphql)) {
-            endForError(request.response(), new RuntimeException("Bad geteway"), gson);
+            endForError(request.response(), HttpResponseStatus.BAD_GATEWAY, new RuntimeException("Bad getaway"), gson);
             return;
         }
         request.body(ar -> {
@@ -70,7 +70,7 @@ public class GraphqlIncoming implements Incoming {
                 //
                 future.whenComplete((r, t) -> {
                     if (Objects.nonNull(t)) {
-                        endForError(request.response(), t, gson);
+                        endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, t, gson);
                     } else {
                         HttpServerResponse response = request.response();
                         response.headers().set(HttpHeaders.CONTENT_TYPE, contentType);
@@ -79,15 +79,15 @@ public class GraphqlIncoming implements Incoming {
                     }
                 });
             } else {
-                endForError(request.response(), ar.cause(), gson);
+                endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, ar.cause(), gson);
             }
         });
     }
 
-    private void endForError(final HttpServerResponse response, final Throwable cause, final Gson gson) {
+    private void endForError(final HttpServerResponse response, final HttpResponseStatus status, final Throwable cause, final Gson gson) {
         logger.error(cause.getLocalizedMessage(), cause);
         response.headers().set(HttpHeaders.CONTENT_TYPE, contentType);
-        response.setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
+        response.setStatusCode(status.code());
         final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
         String message = cause.getLocalizedMessage();
         if (Objects.isNull(message)) {
