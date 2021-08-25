@@ -40,8 +40,7 @@ public class GraphqlIncoming implements Incoming {
     @Override
     public void reload(final List<ServiceMetadata> services, final Set<Outgoing> outgoings) {
         final GraphqlBuilder builder = GraphqlBuilder.newBuilder();
-        builder.outgoings(outgoings).services(services);
-        graphQLReference.set(builder.build());
+        graphQLReference.set(builder.outgoings(outgoings).services(services).build());
     }
 
     @Override
