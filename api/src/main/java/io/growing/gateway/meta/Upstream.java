@@ -10,6 +10,7 @@ import java.util.stream.Stream;
  * @author AI
  */
 public interface Upstream {
+
     String name();
 
     String protocol();
