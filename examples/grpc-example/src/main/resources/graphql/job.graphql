@@ -12,6 +12,7 @@ type Job {
 
 input JobInput {
     name: String!
+    description: String = "Hello"
 }
 
 type Query {
@@ -26,6 +27,6 @@ type Query {
 
 type Mutation {
 
-    createJob(projectId: Int, job: JobInput): Job! @grpc(endpoint: "growing.graphql.example.JobService/CreateJob")
+    createJob(projectId: Int = 0, job: JobInput): Job! @grpc(endpoint: "growing.graphql.example.JobService/CreateJob")
 
 }

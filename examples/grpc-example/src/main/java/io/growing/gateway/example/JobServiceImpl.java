@@ -27,7 +27,7 @@ public class JobServiceImpl extends JobServiceGrpc.JobServiceImplBase {
     @Override
     public void createJob(CreateJobRequest request, StreamObserver<JobDto> responseObserver) {
         System.out.println("invoke createJob method");
-        final JobDto job = JobDto.newBuilder().setName(request.getJob().getName()).build();
+        final JobDto job = JobDto.newBuilder().setName(request.getJob().getName()).setDescription(request.getJob().getDescription()).build();
         responseObserver.onNext(job);
         responseObserver.onCompleted();
     }
