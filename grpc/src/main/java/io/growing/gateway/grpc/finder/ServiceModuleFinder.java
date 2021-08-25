@@ -4,8 +4,8 @@ import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Empty;
 import io.growing.gateway.SchemeDto;
 import io.growing.gateway.SchemeServiceGrpc;
-import io.growing.gateway.api.Upstream;
-import io.growing.gateway.api.UpstreamNode;
+import io.growing.gateway.meta.Upstream;
+import io.growing.gateway.meta.ServerNode;
 import io.growing.gateway.grpc.ServiceResolveException;
 import io.growing.gateway.grpc.ServiceResolver;
 import io.growing.gateway.grpc.dto.GrpcModuleScheme;
@@ -46,7 +46,7 @@ public class ServiceModuleFinder {
     }
 
     public ManagedChannel createChannel(final Upstream upstream) {
-        final UpstreamNode node = upstream.getNodes()[0];
+        final ServerNode node = upstream.getNodes()[0];
         return ManagedChannelBuilder.forAddress(node.getHost(), node.getPort()).usePlaintext().build();
     }
 

@@ -1,13 +1,15 @@
 package io.growing.gateway.config;
 
-import io.growing.gateway.api.Upstream;
-import io.growing.gateway.api.UpstreamNode;
+import io.growing.gateway.cluster.RoundRobin;
+import io.growing.gateway.meta.ServerNode;
+import io.growing.gateway.meta.Upstream;
 
 public class UpstreamConfig {
 
     private String name;
     private String protocol;
     private Node[] nodes;
+    private String balancer;
 
     public String getName() {
         return name;
@@ -62,8 +64,8 @@ public class UpstreamConfig {
             this.weight = weight;
         }
 
-        UpstreamNode toUpstreamNode() {
-            final UpstreamNode node = new UpstreamNode();
+        ServerNode toUpstreamNode() {
+            final ServerNode node = new ServerNode();
             node.setHost(host);
             node.setPort(port);
             node.setWeight(weight);
@@ -72,15 +74,16 @@ public class UpstreamConfig {
     }
 
     public Upstream toUpstream() {
-        final UpstreamNode[] upstreamNodes = new UpstreamNode[this.nodes.length];
+        final ServerNode[] serverNodes = new ServerNode[this.nodes.length];
         for (int i = 0; i < this.nodes.length; i++) {
             final UpstreamConfig.Node node = this.nodes[i];
-            upstreamNodes[i] = node.toUpstreamNode();
+            serverNodes[i] = node.toUpstreamNode();
         }
         final Upstream upstream = new Upstream();
         upstream.setName(name);
         upstream.setProtocol(protocol);
-        upstream.setNodes(upstreamNodes);
+        upstream.setNodes(serverNodes);
+        upstream.setBalancer(new RoundRobin());
         return upstream;
     }
 

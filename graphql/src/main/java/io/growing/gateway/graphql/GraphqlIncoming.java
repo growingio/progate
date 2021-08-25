@@ -8,10 +8,10 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
-import io.growing.gateway.api.Upstream;
 import io.growing.gateway.graphql.idl.GraphqlBuilder;
 import io.growing.gateway.graphql.request.GraphqlRelayRequest;
 import io.growing.gateway.http.HttpApi;
+import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -84,6 +84,7 @@ public class GraphqlIncoming implements Incoming {
         });
     }
 
+    @SuppressWarnings("unchecked")
     private void endForError(final HttpServerResponse response, final HttpResponseStatus status, final Throwable cause, final Gson gson) {
         logger.error(cause.getLocalizedMessage(), cause);
         response.headers().set(HttpHeaders.CONTENT_TYPE, contentType);

@@ -2,7 +2,7 @@ package io.growing.gateway.restful;
 
 import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
-import io.growing.gateway.api.Upstream;
+import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.http.HttpApi;
 import io.vertx.core.http.HttpServerRequest;
 

@@ -1,4 +1,6 @@
-package io.growing.gateway.api;
+package io.growing.gateway.meta;
+
+import io.growing.gateway.cluster.LoadBalance;
 
 /**
  * @author AI
@@ -6,7 +8,8 @@ package io.growing.gateway.api;
 public class Upstream {
     private String name;
     private String protocol;
-    private UpstreamNode[] nodes;
+    private ServerNode[] nodes;
+    private LoadBalance balancer;
 
     public String getName() {
         return name;
@@ -24,11 +27,20 @@ public class Upstream {
         this.protocol = protocol;
     }
 
-    public UpstreamNode[] getNodes() {
+    public ServerNode[] getNodes() {
         return nodes;
     }
 
-    public void setNodes(UpstreamNode[] nodes) {
+    public void setNodes(ServerNode[] nodes) {
         this.nodes = nodes;
     }
+
+    public LoadBalance getBalancer() {
+        return balancer;
+    }
+
+    public void setBalancer(LoadBalance balancer) {
+        this.balancer = balancer;
+    }
+
 }

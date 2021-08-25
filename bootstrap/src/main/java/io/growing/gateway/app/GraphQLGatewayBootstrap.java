@@ -1,7 +1,7 @@
 package io.growing.gateway.app;
 
 import com.google.common.collect.Sets;
-import io.growing.gateway.api.Upstream;
+import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.discovery.UpstreamDiscovery;
 import io.growing.gateway.graphql.GraphqlIncoming;
 import io.growing.gateway.grpc.GrpcOutgoing;

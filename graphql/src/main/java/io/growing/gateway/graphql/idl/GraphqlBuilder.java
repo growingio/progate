@@ -11,7 +11,7 @@ import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import io.growing.gateway.pipeline.Outgoing;
-import io.growing.gateway.api.Upstream;
+import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.graphql.fetcher.NotFoundFetcher;
 import io.growing.gateway.graphql.fetcher.OutgoingDataFetcher;
 import io.growing.gateway.module.ModuleScheme;

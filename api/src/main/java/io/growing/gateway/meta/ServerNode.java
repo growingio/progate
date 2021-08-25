@@ -1,9 +1,9 @@
-package io.growing.gateway.api;
+package io.growing.gateway.meta;
 
 /**
  * @author AI
  */
-public class UpstreamNode {
+public class ServerNode {
     private String host;
     private int port;
     private int weight;

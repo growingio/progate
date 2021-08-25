@@ -1,6 +1,6 @@
 package io.growing.gateway.discovery;
 
-import io.growing.gateway.api.Upstream;
+import io.growing.gateway.meta.Upstream;
 
 import java.util.List;
 
