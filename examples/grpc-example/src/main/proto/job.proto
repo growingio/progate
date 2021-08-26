@@ -30,4 +30,5 @@ message GetJobsRequest {
 
 message CreateJobRequest {
   JobDto job = 1;
+  string type = 2;
 }
