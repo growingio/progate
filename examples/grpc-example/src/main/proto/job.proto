@@ -25,7 +25,7 @@ service JobService {
 }
 
 message GetJobsRequest {
-
+  repeated int32 ids = 1;
 }
 
 message CreateJobRequest {

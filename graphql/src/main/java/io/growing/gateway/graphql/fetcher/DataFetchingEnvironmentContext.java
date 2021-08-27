@@ -1,25 +1,44 @@
 package io.growing.gateway.graphql.fetcher;
 
+import com.google.common.collect.ImmutableMap;
 import graphql.schema.DataFetchingEnvironment;
 import io.growing.gateway.context.RequestContext;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DataFetchingEnvironmentContext implements RequestContext {
 
-    private final DataFetchingEnvironment environment;
+    private final Map<String, Object> arguments;
 
-    public DataFetchingEnvironmentContext(DataFetchingEnvironment environment) {
-        this.environment = environment;
+    public DataFetchingEnvironmentContext(DataFetchingEnvironment environment, List<String> values, List<String> mappings) {
+        final Map<String, Object> parameters = new HashMap<>(environment.getArguments());
+        values.forEach(value -> {
+            final int index = value.indexOf('=');
+            parameters.put(value.substring(0, index), value.substring(index + 1));
+        });
+        mappings.forEach(mapping -> {
+            final int index = mapping.indexOf('=');
+            final Object value = parameters.get(mapping.substring(0, index));
+            final String to = mapping.substring(index + 1);
+            final int dot = to.indexOf('.');
+            if (dot > -1) {
+                parameters.put(to.substring(0, dot), new Object[]{value});
+            } else {
+                parameters.put(to, value);
+            }
+        });
+        this.arguments = ImmutableMap.copyOf(parameters);
     }
 
     @Override
     public <T> T getArgument(String name) {
-        return environment.getArgument(name);
+        return (T) arguments.get(name);
     }
 
     @Override
     public Map<String, Object> getArguments() {
-        return environment.getArguments();
+        return arguments;
     }
 }

@@ -1,5 +1,4 @@
-directive @field(to: String!) on ARGUMENT_DEFINITION
-directive @grpc(endpoint: String!, values: [String!]) on FIELD_DEFINITION
+directive @grpc(endpoint: String!, values: [String!], mappings: [String!]) on FIELD_DEFINITION
 directive @dubbo(endpoint: String!) on FIELD_DEFINITION
 
 # dashboard.read
@@ -20,6 +19,8 @@ type Query {
 
     jobs: [Job]! @grpc(endpoint: "growing.graphql.example.JobService/GetJobs")
 
+    newJobs(id: Int!): [Job]! @grpc(endpoint: "growing.graphql.example.JobService/GetJobs", mappings: ["id=ids.add"])
+
     legacyJobs: [Job]! @dubbo(endpoint: "io.growing.dubbo.job.JobServce/GetJobs")
 
     jobNames: [String]
@@ -28,6 +29,6 @@ type Query {
 
 type Mutation {
 
-    createJob(projectId: Int = 0,id: String @field(to :"ids.add"), job: JobInput): Job! @grpc(endpoint: "growing.graphql.example.JobService/CreateJob", values: ["type=DOWNLOAD"])
+    createJob(projectId: Int = 0, id: String, job: JobInput): Job! @grpc(endpoint: "growing.graphql.example.JobService/CreateJob", values: ["type=DOWNLOAD"])
 
 }

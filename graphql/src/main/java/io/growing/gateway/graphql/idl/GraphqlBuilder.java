@@ -1,6 +1,8 @@
 package io.growing.gateway.graphql.idl;
 
 import graphql.GraphQL;
+import graphql.language.Argument;
+import graphql.language.ArrayValue;
 import graphql.language.Directive;
 import graphql.language.FieldDefinition;
 import graphql.language.ObjectTypeDefinition;
@@ -15,6 +17,8 @@ import io.growing.gateway.graphql.fetcher.OutgoingDataFetcher;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,8 +78,10 @@ public class GraphqlBuilder {
                     if (endpointDirectiveOpt.isPresent()) {
                         final Directive endpointDirective = endpointDirectiveOpt.get();
                         final String endpoint = ((StringValue) endpointDirective.getArgument("endpoint").getValue()).getValue();
+                        final List<String> values = getListStringArgument(endpointDirective, "values");
+                        final List<String> mappings = getListStringArgument(endpointDirective, "mappings");
                         final Outgoing handler = handlers.get(endpointDirective.getName());
-                        final DataFetcher<CompletionStage<?>> fetcher = new OutgoingDataFetcher(endpoint, service.upstream(), handler);
+                        final DataFetcher<CompletionStage<?>> fetcher = new OutgoingDataFetcher(endpoint, service.upstream(), handler, values, mappings);
                         register.type(type, builder -> builder.dataFetcher(field.getName(), fetcher));
                     } else {
                         register.type(type, builder -> builder.dataFetcher(field.getName(), new NotFoundFetcher()));
@@ -85,6 +91,17 @@ public class GraphqlBuilder {
         };
         bind.accept("Query");
         bind.accept("Mutation");
+    }
+
+    private List<String> getListStringArgument(final Directive directive, final String name) {
+        final Argument argument = directive.getArgument(name);
+        if (Objects.isNull(argument)) {
+            return Collections.emptyList();
+        }
+        final ArrayValue array = (ArrayValue) argument.getValue();
+        final List<String> values = new ArrayList<>(array.getValues().size());
+        array.getValues().forEach(value -> values.add(((StringValue) value).getValue()));
+        return values;
     }
 
 }

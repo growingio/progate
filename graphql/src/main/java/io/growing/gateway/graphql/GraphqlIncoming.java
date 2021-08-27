@@ -64,9 +64,11 @@ public class GraphqlIncoming implements Incoming {
                 //
                 final GraphqlRelayRequest graphqlRequest = gson.fromJson(ar.result().toString(StandardCharsets.UTF_8), GraphqlRelayRequest.class);
                 final GraphQLContext context = GraphQLContext.newContext().build();
-                final ExecutionInput execution = ExecutionInput.newExecutionInput(graphqlRequest.getQuery())
-                    .variables(graphqlRequest.getVariables()).localContext(context).build();
-                final CompletableFuture<ExecutionResult> future = graphql.executeAsync(execution);
+                final ExecutionInput.Builder builder = ExecutionInput.newExecutionInput(graphqlRequest.getQuery()).localContext(context);
+                if (Objects.nonNull(graphqlRequest.getVariables())) {
+                    builder.variables(graphqlRequest.getVariables());
+                }
+                final CompletableFuture<ExecutionResult> future = graphql.executeAsync(builder.build());
                 //
                 future.whenComplete((r, t) -> {
                     if (Objects.nonNull(t)) {
