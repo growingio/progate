@@ -7,6 +7,7 @@ import io.growing.gateway.context.RequestContext;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class DataFetchingEnvironmentContext implements RequestContext {
 
@@ -29,7 +30,13 @@ public class DataFetchingEnvironmentContext implements RequestContext {
                 parameters.put(to, value);
             }
         });
-        this.arguments = ImmutableMap.copyOf(parameters);
+        final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+        parameters.forEach((key, value) -> {
+            if (Objects.nonNull(value)) {
+                builder.put(key, value);
+            }
+        });
+        this.arguments = builder.build();
     }
 
     @Override
