@@ -1,6 +1,8 @@
 package io.growing.gateway.graphql.fetcher;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
+import com.google.protobuf.ByteString;
 import graphql.schema.DataFetchingEnvironment;
 import io.growing.gateway.context.RequestContext;
 
@@ -26,11 +28,20 @@ public class DataFetchingEnvironmentContext implements RequestContext {
             final int dot = to.indexOf('.');
             if (dot > -1) {
                 final String name = to.substring(0, dot);
-                final String flag = "any:";
-                if (to.indexOf(flag, dot) > -1) {
+                final String flagAny = "any:";
+                final String flagBytes = "bytes";
+                if (to.indexOf(flagAny, dot) > -1) {
                     final Map<String, Object> object = (Map<String, Object>) value;
-                    object.put("@type", to.substring(dot + 1).replace(flag, ""));
+                    object.put("@type", to.substring(dot + 1).replace(flagAny, ""));
                     parameters.put(name, value);
+                } else if (to.indexOf(flagBytes, dot) > -1) {
+                    String bytesString;
+                    if (value instanceof Map) {
+                        bytesString = new Gson().toJson(value);
+                    } else {
+                        bytesString = String.valueOf(value);
+                    }
+                    parameters.put(name, ByteString.copyFromUtf8(bytesString));
                 } else {
                     parameters.put(name, new Object[]{value});
                 }
