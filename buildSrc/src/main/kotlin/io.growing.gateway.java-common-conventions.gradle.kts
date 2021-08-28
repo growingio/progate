@@ -41,6 +41,7 @@ dependencies {
         implementation("org.apache.commons:commons-lang3:3.12.0")
 
         implementation("com.graphql-java:graphql-java:17.0")
+        implementation("com.graphql-java:graphql-java-extended-scalars:17.0")
 
         implementation("com.google.dagger:dagger:${ComponentVersions.dagger}")
         annotationProcessor("com.google.dagger:dagger-compiler:${ComponentVersions.dagger}")

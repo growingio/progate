@@ -1,5 +1,6 @@
 package io.growing.gateway.graphql.idl;
 
+import com.google.common.collect.Sets;
 import graphql.GraphQL;
 import graphql.language.Argument;
 import graphql.language.ArrayValue;
@@ -10,7 +11,9 @@ import graphql.language.Node;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.StringValue;
 import graphql.language.Type;
+import graphql.scalars.ExtendedScalars;
 import graphql.schema.DataFetcher;
+import graphql.schema.GraphQLScalarType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
@@ -19,6 +22,7 @@ import io.growing.gateway.graphql.fetcher.NotFoundFetcher;
 import io.growing.gateway.graphql.fetcher.OutgoingDataFetcher;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.plugin.PluginScalars;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,6 +40,8 @@ public class GraphqlBuilder {
 
     private Set<Outgoing> outgoings;
     private List<ServiceMetadata> services;
+    private Set<GraphQLScalarType> scalars = Sets.newHashSet(PluginScalars.HashId, PluginScalars.BytesJson,
+        PluginScalars.DateTime, ExtendedScalars.Json, ExtendedScalars.Object);
     private final GraphqlSchemaParser parser = new GraphqlSchemaParser();
 
     public static GraphqlBuilder newBuilder() {
@@ -59,7 +65,7 @@ public class GraphqlBuilder {
         services.forEach(service -> {
             bindDataFetcher(runtimeWiringBuilder, service, handlers);
         });
-
+        scalars.forEach(runtimeWiringBuilder::scalar);
         final TypeDefinitionRegistry registry = parser.parse(services);
         final SchemaGenerator generator = new SchemaGenerator();
         final GraphQLSchema graphQLSchema = generator.makeExecutableSchema(registry, runtimeWiringBuilder.build());
