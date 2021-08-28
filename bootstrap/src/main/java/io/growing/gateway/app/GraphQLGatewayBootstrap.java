@@ -1,6 +1,7 @@
 package io.growing.gateway.app;
 
 import com.google.common.collect.Sets;
+import io.growing.gateway.config.YamlConfigFactoryImpl;
 import io.growing.gateway.discovery.ServiceDiscovery;
 import io.growing.gateway.discovery.UpstreamDiscovery;
 import io.growing.gateway.graphql.GraphqlIncoming;
@@ -36,6 +37,10 @@ public class GraphQLGatewayBootstrap {
         final Router router = Router.router(vertx);
 
         final String configPath = getApplicationConfigFile();
+
+        final GlobalConfig config = new YamlConfigFactoryImpl(configPath).load(GlobalConfig.class);
+
+        System.setProperty("hashids.salt", config.getHashids().getSalt());
 
         final UpstreamDiscovery discovery = new ConfigUpstreamDiscovery(configPath);
         final List<Upstream> upstreams = discovery.discover();
