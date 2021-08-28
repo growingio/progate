@@ -14,6 +14,7 @@ import com.google.protobuf.Int32Value;
 import com.google.protobuf.Int64Value;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
+import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.UInt32Value;
 import com.google.protobuf.UInt64Value;
 import com.google.protobuf.util.JsonFormat;
@@ -52,7 +53,9 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
     public DynamicMessageWrapper(DynamicMessage origin, Set<Descriptors.Descriptor> descriptors) {
         this.values = new HashMap<>();
         try {
-            final String json = JsonFormat.printer().print(origin);
+            final TypeRegistry.Builder builder = TypeRegistry.newBuilder();
+            descriptors.forEach(builder::add);
+            final String json = JsonFormat.printer().usingTypeRegistry(builder.build()).print(origin);
             Map map = new Gson().fromJson(json, Map.class);
             values.putAll(map);
         } catch (InvalidProtocolBufferException e) {
