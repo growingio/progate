@@ -12,6 +12,7 @@ import graphql.language.ObjectTypeDefinition;
 import graphql.language.StringValue;
 import graphql.language.Type;
 import graphql.scalars.ExtendedScalars;
+import graphql.scalars.java.JavaPrimitives;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLScalarType;
 import graphql.schema.GraphQLSchema;
@@ -41,7 +42,7 @@ public class GraphqlBuilder {
     private Set<Outgoing> outgoings;
     private List<ServiceMetadata> services;
     private Set<GraphQLScalarType> scalars = Sets.newHashSet(PluginScalars.HashId, PluginScalars.BytesJson,
-        PluginScalars.DateTime, ExtendedScalars.Json, ExtendedScalars.Object);
+        PluginScalars.DateTime, ExtendedScalars.Json, ExtendedScalars.Object, JavaPrimitives.GraphQLLong);
     private final GraphqlSchemaParser parser = new GraphqlSchemaParser();
 
     public static GraphqlBuilder newBuilder() {
