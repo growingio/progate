@@ -1,6 +1,7 @@
 package io.growing.gateway.grpc.transcode;
 
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
 import com.google.protobuf.Any;
 import com.google.protobuf.BoolValue;
 import com.google.protobuf.ByteString;
@@ -15,6 +16,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
 import com.google.protobuf.UInt32Value;
 import com.google.protobuf.UInt64Value;
+import com.google.protobuf.util.JsonFormat;
 import io.growing.gateway.utilities.CollectionUtilities;
 
 import java.util.Collection;
@@ -48,29 +50,39 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
     private final Set<Descriptors.Descriptor> descriptors;
 
     public DynamicMessageWrapper(DynamicMessage origin, Set<Descriptors.Descriptor> descriptors) {
-        final Optional<DynamicMessage> anyOpt = extractAny(origin, descriptors);
-        DynamicMessage message = origin;
-        if (anyOpt.isPresent()) {
-            message = anyOpt.get();
-        }
         this.values = new HashMap<>();
-        for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : message.getAllFields().entrySet()) {
-            values.put(entry.getKey().getName(), entry.getValue());
-            if (!entry.getKey().getName().equals(entry.getKey().getJsonName())) {
-                values.put(entry.getKey().getJsonName(), entry.getValue());
-            }
+        try {
+            final String json = JsonFormat.printer().print(origin);
+            Map map = new Gson().fromJson(json, Map.class);
+            values.putAll(map);
+        } catch (InvalidProtocolBufferException e) {
+
+            e.printStackTrace();
         }
-        message.getDescriptorForType().getFields().forEach(field -> {
-            if (field.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE) {
-                final Object defaultValue = field.getDefaultValue();
-                if (!values.containsKey(field.getName())) {
-                    values.put(field.getName(), defaultValue);
-                }
-                if (!values.containsKey(field.getJsonName())) {
-                    values.put(field.getJsonName(), defaultValue);
-                }
-            }
-        });
+
+//        final Optional<DynamicMessage> anyOpt = extractAny(origin, descriptors);
+//        DynamicMessage message = origin;
+//        if (anyOpt.isPresent()) {
+//            message = anyOpt.get();
+//        }
+//        this.values = new HashMap<>();
+//        for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : message.getAllFields().entrySet()) {
+//            values.put(entry.getKey().getName(), entry.getValue());
+//            if (!entry.getKey().getName().equals(entry.getKey().getJsonName())) {
+//                values.put(entry.getKey().getJsonName(), entry.getValue());
+//            }
+//        }
+//        message.getDescriptorForType().getFields().forEach(field -> {
+//            if (field.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE) {
+//                final Object defaultValue = field.getDefaultValue();
+//                if (!values.containsKey(field.getName())) {
+//                    values.put(field.getName(), defaultValue);
+//                }
+//                if (!values.containsKey(field.getJsonName())) {
+//                    values.put(field.getJsonName(), defaultValue);
+//                }
+//            }
+//        });
         this.descriptors = descriptors;
     }
 
