@@ -19,7 +19,7 @@ type Query {
 
     jobs: [Job]! @grpc(endpoint: "growing.graphql.example.JobService/GetJobs")
 
-    newJobs(id: Int!): [Job]! @grpc(endpoint: "growing.graphql.example.JobService/GetJobs", mappings: ["id=ids.add"])
+    job(id: Int!): Job @grpc(endpoint: "growing.graphql.example.JobService/GetJobs", mappings: ["id=ids.add"])
 
     legacyJobs: [Job]! @dubbo(endpoint: "io.growing.dubbo.job.JobServce/GetJobs")
 

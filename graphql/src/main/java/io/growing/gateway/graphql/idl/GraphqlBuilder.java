@@ -5,8 +5,11 @@ import graphql.language.Argument;
 import graphql.language.ArrayValue;
 import graphql.language.Directive;
 import graphql.language.FieldDefinition;
+import graphql.language.ListType;
+import graphql.language.Node;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.StringValue;
+import graphql.language.Type;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
@@ -81,7 +84,8 @@ public class GraphqlBuilder {
                         final List<String> values = getListStringArgument(endpointDirective, "values");
                         final List<String> mappings = getListStringArgument(endpointDirective, "mappings");
                         final Outgoing handler = handlers.get(endpointDirective.getName());
-                        final DataFetcher<CompletionStage<?>> fetcher = new OutgoingDataFetcher(endpoint, service.upstream(), handler, values, mappings);
+                        final boolean isListType = isListReturnType(field);
+                        final DataFetcher<CompletionStage<?>> fetcher = new OutgoingDataFetcher(endpoint, service.upstream(), handler, values, mappings, isListType);
                         register.type(type, builder -> builder.dataFetcher(field.getName(), fetcher));
                     } else {
                         register.type(type, builder -> builder.dataFetcher(field.getName(), new NotFoundFetcher()));
@@ -102,6 +106,20 @@ public class GraphqlBuilder {
         final List<String> values = new ArrayList<>(array.getValues().size());
         array.getValues().forEach(value -> values.add(((StringValue) value).getValue()));
         return values;
+    }
+
+    private boolean isListReturnType(final FieldDefinition field) {
+        final Type type = field.getType();
+        if (type instanceof ListType) {
+            return true;
+        }
+        final List<Node> children = type.getChildren();
+        for (Node child : children) {
+            if (child instanceof ListType) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
