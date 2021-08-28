@@ -1,6 +1,7 @@
 package io.growing.gateway.example;
 
 import com.google.common.collect.Sets;
+import com.google.protobuf.Int32Value;
 import com.google.protobuf.StringValue;
 import io.grpc.stub.StreamObserver;
 
@@ -15,6 +16,7 @@ public class JobServiceImpl extends JobServiceGrpc.JobServiceImplBase {
         System.out.println(request.getIdsList());
         for (int i = 0; i < 100; i++) {
             final JobDto.Builder builder = JobDto.newBuilder();
+            builder.setIndex(Int32Value.newBuilder().setValue(0).build());
             builder.setName("Hello: " + i);
             if (i % 2 == 0) {
                 builder.setDescription(StringValue.of("hello example"));

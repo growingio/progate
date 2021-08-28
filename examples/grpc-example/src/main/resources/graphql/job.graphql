@@ -8,6 +8,7 @@ type Job {
     name: String!
     description: String
     tags: [String]
+    index: Int
 }
 
 input JobInput {

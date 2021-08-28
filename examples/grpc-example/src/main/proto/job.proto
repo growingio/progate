@@ -12,6 +12,7 @@ message JobDto {
   string name = 1;
   google.protobuf.StringValue description = 2;
   repeated string tags = 3;
+  google.protobuf.Int32Value index = 4;
 }
 
 service JobService {

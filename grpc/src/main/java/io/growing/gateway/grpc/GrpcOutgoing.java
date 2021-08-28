@@ -1,5 +1,6 @@
 package io.growing.gateway.grpc;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.Gson;
@@ -10,6 +11,7 @@ import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.util.JsonFormat;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.grpc.finder.ServiceModuleFinder;
+import io.growing.gateway.grpc.json.Jackson;
 import io.growing.gateway.grpc.observer.CollectionObserver;
 import io.growing.gateway.grpc.observer.UnaryObserver;
 import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
@@ -50,7 +52,7 @@ public class GrpcOutgoing implements Outgoing {
         DynamicMessage message;
         try {
             message = transcode(request, methodDescriptor.getInputType(), resolver.getTypeDescriptors());
-        } catch (InvalidProtocolBufferException e) {
+        } catch (Exception e) {
             return CompletableFuture.failedFuture(e);
         }
         if (methodDescriptor.isServerStreaming()) {
@@ -70,9 +72,9 @@ public class GrpcOutgoing implements Outgoing {
         }
     }
 
-    private DynamicMessage transcode(final RequestContext context, final Descriptors.Descriptor type, final Set<Descriptors.Descriptor> descriptors) throws InvalidProtocolBufferException {
+    private DynamicMessage transcode(final RequestContext context, final Descriptors.Descriptor type, final Set<Descriptors.Descriptor> descriptors) throws InvalidProtocolBufferException, JsonProcessingException {
         final DynamicMessage.Builder builder = DynamicMessage.newBuilder(type);
-        final String json = new Gson().toJson(context.getArguments());
+        final String json = Jackson.MAPPER.writeValueAsString(context.getArguments());
         final TypeRegistry.Builder tr = TypeRegistry.newBuilder();
         descriptors.forEach(tr::add);
         JsonFormat.parser().ignoringUnknownFields().usingTypeRegistry(tr.build()).merge(json, builder);

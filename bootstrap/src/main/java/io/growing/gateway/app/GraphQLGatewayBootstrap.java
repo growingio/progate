@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
@@ -40,7 +41,9 @@ public class GraphQLGatewayBootstrap {
 
         final GlobalConfig config = new YamlConfigFactoryImpl(configPath).load(GlobalConfig.class);
 
-        System.setProperty("hashids.salt", config.getHashids().getSalt());
+        if(Objects.nonNull(config.getHashids())) {
+            System.setProperty("hashids.salt", config.getHashids().getSalt());
+        }
 
         final UpstreamDiscovery discovery = new ConfigUpstreamDiscovery(configPath);
         final List<Upstream> upstreams = discovery.discover();
