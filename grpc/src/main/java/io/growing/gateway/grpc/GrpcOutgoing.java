@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.util.JsonFormat;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.grpc.finder.ServiceModuleFinder;
@@ -22,6 +23,7 @@ import io.grpc.stub.ClientCalls;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -47,7 +49,7 @@ public class GrpcOutgoing implements Outgoing {
         final ClientCall<DynamicMessage, DynamicMessage> call = channel.newCall(grpcMethodDescriptor, CallOptions.DEFAULT);
         DynamicMessage message;
         try {
-            message = transcode(request, methodDescriptor.getInputType());
+            message = transcode(request, methodDescriptor.getInputType(), resolver.getTypeDescriptors());
         } catch (InvalidProtocolBufferException e) {
             return CompletableFuture.failedFuture(e);
         }
@@ -68,10 +70,12 @@ public class GrpcOutgoing implements Outgoing {
         }
     }
 
-    private DynamicMessage transcode(final RequestContext context, final Descriptors.Descriptor type) throws InvalidProtocolBufferException {
+    private DynamicMessage transcode(final RequestContext context, final Descriptors.Descriptor type, final Set<Descriptors.Descriptor> descriptors) throws InvalidProtocolBufferException {
         final DynamicMessage.Builder builder = DynamicMessage.newBuilder(type);
         final String json = new Gson().toJson(context.getArguments());
-        JsonFormat.parser().ignoringUnknownFields().merge(json, builder);
+        final TypeRegistry.Builder tr = TypeRegistry.newBuilder();
+        descriptors.forEach(tr::add);
+        JsonFormat.parser().ignoringUnknownFields().usingTypeRegistry(tr.build()).merge(json, builder);
         return builder.build();
     }
 
