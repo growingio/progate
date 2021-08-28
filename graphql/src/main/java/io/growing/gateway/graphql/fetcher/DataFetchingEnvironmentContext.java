@@ -25,7 +25,15 @@ public class DataFetchingEnvironmentContext implements RequestContext {
             final String to = mapping.substring(index + 1);
             final int dot = to.indexOf('.');
             if (dot > -1) {
-                parameters.put(to.substring(0, dot), new Object[]{value});
+                final String name = to.substring(0, dot);
+                final String flag = "any:";
+                if (to.indexOf(flag, dot) > -1) {
+                    final Map<String, Object> object = (Map<String, Object>) value;
+                    object.put("@type", to.substring(dot + 1).replace(flag, ""));
+                    parameters.put(name, value);
+                } else {
+                    parameters.put(name, new Object[]{value});
+                }
             } else {
                 parameters.put(to, value);
             }
