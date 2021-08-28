@@ -14,6 +14,7 @@ import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.utilities.CollectionUtilities;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
@@ -78,6 +79,14 @@ public class GraphqlIncoming implements Incoming {
                         response.headers().set(HttpHeaders.CONTENT_TYPE, contentType);
                         String chunk = gson.toJson(r.toSpecification());
                         response.end(chunk);
+                        if (CollectionUtilities.isNotEmpty(r.getErrors())) {
+                            r.getErrors().forEach(error -> {
+                                if (error instanceof Exception) {
+                                    final Exception e = (Exception) error;
+                                    logger.error(e.getLocalizedMessage(), e);
+                                }
+                            });
+                        }
                     }
                 });
             } else {
