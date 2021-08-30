@@ -3,9 +3,9 @@ package io.growing.gateway.grpc;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.google.gson.Gson;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
+import com.google.protobuf.Empty;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.util.JsonFormat;
@@ -68,7 +68,13 @@ public class GrpcOutgoing implements Outgoing {
         } else {
             final UnaryObserver<DynamicMessage> observer = new UnaryObserver<>();
             ClientCalls.asyncUnaryCall(call, message, observer);
-            return observer.toCompletionStage().thenApply(dm -> new DynamicMessageWrapper(dm, resolver.getTypeDescriptors()));
+            return observer.toCompletionStage().thenApply(dm -> {
+                if (methodDescriptor.getOutputType().getFullName().equals(Empty.getDescriptor().getFullName())) {
+                    return true;
+                } else {
+                    return new DynamicMessageWrapper(dm, resolver.getTypeDescriptors());
+                }
+            });
         }
     }
 
