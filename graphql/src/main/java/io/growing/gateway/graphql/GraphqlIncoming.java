@@ -61,36 +61,40 @@ public class GraphqlIncoming implements Incoming {
             return;
         }
         request.body(ar -> {
-            if (ar.succeeded()) {
-                //
-                final GraphqlRelayRequest graphqlRequest = gson.fromJson(ar.result().toString(StandardCharsets.UTF_8), GraphqlRelayRequest.class);
-                final GraphQLContext context = GraphQLContext.newContext().build();
-                final ExecutionInput.Builder builder = ExecutionInput.newExecutionInput(graphqlRequest.getQuery()).localContext(context);
-                if (Objects.nonNull(graphqlRequest.getVariables())) {
-                    builder.variables(graphqlRequest.getVariables());
-                }
-                final CompletableFuture<ExecutionResult> future = graphql.executeAsync(builder.build());
-                //
-                future.whenComplete((r, t) -> {
-                    if (Objects.nonNull(t)) {
-                        endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, t, gson);
-                    } else {
-                        HttpServerResponse response = request.response();
-                        response.headers().set(HttpHeaders.CONTENT_TYPE, contentType);
-                        String chunk = gson.toJson(r.toSpecification());
-                        response.end(chunk);
-                        if (CollectionUtilities.isNotEmpty(r.getErrors())) {
-                            r.getErrors().forEach(error -> {
-                                if (error instanceof Exception) {
-                                    final Exception e = (Exception) error;
-                                    logger.error(e.getLocalizedMessage(), e);
-                                }
-                            });
-                        }
+            try {
+                if (ar.succeeded()) {
+                    //
+                    final GraphqlRelayRequest graphqlRequest = gson.fromJson(ar.result().toString(StandardCharsets.UTF_8), GraphqlRelayRequest.class);
+                    final GraphQLContext context = GraphQLContext.newContext().build();
+                    final ExecutionInput.Builder builder = ExecutionInput.newExecutionInput(graphqlRequest.getQuery()).localContext(context);
+                    if (Objects.nonNull(graphqlRequest.getVariables())) {
+                        builder.variables(graphqlRequest.getVariables());
                     }
-                });
-            } else {
-                endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, ar.cause(), gson);
+                    final CompletableFuture<ExecutionResult> future = graphql.executeAsync(builder.build());
+                    //
+                    future.whenComplete((r, t) -> {
+                        if (Objects.nonNull(t)) {
+                            endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, t, gson);
+                        } else {
+                            HttpServerResponse response = request.response();
+                            response.headers().set(HttpHeaders.CONTENT_TYPE, contentType);
+                            String chunk = gson.toJson(r.toSpecification());
+                            response.end(chunk);
+                            if (CollectionUtilities.isNotEmpty(r.getErrors())) {
+                                r.getErrors().forEach(error -> {
+                                    if (error instanceof Exception) {
+                                        final Exception e = (Exception) error;
+                                        logger.error(e.getLocalizedMessage(), e);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                } else {
+                    endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, ar.cause(), gson);
+                }
+            } catch (Exception e) {
+                endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, e, gson);
             }
         });
     }
