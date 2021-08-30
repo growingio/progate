@@ -24,7 +24,8 @@ public interface Transcoder {
                 final Object value = new Object[]{originValue};
                 set(parameters, transcode.getTarget().replace(".add", ""), value);
             } else if (transcode.getTarget().endsWith(".any")) {
-                set(parameters, transcode.getTarget().replace(".any", "@type"), transcode.getExtension());
+                set(parameters, transcode.getTarget().replace(".any", ""), originValue);
+                set(parameters, transcode.getTarget().replace(".any", ".@type"), transcode.getExtension());
             } else if (transcode.getTarget().endsWith("...")) {
                 parameters.putAll((Map<String, Object>) originValue);
             } else {
@@ -71,6 +72,15 @@ public interface Transcoder {
                 }
             }
             node.put(names[names.length - 1], value);
+        } else {
+            put(target, name, value);
+        }
+    }
+
+    default void put(final Map<String, Object> target, final String name, final Object value) {
+        if (value instanceof ImmutableMap) {
+            final Map<String, Object> container = new HashMap<>((Map<String, Object>) value);
+            target.put(name, container);
         } else {
             target.put(name, value);
         }
