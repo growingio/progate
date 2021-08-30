@@ -1,6 +1,8 @@
 package io.growing.gateway.graphql.transcode;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
+import com.google.protobuf.ByteString;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
@@ -26,6 +28,8 @@ public interface Transcoder {
             } else if (transcode.getTarget().endsWith(".any")) {
                 set(parameters, transcode.getTarget().replace(".any", ""), originValue);
                 set(parameters, transcode.getTarget().replace(".any", ".@type"), transcode.getExtension());
+            } else if (transcode.getTarget().endsWith(".bytes")) {
+                set(parameters, transcode.getTarget().replace(".bytes", ""), ByteString.copyFromUtf8(new Gson().toJson(originValue)));
             } else if (transcode.getTarget().endsWith("...")) {
                 parameters.putAll((Map<String, Object>) originValue);
             } else {
