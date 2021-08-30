@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import org.apache.commons.lang3.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,7 @@ public interface Transcoder {
                 set(parameters, transcode.getTarget().replace(".any", ""), originValue);
                 set(parameters, transcode.getTarget().replace(".any", ".@type"), transcode.getExtension());
             } else if (transcode.getTarget().endsWith(".bytes")) {
-                set(parameters, transcode.getTarget().replace(".bytes", ""), ByteString.copyFromUtf8(new Gson().toJson(originValue)));
+                set(parameters, transcode.getTarget().replace(".bytes", ""), new Gson().toJson(originValue).getBytes(StandardCharsets.UTF_8));
             } else if (transcode.getTarget().endsWith("...")) {
                 parameters.putAll((Map<String, Object>) originValue);
             } else {
