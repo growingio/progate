@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -23,11 +24,13 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * @author AI
@@ -63,33 +66,44 @@ public class GraphqlIncoming implements Incoming {
         request.body(ar -> {
             try {
                 if (ar.succeeded()) {
-                    //
-                    final GraphqlRelayRequest graphqlRequest = gson.fromJson(ar.result().toString(StandardCharsets.UTF_8), GraphqlRelayRequest.class);
-                    final GraphQLContext context = GraphQLContext.newContext().build();
-                    final ExecutionInput.Builder builder = ExecutionInput.newExecutionInput(graphqlRequest.getQuery()).localContext(context);
-                    if (Objects.nonNull(graphqlRequest.getVariables())) {
-                        builder.variables(graphqlRequest.getVariables());
-                    }
-                    final CompletableFuture<ExecutionResult> future = graphql.executeAsync(builder.build());
-                    //
-                    future.whenComplete((r, t) -> {
-                        if (Objects.nonNull(t)) {
-                            endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, t, gson);
-                        } else {
+                    final JsonElement json = gson.fromJson(ar.result().toString(StandardCharsets.UTF_8), JsonElement.class);
+                    if (json.isJsonArray()) {
+                        final GraphqlRelayRequest[] graphqlRequests = gson.fromJson(json, GraphqlRelayRequest[].class);
+                        final List<CompletableFuture<ExecutionResult>> futures = new ArrayList<>(graphqlRequests.length);
+                        for (GraphqlRelayRequest grr : graphqlRequests) {
+                            futures.add(execute(graphql, grr));
+                        }
+                        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenApply(v -> {
+                            return futures.stream().map(CompletableFuture::join)
+                                .map(ExecutionResult::toSpecification).collect(Collectors.toList());
+                        }).whenComplete((results, t) -> {
                             HttpServerResponse response = request.response();
                             response.headers().set(HttpHeaders.CONTENT_TYPE, contentType);
-                            String chunk = gson.toJson(r.toSpecification());
+                            String chunk = gson.toJson(results);
                             response.end(chunk);
-                            if (CollectionUtilities.isNotEmpty(r.getErrors())) {
-                                r.getErrors().forEach(error -> {
-                                    if (error instanceof Exception) {
-                                        final Exception e = (Exception) error;
-                                        logger.error(e.getLocalizedMessage(), e);
-                                    }
-                                });
+                        });
+                    } else {
+                        final GraphqlRelayRequest graphqlRelayRequest = gson.fromJson(json, GraphqlRelayRequest.class);
+                        final CompletableFuture<ExecutionResult> future = execute(graphql, graphqlRelayRequest);
+                        future.whenComplete((r, t) -> {
+                            if (Objects.nonNull(t)) {
+                                endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, t, gson);
+                            } else {
+                                HttpServerResponse response = request.response();
+                                response.headers().set(HttpHeaders.CONTENT_TYPE, contentType);
+                                String chunk = gson.toJson(r.toSpecification());
+                                response.end(chunk);
+                                if (CollectionUtilities.isNotEmpty(r.getErrors())) {
+                                    r.getErrors().forEach(error -> {
+                                        if (error instanceof Exception) {
+                                            final Exception e = (Exception) error;
+                                            logger.error(e.getLocalizedMessage(), e);
+                                        }
+                                    });
+                                }
                             }
-                        }
-                    });
+                        });
+                    }
                 } else {
                     endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, ar.cause(), gson);
                 }
@@ -97,6 +111,15 @@ public class GraphqlIncoming implements Incoming {
                 endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, e, gson);
             }
         });
+    }
+
+    private CompletableFuture<ExecutionResult> execute(final GraphQL graphql, final GraphqlRelayRequest graphqlRequest) {
+        final GraphQLContext context = GraphQLContext.newContext().build();
+        final ExecutionInput.Builder builder = ExecutionInput.newExecutionInput(graphqlRequest.getQuery()).localContext(context);
+        if (Objects.nonNull(graphqlRequest.getVariables())) {
+            builder.variables(graphqlRequest.getVariables());
+        }
+        return graphql.executeAsync(builder.build());
     }
 
     @SuppressWarnings("unchecked")
