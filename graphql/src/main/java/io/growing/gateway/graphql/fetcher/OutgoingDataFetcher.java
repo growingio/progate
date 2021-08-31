@@ -8,6 +8,7 @@ import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.transcode.ResultWrapper;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -42,7 +43,11 @@ public class OutgoingDataFetcher implements DataFetcher<CompletionStage<?>> {
         return stage.thenApply(result -> {
             final Object value = wrap(result);
             if (!isListReturnType && value instanceof Collection) {
-                return ((Collection<?>) value).iterator().next();
+                final Iterator<?> iterator = ((Collection<?>) value).iterator();
+                if (iterator.hasNext()) {
+                    return iterator.next();
+                }
+                return null;
             }
             return value;
         });
