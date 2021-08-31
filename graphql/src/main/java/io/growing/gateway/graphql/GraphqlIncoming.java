@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
@@ -42,10 +43,12 @@ public class GraphqlIncoming implements Incoming {
     private final String contentType = "application/json;charset=utf-8";
     private final AtomicReference<GraphQL> graphQLReference = new AtomicReference<>();
     private final Logger logger = LoggerFactory.getLogger(GraphqlIncoming.class);
+    private final Gson gson;
     private final GraphqlConfig config;
 
     public GraphqlIncoming(GraphqlConfig config) {
         this.config = config;
+        this.gson = new GsonBuilder().serializeNulls().create();
     }
 
     @Override
@@ -69,7 +72,6 @@ public class GraphqlIncoming implements Incoming {
     @Override
     public void handle(HttpServerRequest request) {
         final GraphQL graphql = graphQLReference.get();
-        final Gson gson = new Gson();
         if (Objects.isNull(graphql)) {
             endForError(request.response(), HttpResponseStatus.BAD_GATEWAY, new RuntimeException("Bad getaway"), gson);
             return;
