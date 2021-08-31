@@ -22,5 +22,4 @@ extra-plugins:
   - hash-id
 
 graphql:
-  - sclars:
-      - graphql.scalars.datetime.DateTimeScalar
+  path: "/graphql"

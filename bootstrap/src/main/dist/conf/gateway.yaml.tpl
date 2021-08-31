@@ -23,5 +23,4 @@ extra-plugins:
   - hash-id
 
 graphql:
-  - scalars:
-      - graphql.scalars.datetime.DateTimeScalar
+  path: /v3/data-centers/:dataCenterUid/graphql

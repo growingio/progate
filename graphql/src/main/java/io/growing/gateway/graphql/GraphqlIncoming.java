@@ -9,6 +9,7 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.GraphQLContext;
+import io.growing.gateway.graphql.config.GraphqlConfig;
 import io.growing.gateway.graphql.idl.GraphqlBuilder;
 import io.growing.gateway.graphql.request.GraphqlRelayRequest;
 import io.growing.gateway.http.HttpApi;
@@ -22,6 +23,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -40,6 +42,11 @@ public class GraphqlIncoming implements Incoming {
     private final String contentType = "application/json;charset=utf-8";
     private final AtomicReference<GraphQL> graphQLReference = new AtomicReference<>();
     private final Logger logger = LoggerFactory.getLogger(GraphqlIncoming.class);
+    private final GraphqlConfig config;
+
+    public GraphqlIncoming(GraphqlConfig config) {
+        this.config = config;
+    }
 
     @Override
     public void reload(final List<ServiceMetadata> services, final Set<Outgoing> outgoings) {
@@ -50,7 +57,11 @@ public class GraphqlIncoming implements Incoming {
     @Override
     public Set<HttpApi> apis() {
         final HttpApi httpApi = new HttpApi();
-        httpApi.setPath("/graphql");
+        String path = "/graphql";
+        if (StringUtils.isNoneBlank(config.getPath())) {
+            path = config.getPath();
+        }
+        httpApi.setPath(path);
         httpApi.setMethods(Sets.newHashSet(HttpMethod.POST));
         return Sets.newHashSet(httpApi);
     }

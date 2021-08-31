@@ -47,7 +47,7 @@ public class GraphQLGatewayBootstrap {
 
         final UpstreamDiscovery discovery = new ConfigUpstreamDiscovery(configPath);
         final List<Upstream> upstreams = discovery.discover();
-        final GraphqlIncoming incoming = new GraphqlIncoming();
+        final GraphqlIncoming incoming = new GraphqlIncoming(config.getGraphql());
 
 
         incoming.apis().forEach(api -> {

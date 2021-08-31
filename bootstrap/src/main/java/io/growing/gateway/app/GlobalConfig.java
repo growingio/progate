@@ -1,8 +1,11 @@
 package io.growing.gateway.app;
 
+import io.growing.gateway.graphql.config.GraphqlConfig;
+
 public class GlobalConfig {
     private ServerConfig server;
     private HashIdConfig hashids;
+    private GraphqlConfig graphql;
 
     public static class HashIdConfig {
         private String salt;
@@ -39,5 +42,13 @@ public class GlobalConfig {
 
     public void setHashids(HashIdConfig hashids) {
         this.hashids = hashids;
+    }
+
+    public GraphqlConfig getGraphql() {
+        return graphql;
+    }
+
+    public void setGraphql(GraphqlConfig graphql) {
+        this.graphql = graphql;
     }
 }
