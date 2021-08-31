@@ -75,17 +75,17 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
 //                values.put(entry.getKey().getJsonName(), entry.getValue());
 //            }
 //        }
-//        message.getDescriptorForType().getFields().forEach(field -> {
-//            if (field.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE) {
-//                final Object defaultValue = field.getDefaultValue();
-//                if (!values.containsKey(field.getName())) {
-//                    values.put(field.getName(), defaultValue);
-//                }
-//                if (!values.containsKey(field.getJsonName())) {
-//                    values.put(field.getJsonName(), defaultValue);
-//                }
-//            }
-//        });
+        origin.getDescriptorForType().getFields().forEach(field -> {
+            if (field.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE) {
+                final Object defaultValue = field.getDefaultValue();
+                if (!values.containsKey(field.getName())) {
+                    values.put(field.getName(), defaultValue);
+                }
+                if (!values.containsKey(field.getJsonName())) {
+                    values.put(field.getJsonName(), defaultValue);
+                }
+            }
+        });
         this.descriptors = descriptors;
     }
 

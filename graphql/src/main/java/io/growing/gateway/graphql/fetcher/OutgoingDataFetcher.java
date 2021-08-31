@@ -5,10 +5,13 @@ import graphql.schema.DataFetchingEnvironment;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.plugin.wrapper.ResultWrapper;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 
 /**
  * @author AI
@@ -37,12 +40,22 @@ public class OutgoingDataFetcher implements DataFetcher<CompletionStage<?>> {
         final RequestContext context = new DataFetchingEnvironmentContext(environment, values, mappings);
         final CompletionStage<?> stage = outgoing.handle(upstream, endpoint, context);
         return stage.thenApply(result -> {
-            if (!isListReturnType && result instanceof Collection) {
-                return ((Collection<?>) result).iterator().next();
+            final Object value = wrap(result);
+            if (!isListReturnType && value instanceof Collection) {
+                return ((Collection<?>) value).iterator().next();
             }
-            return result;
+            return value;
         });
         //
+    }
+
+    @SuppressWarnings("unchecked")
+    private Object wrap(final Object value) {
+        if (value instanceof Collection) {
+            return ((Collection) value).stream().map(v -> new ResultWrapper((Map<String, Object>) v))
+                .collect(Collectors.toList());
+        }
+        return new ResultWrapper((Map<String, Object>) value);
     }
 
 }
