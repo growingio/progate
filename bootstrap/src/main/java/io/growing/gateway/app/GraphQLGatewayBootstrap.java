@@ -41,7 +41,7 @@ public class GraphQLGatewayBootstrap {
 
         final GlobalConfig config = new YamlConfigFactoryImpl(configPath).load(GlobalConfig.class);
 
-        if(Objects.nonNull(config.getHashids())) {
+        if (Objects.nonNull(config.getHashids())) {
             System.setProperty("hashids.salt", config.getHashids().getSalt());
         }
 
@@ -77,7 +77,8 @@ public class GraphQLGatewayBootstrap {
             }
         }));
 
-        server.requestHandler(router).listen(8080).onSuccess(handler -> logger.info("Server listening on 8080"));
+        final int port = getServerPort(config);
+        server.requestHandler(router).listen(port).onSuccess(handler -> logger.info("Server listening on {}", port));
 
         final EventBus eventBus = vertx.eventBus();
 
@@ -108,6 +109,13 @@ public class GraphQLGatewayBootstrap {
             services.add(discovery.discover(upstream));
         });
         return services;
+    }
+
+    private static int getServerPort(final GlobalConfig config) {
+        if (Objects.nonNull(config.getServer()) && Objects.nonNull(config.getServer().getPort())) {
+            return config.getServer().getPort();
+        }
+        return 8080;
     }
 
 }

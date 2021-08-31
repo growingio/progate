@@ -1,3 +1,6 @@
+server:
+  port: {{ services.graphql_gateway.http.port }}
+
 hashids:
   length: 8
   salt: "{{ global.hashids_salt  }}"

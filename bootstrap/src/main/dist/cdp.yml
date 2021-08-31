@@ -6,8 +6,6 @@ units:
         protocol: http
       - name: http
         protocol: http
-      - name: grpc
-        protocol: grpc
     command: "{{ app_deploy_dir}}/bin/bootstrap"
     envs:
       JAVA_OPTS: -javaagent:{{ jmx_jar_path }}={{ services.graphql_gateway.jmx_exporter.port }}:{{ app_deploy_dir }}/conf/metrics.yml

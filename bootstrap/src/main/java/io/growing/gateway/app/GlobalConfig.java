@@ -1,6 +1,7 @@
 package io.growing.gateway.app;
 
 public class GlobalConfig {
+    private ServerConfig server;
     private HashIdConfig hashids;
 
     public static class HashIdConfig {
@@ -22,6 +23,14 @@ public class GlobalConfig {
         public void setLength(int length) {
             this.length = length;
         }
+    }
+
+    public ServerConfig getServer() {
+        return server;
+    }
+
+    public void setServer(ServerConfig server) {
+        this.server = server;
     }
 
     public HashIdConfig getHashids() {
