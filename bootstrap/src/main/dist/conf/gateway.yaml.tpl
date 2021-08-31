@@ -1,10 +1,12 @@
 upstreams:
-  - name: metadata
+  - name: growing-analysis-java
     protocol: grpc
     nodes:
-      - host: localhost
-        port: 18080
+    {% for host in services.analysis_service.hosts %}
+      - host: {{ host }}
+        port: {{ services.analysis_service.grpc.port }}
         weight: 1
+    {% endfor %}
 
 
 plugins:
