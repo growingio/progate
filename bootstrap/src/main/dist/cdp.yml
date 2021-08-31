@@ -7,16 +7,7 @@ units:
       - name: http
         protocol: http
     command: "{{ app_deploy_dir}}/bin/bootstrap"
-    envs:
-      JAVA_OPTS: -javaagent:{{ jmx_jar_path }}={{ services.graphql_gateway.jmx_exporter.port }}:{{ app_deploy_dir }}/conf/metrics.yml
-        {% if global.elastic_apm.enabled %}
-        -javaagent:{{ elastic_apm_agent_jar_path }}
-        -Delastic.apm.service_name=graphql-gateway
-        -Delastic.apm.server_urls={{ global.elastic_apm.server_urls }}
-        -Delastic.apm.secret_token={{ global.elastic_apm.secret_token }}
-        -Delastic.apm.environment={{ global.elastic_apm.environment }}
-        -Delastic.apm.application_packages=io.growing.gateway
-        {% endif %}
+
 resources:
   - resource: redis
     name: graphql_gateway
