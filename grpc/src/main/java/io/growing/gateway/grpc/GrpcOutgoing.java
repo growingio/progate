@@ -78,7 +78,8 @@ public class GrpcOutgoing implements Outgoing {
         }
     }
 
-    private DynamicMessage transcode(final RequestContext context, final Descriptors.Descriptor type, final Set<Descriptors.Descriptor> descriptors) throws InvalidProtocolBufferException, JsonProcessingException {
+    private DynamicMessage transcode(final RequestContext context, final Descriptors.Descriptor type,
+                                     final Set<Descriptors.Descriptor> descriptors) throws InvalidProtocolBufferException, JsonProcessingException {
         final DynamicMessage.Builder builder = DynamicMessage.newBuilder(type);
         final String json = Jackson.MAPPER.writeValueAsString(context.getArguments());
         final TypeRegistry.Builder tr = TypeRegistry.newBuilder();
