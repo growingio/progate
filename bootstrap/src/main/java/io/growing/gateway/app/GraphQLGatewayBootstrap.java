@@ -62,6 +62,10 @@ public class GraphQLGatewayBootstrap {
             ctx.response().end();
         });
 
+        final HealthyCheck check = new HealthyCheck();
+
+        router.get(check.path).handler(check);
+
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             final CountDownLatch counter = new CountDownLatch(1);
             logger.info("Server on shutdown...");
