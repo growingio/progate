@@ -99,6 +99,10 @@ public class GraphQLGatewayBootstrap {
     }
 
     private static String getApplicationConfigFile() {
+        final String property = System.getProperty("config.file");
+        if (Objects.nonNull(property)) {
+            return property;
+        }
         return Paths.get(SystemUtils.getUserDir().getAbsolutePath(), "conf", "gateway.yaml").toAbsolutePath().toString();
     }
 
