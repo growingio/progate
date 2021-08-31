@@ -59,7 +59,7 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
         final String fullServiceName = part.getLeft();
         final String methodName = part.getRight();
         final Optional<Descriptors.ServiceDescriptor> serviceDescriptorOpt = findService(fullServiceName);
-        if (serviceDescriptorOpt.isEmpty()) {
+        if (!serviceDescriptorOpt.isPresent()) {
             throw new ServiceResolveException("Cannot found service: " + fullServiceName);
         }
         final String fullMethodName = io.grpc.MethodDescriptor.generateFullMethodName(fullServiceName, methodName);
