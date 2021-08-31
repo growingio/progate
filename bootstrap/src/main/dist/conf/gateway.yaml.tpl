@@ -9,9 +9,9 @@ upstreams:
   - name: growing-analysis-java
     protocol: grpc
     nodes:
-    {% for host in services.analysis_service.hosts %}
+    {% for host in services.growing_analysis_java.hosts %}
       - host: {{ host }}
-        port: {{ services.analysis_service.grpc.port }}
+        port: {{ services.growing_analysis_java.grpc.port }}
         weight: 1
     {% endfor %}
 
