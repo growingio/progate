@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
 
 /**
  * @author AI
@@ -61,7 +62,7 @@ public class OutgoingDataFetcher implements DataFetcher<CompletionStage<?>> {
                     return new ResultWrapper((Map<String, Object>) v);
                 }
                 return v;
-            });
+            }).collect(Collectors.toList());
         }
         if (value instanceof Map) {
             return new ResultWrapper((Map<String, Object>) value);
