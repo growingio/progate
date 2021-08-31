@@ -4,6 +4,7 @@
 # Ignore Gradle build output directory
 build
 logs
+conf/gateway.yaml
 
 .idea/modules
 .idea/*.xml
