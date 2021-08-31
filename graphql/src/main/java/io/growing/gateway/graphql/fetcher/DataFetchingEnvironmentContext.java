@@ -3,6 +3,7 @@ package io.growing.gateway.graphql.fetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.graphql.transcode.Transcoder;
+import io.growing.gateway.plugin.transcode.EnvironmentArgumentTranscoder;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,8 @@ public class DataFetchingEnvironmentContext implements RequestContext, Transcode
     private final Map<String, Object> arguments;
 
     public DataFetchingEnvironmentContext(DataFetchingEnvironment environment, List<String> values, List<String> mappings) {
-        this.arguments = transcode(environment.getArguments(), values, mappings);
+        final EnvironmentArgumentTranscoder transcoder = new EnvironmentArgumentTranscoder();
+        this.arguments = transcoder.transcode(transcode(environment.getArguments(), values, mappings));
     }
 
     @Override

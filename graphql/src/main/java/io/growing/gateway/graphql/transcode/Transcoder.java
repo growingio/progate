@@ -37,13 +37,14 @@ public interface Transcoder {
                 set(parameters, transcode.getTarget(), originValue);
             }
         });
-        final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
-        parameters.forEach((key, value) -> {
-            if (Objects.nonNull(value)) {
-                builder.put(key, value);
-            }
-        });
-        return builder.build();
+//        final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+//        parameters.forEach((key, value) -> {
+//            if (Objects.nonNull(value)) {
+//                builder.put(key, value);
+//            }
+//        });
+//        return builder.build();
+        return parameters;
     }
 
 
