@@ -3,8 +3,7 @@
  */
 
 plugins {
-    `maven-publish`
-    id("io.growing.gateway.java-library-conventions")
+    id("io.growing.gateway.java-publishing-conventions")
 }
 
 dependencies {
@@ -12,22 +11,4 @@ dependencies {
     api(project(":grpc-proto"))
     api("io.grpc:grpc-services")
     implementation(project(":utilities"))
-}
-
-publishing {
-    repositories {
-        publications {
-            create<MavenPublication>(project.name) {
-                from(components["java"])
-            }
-        }
-        maven {
-            name = "growingNexus"
-            val host: String = "https://nexus.growingio.cn"
-            val releasesRepoUrl = uri("$host/repository/maven-releases/")
-            val snapshotsRepoUrl = uri("$host/repository/maven-snapshots/")
-            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
-            credentials(PasswordCredentials::class)
-        }
-    }
 }

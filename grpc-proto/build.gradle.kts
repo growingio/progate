@@ -5,9 +5,8 @@ import com.google.protobuf.gradle.*
 
 plugins {
     idea
-    `maven-publish`
     id("com.google.protobuf") version "0.8.17"
-    id("io.growing.gateway.java-library-conventions")
+    id("io.growing.gateway.java-publishing-conventions")
 }
 
 dependencies {
@@ -48,22 +47,3 @@ protobuf {
         }
     }
 }
-
-publishing {
-    repositories {
-        publications {
-            create<MavenPublication>(project.name) {
-                from(components["java"])
-            }
-        }
-        maven {
-            name = "growingNexus"
-            val host: String = "https://nexus.growingio.cn"
-            val releasesRepoUrl = uri("$host/repository/maven-releases/")
-            val snapshotsRepoUrl = uri("$host/repository/maven-snapshots/")
-            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
-            credentials(PasswordCredentials::class)
-        }
-    }
-}
-

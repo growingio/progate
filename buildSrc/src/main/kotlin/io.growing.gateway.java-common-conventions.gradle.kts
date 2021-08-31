@@ -3,6 +3,9 @@ plugins {
     jacoco
 }
 
+group = "io.growing.gateway"
+version = "1.0.0-SNAPSHOT"
+
 repositories {
     mavenLocal()
     maven {
@@ -10,8 +13,6 @@ repositories {
     }
     mavenCentral()
 }
-
-
 
 dependencies {
 
