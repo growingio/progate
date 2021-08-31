@@ -13,3 +13,12 @@ include(
     "grpc-libs",
     "examples:grpc-example"
 )
+
+pluginManagement {
+    repositories {
+        mavenLocal()
+        maven {
+            url = uri("https://nexus.growingio.cn/repository/maven-public/")
+        }
+    }
+}
