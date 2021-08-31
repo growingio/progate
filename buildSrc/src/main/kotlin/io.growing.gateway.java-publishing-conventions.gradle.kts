@@ -3,6 +3,9 @@ plugins {
     id("io.growing.gateway.java-library-conventions")
 }
 
+group = "io.growing.gateway"
+version = "1.0.0-SNAPSHOT"
+
 publishing {
     repositories {
         publications {
