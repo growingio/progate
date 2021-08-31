@@ -31,7 +31,7 @@ public final class FileUtilities {
             return Collections.emptySet();
         }
         final Set<Path> paths = new HashSet<>();
-        final FileVisitor<Path> visitor = new SimpleFileVisitor<>() {
+        final FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 if (!Files.isDirectory(file)) {

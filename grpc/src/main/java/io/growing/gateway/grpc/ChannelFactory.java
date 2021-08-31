@@ -17,7 +17,7 @@ public final class ChannelFactory {
         .expireAfterAccess(Duration.ofMinutes(5)).removalListener((key, value, cause) -> {
             final ManagedChannel channel = (ManagedChannel) value;
             channel.shutdown();
-        }).build(new CacheLoader<>() {
+        }).build(new CacheLoader<ServerNode, ManagedChannel>() {
             @Override
             public @Nullable
             ManagedChannel load(ServerNode key) throws Exception {
