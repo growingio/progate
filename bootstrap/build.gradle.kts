@@ -3,6 +3,7 @@
  */
 
 plugins {
+    distribution
     id("io.growing.gateway.java-application-conventions")
 }
 
@@ -27,4 +28,13 @@ dependencies {
 application {
     // Define the main class for the application.
     mainClass.set("io.growing.gateway.app.GraphQLGatewayBootstrap")
+}
+
+distributions {
+
+    main {
+        if (project.hasProperty("packageName")) {
+            distributionBaseName.set(project.property("packageName").toString())
+        }
+    }
 }

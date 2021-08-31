@@ -1,0 +1,5 @@
+---
+lowercaseOutputName: true
+blacklistObjectNames: ["org.apache.logging.log4j2:*", "com.mchange.v2.c3p0:*"]
+rules:
+  - pattern: ".*"
