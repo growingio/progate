@@ -1,3 +1,7 @@
+hashids:
+  length: 8
+  salt: "{{ global.hashids_salt  }}"
+
 upstreams:
   - name: growing-analysis-java
     protocol: grpc

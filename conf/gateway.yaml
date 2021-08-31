@@ -1,3 +1,7 @@
+hashids:
+  length: 8
+  salt: SALT
+
 upstreams:
   - name: metadata
     protocol: grpc
