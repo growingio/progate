@@ -22,7 +22,3 @@ dependencies {
     annotationProcessor("com.google.dagger:dagger-compiler")
 
 }
-
-configurations.all {
-    resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
-}
