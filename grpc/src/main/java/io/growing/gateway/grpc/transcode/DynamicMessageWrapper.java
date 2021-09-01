@@ -55,7 +55,7 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
         try {
             final TypeRegistry.Builder builder = TypeRegistry.newBuilder();
             descriptors.forEach(builder::add);
-            final String json = JsonFormat.printer().usingTypeRegistry(builder.build()).print(origin);
+            final String json = JsonFormat.printer().includingDefaultValueFields().usingTypeRegistry(builder.build()).print(origin);
             Map map = new Gson().fromJson(json, Map.class);
             values.putAll(map);
         } catch (InvalidProtocolBufferException e) {
