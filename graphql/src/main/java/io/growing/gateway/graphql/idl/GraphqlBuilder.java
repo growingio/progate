@@ -24,6 +24,7 @@ import io.growing.gateway.graphql.fetcher.OutgoingDataFetcher;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.PluginScalars;
+import io.growing.gateway.plugin.fetcher.PluginFetcherBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -82,6 +83,7 @@ public class GraphqlBuilder {
                 return;
             }
             final List<FieldDefinition> fields = typeDef.getFieldDefinitions();
+            final PluginFetcherBuilder pfb = new PluginFetcherBuilder();
             fields.forEach(field -> {
                 try (final Stream<Directive> stream = field.getDirectives().stream()) {
                     final Optional<Directive> endpointDirectiveOpt = stream.filter(directive -> protocols.contains(directive.getName())).findAny();
@@ -93,7 +95,7 @@ public class GraphqlBuilder {
                         final Outgoing handler = handlers.get(endpointDirective.getName());
                         final boolean isListType = isListReturnType(field);
                         final DataFetcher<CompletionStage<?>> fetcher = new OutgoingDataFetcher(endpoint, service.upstream(), handler, values, mappings, isListType);
-                        register.type(type, builder -> builder.dataFetcher(field.getName(), fetcher));
+                        register.type(type, builder -> builder.dataFetcher(field.getName(), pfb.build(field.getDirectives(), fetcher)));
                     } else {
                         register.type(type, builder -> builder.dataFetcher(field.getName(), new NotFoundFetcher()));
                     }

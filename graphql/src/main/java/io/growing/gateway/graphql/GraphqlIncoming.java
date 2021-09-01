@@ -17,6 +17,7 @@ import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.plugin.PluginArguments;
 import io.growing.gateway.utilities.CollectionUtilities;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.http.HttpMethod;
@@ -29,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -79,12 +81,13 @@ public class GraphqlIncoming implements Incoming {
         request.body(ar -> {
             try {
                 if (ar.succeeded()) {
+                    final Map<String, Object> arguments = new PluginArguments().arguments(request);
                     final JsonElement json = gson.fromJson(ar.result().toString(StandardCharsets.UTF_8), JsonElement.class);
                     if (json.isJsonArray()) {
                         final GraphqlRelayRequest[] graphqlRequests = gson.fromJson(json, GraphqlRelayRequest[].class);
                         final List<CompletableFuture<ExecutionResult>> futures = new ArrayList<>(graphqlRequests.length);
                         for (GraphqlRelayRequest grr : graphqlRequests) {
-                            futures.add(execute(graphql, grr));
+                            futures.add(execute(arguments, graphql, grr));
                         }
                         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenApply(v -> {
                             return futures.stream().map(CompletableFuture::join)
@@ -97,7 +100,7 @@ public class GraphqlIncoming implements Incoming {
                         });
                     } else {
                         final GraphqlRelayRequest graphqlRelayRequest = gson.fromJson(json, GraphqlRelayRequest.class);
-                        final CompletableFuture<ExecutionResult> future = execute(graphql, graphqlRelayRequest);
+                        final CompletableFuture<ExecutionResult> future = execute(arguments, graphql, graphqlRelayRequest);
                         future.whenComplete((r, t) -> {
                             if (Objects.nonNull(t)) {
                                 endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, t, gson);
@@ -126,9 +129,8 @@ public class GraphqlIncoming implements Incoming {
         });
     }
 
-    private CompletableFuture<ExecutionResult> execute(final GraphQL graphql, final GraphqlRelayRequest graphqlRequest) {
-        final GraphQLContext context = GraphQLContext.newContext().build();
-        final ExecutionInput.Builder builder = ExecutionInput.newExecutionInput(graphqlRequest.getQuery()).localContext(context);
+    private CompletableFuture<ExecutionResult> execute(final Map<String, Object> arguments, final GraphQL graphql, final GraphqlRelayRequest graphqlRequest) {
+        final ExecutionInput.Builder builder = ExecutionInput.newExecutionInput(graphqlRequest.getQuery()).graphQLContext(arguments);
         if (Objects.nonNull(graphqlRequest.getVariables())) {
             builder.variables(graphqlRequest.getVariables());
         }
