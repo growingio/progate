@@ -14,7 +14,15 @@ upstreams:
         port: {{ services.growing_analysis_java.grpc.port }}
         weight: 1
     {% endfor %}
-
+  - name: iam
+    protocol: grpc
+    internal: true
+    nodes:
+    {% for host in services.growing_iam.hosts %}
+      - host: {{ host }}
+        port: {{ services.growing_iam.grpc.port }}
+        weight: 1
+    {% endfor %}
 
 plugins:
   - hash-id
