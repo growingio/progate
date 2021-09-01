@@ -11,6 +11,7 @@ import io.growing.gateway.internal.ConfigUpstreamDiscovery;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.plugin.iam.UserFactory;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServer;
@@ -47,6 +48,13 @@ public class GraphQLGatewayBootstrap {
 
         final UpstreamDiscovery discovery = new ConfigUpstreamDiscovery(configPath);
         final List<Upstream> upstreams = discovery.discover();
+
+        upstreams.forEach(upstream -> {
+            if(upstream.isInternal()) {
+                UserFactory.upstream(upstream);
+            }
+        });
+
         final GraphqlIncoming incoming = new GraphqlIncoming(config.getGraphql());
 
 
@@ -114,7 +122,9 @@ public class GraphQLGatewayBootstrap {
         final ServiceDiscovery discovery = new GrpcReflectionServiceDiscovery();
         final List<ServiceMetadata> services = new LinkedList<>();
         upstreams.forEach(upstream -> {
-            services.add(discovery.discover(upstream));
+            if(!upstream.isInternal()) {
+                services.add(discovery.discover(upstream));
+            }
         });
         return services;
     }

@@ -13,7 +13,7 @@ dependencies {
     implementation("com.graphql-java:graphql-java")
     implementation("com.google.protobuf:protobuf-java-util")
     implementation("com.graphql-java:graphql-java-extended-scalars")
-    implementation("io.growing.gateway.plugin:gateway-plugin:1.0.0-SNAPSHOT") {
+    api("io.growing.gateway.plugin:gateway-plugin:1.0.0-SNAPSHOT") {
         isChanging = true
     }
     // We use implementation instead of api for better compilation performance

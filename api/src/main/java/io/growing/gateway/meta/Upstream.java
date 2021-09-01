@@ -11,6 +11,8 @@ import java.util.stream.Stream;
  */
 public interface Upstream {
 
+    boolean isInternal();
+
     String name();
 
     String protocol();

@@ -14,6 +14,7 @@ public class UpstreamConfig {
     private String protocol;
     private List<Node> nodes;
     private String balancer;
+    private boolean internal = false;
 
     public String getName() {
         return name;
@@ -45,6 +46,14 @@ public class UpstreamConfig {
 
     public void setBalancer(String balancer) {
         this.balancer = balancer;
+    }
+
+    public boolean isInternal() {
+        return internal;
+    }
+
+    public void setInternal(boolean internal) {
+        this.internal = internal;
     }
 
     public static class Node {
@@ -110,6 +119,11 @@ public class UpstreamConfig {
         final List<ServerNode> servers = new LinkedList<>();
         nodes.forEach(node -> servers.add(node.toServerNode()));
         return new Upstream() {
+            @Override
+            public boolean isInternal() {
+                return internal;
+            }
+
             @Override
             public String name() {
                 return name;
