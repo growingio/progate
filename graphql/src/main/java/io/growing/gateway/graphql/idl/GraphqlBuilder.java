@@ -36,7 +36,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 public class GraphqlBuilder {
 
@@ -85,20 +84,19 @@ public class GraphqlBuilder {
             final List<FieldDefinition> fields = typeDef.getFieldDefinitions();
             final PluginFetcherBuilder pfb = new PluginFetcherBuilder();
             fields.forEach(field -> {
-                try (final Stream<Directive> stream = field.getDirectives().stream()) {
-                    final Optional<Directive> endpointDirectiveOpt = stream.filter(directive -> protocols.contains(directive.getName())).findAny();
-                    if (endpointDirectiveOpt.isPresent()) {
-                        final Directive endpointDirective = endpointDirectiveOpt.get();
-                        final String endpoint = ((StringValue) endpointDirective.getArgument("endpoint").getValue()).getValue();
-                        final List<String> values = getListStringArgument(endpointDirective, "values");
-                        final List<String> mappings = getListStringArgument(endpointDirective, "mappings");
-                        final Outgoing handler = handlers.get(endpointDirective.getName());
-                        final boolean isListType = isListReturnType(field);
-                        final DataFetcher<CompletionStage<?>> fetcher = new OutgoingDataFetcher(endpoint, service.upstream(), handler, values, mappings, isListType);
-                        register.type(type, builder -> builder.dataFetcher(field.getName(), pfb.build(field.getDirectives(), fetcher)));
-                    } else {
-                        register.type(type, builder -> builder.dataFetcher(field.getName(), new NotFoundFetcher()));
-                    }
+                final Optional<Directive> endpointDirectiveOpt = field.getDirectives().stream()
+                    .filter(directive -> protocols.contains(directive.getName())).findAny();
+                if (endpointDirectiveOpt.isPresent()) {
+                    final Directive endpointDirective = endpointDirectiveOpt.get();
+                    final String endpoint = ((StringValue) endpointDirective.getArgument("endpoint").getValue()).getValue();
+                    final List<String> values = getListStringArgument(endpointDirective, "values");
+                    final List<String> mappings = getListStringArgument(endpointDirective, "mappings");
+                    final Outgoing handler = handlers.get(endpointDirective.getName());
+                    final boolean isListType = isListReturnType(field);
+                    final DataFetcher<CompletionStage<?>> fetcher = new OutgoingDataFetcher(endpoint, service.upstream(), handler, values, mappings, isListType);
+                    register.type(type, builder -> builder.dataFetcher(field.getName(), pfb.build(field.getDirectives(), fetcher)));
+                } else {
+                    register.type(type, builder -> builder.dataFetcher(field.getName(), new NotFoundFetcher()));
                 }
             });
         };
