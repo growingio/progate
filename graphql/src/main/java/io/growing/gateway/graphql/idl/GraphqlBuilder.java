@@ -2,6 +2,7 @@ package io.growing.gateway.graphql.idl;
 
 import com.google.common.collect.Sets;
 import graphql.GraphQL;
+import graphql.execution.AsyncExecutionStrategy;
 import graphql.language.Argument;
 import graphql.language.ArrayValue;
 import graphql.language.Directive;
@@ -41,7 +42,7 @@ public class GraphqlBuilder {
 
     private Set<Outgoing> outgoings;
     private List<ServiceMetadata> services;
-    private Set<GraphQLScalarType> scalars = Sets.newHashSet(PluginScalars.HashId, PluginScalars.BytesJson,
+    private final Set<GraphQLScalarType> scalars = Sets.newHashSet(PluginScalars.HashId, PluginScalars.BytesJson,
         PluginScalars.DateTime, ExtendedScalars.Json, ExtendedScalars.Object, JavaPrimitives.GraphQLLong);
     private final GraphqlSchemaParser parser = new GraphqlSchemaParser();
 
@@ -70,7 +71,9 @@ public class GraphqlBuilder {
         final TypeDefinitionRegistry registry = parser.parse(services);
         final SchemaGenerator generator = new SchemaGenerator();
         final GraphQLSchema graphQLSchema = generator.makeExecutableSchema(registry, runtimeWiringBuilder.build());
-        return GraphQL.newGraphQL(graphQLSchema).build();
+        return GraphQL.newGraphQL(graphQLSchema)
+            .queryExecutionStrategy(new AsyncExecutionStrategy())
+            .mutationExecutionStrategy(new AsyncExecutionStrategy()).build();
     }
 
     private void bindDataFetcher(final RuntimeWiring.Builder register, final ServiceMetadata service, final Map<String, Outgoing> handlers) {
