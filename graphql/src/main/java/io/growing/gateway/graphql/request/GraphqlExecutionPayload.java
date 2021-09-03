@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * @author AI
  */
-public class GraphqlRelayRequest {
+public class GraphqlExecutionPayload {
     private String query;
     private String operationName;
     private Map<String, Object> variables;

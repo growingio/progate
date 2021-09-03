@@ -9,10 +9,9 @@ import com.google.gson.JsonElement;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
-import graphql.GraphQLContext;
 import io.growing.gateway.graphql.config.GraphqlConfig;
 import io.growing.gateway.graphql.idl.GraphqlBuilder;
-import io.growing.gateway.graphql.request.GraphqlRelayRequest;
+import io.growing.gateway.graphql.request.GraphqlExecutionPayload;
 import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Incoming;
@@ -29,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -81,13 +81,13 @@ public class GraphqlIncoming implements Incoming {
         request.body(ar -> {
             try {
                 if (ar.succeeded()) {
-                    final Map<String, Object> arguments = new PluginArguments().arguments(request);
                     final JsonElement json = gson.fromJson(ar.result().toString(StandardCharsets.UTF_8), JsonElement.class);
                     if (json.isJsonArray()) {
-                        final GraphqlRelayRequest[] graphqlRequests = gson.fromJson(json, GraphqlRelayRequest[].class);
-                        final List<CompletableFuture<ExecutionResult>> futures = new ArrayList<>(graphqlRequests.length);
-                        for (GraphqlRelayRequest grr : graphqlRequests) {
-                            futures.add(execute(arguments, graphql, grr));
+                        final GraphqlExecutionPayload[] payloads = gson.fromJson(json, GraphqlExecutionPayload[].class);
+                        final List<CompletableFuture<ExecutionResult>> futures = new ArrayList<>(payloads.length);
+                        for (GraphqlExecutionPayload payload : payloads) {
+                            final ExecutionInput execution = buildExecution(request, payload);
+                            futures.add(graphql.executeAsync(execution));
                         }
                         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).thenApply(v -> {
                             return futures.stream().map(CompletableFuture::join)
@@ -99,8 +99,9 @@ public class GraphqlIncoming implements Incoming {
                             response.end(chunk);
                         });
                     } else {
-                        final GraphqlRelayRequest graphqlRelayRequest = gson.fromJson(json, GraphqlRelayRequest.class);
-                        final CompletableFuture<ExecutionResult> future = execute(arguments, graphql, graphqlRelayRequest);
+                        final GraphqlExecutionPayload payload = gson.fromJson(json, GraphqlExecutionPayload.class);
+                        final ExecutionInput execution = buildExecution(request, payload);
+                        final CompletableFuture<ExecutionResult> future = graphql.executeAsync(execution);
                         future.whenComplete((r, t) -> {
                             if (Objects.nonNull(t)) {
                                 endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, t, gson);
@@ -129,12 +130,21 @@ public class GraphqlIncoming implements Incoming {
         });
     }
 
-    private CompletableFuture<ExecutionResult> execute(final Map<String, Object> arguments, final GraphQL graphql, final GraphqlRelayRequest graphqlRequest) {
-        final ExecutionInput.Builder builder = ExecutionInput.newExecutionInput(graphqlRequest.getQuery()).graphQLContext(arguments);
-        if (Objects.nonNull(graphqlRequest.getVariables())) {
-            builder.variables(graphqlRequest.getVariables());
+    private ExecutionInput buildExecution(final HttpServerRequest request, final GraphqlExecutionPayload payload) {
+        final ExecutionInput.Builder builder = ExecutionInput.newExecutionInput();
+        builder.query(payload.getQuery());
+        if (Objects.nonNull(payload.getVariables())) {
+            builder.variables(payload.getVariables());
         }
-        return graphql.executeAsync(builder.build());
+        if (StringUtils.isNotBlank(payload.getOperationName())) {
+            builder.operationName(payload.getOperationName());
+        }
+        final Map<String, Object> arguments = new HashMap<>();
+        arguments.putAll(new PluginArguments().arguments(request));
+        arguments.put("request", request);
+        arguments.put("payload", payload);
+        builder.graphQLContext(arguments);
+        return builder.build();
     }
 
     @SuppressWarnings("unchecked")
