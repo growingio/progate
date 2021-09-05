@@ -3,8 +3,10 @@ package io.growing.gateway.graphql.transcode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
+import graphql.GraphQLContext;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,7 +20,8 @@ public class TranscoderTests {
         final List<String> values = Lists.newArrayList("stage=NONE");
         final Transcoder transcoder = new Transcoder() {
         };
-        final Map<String, Object> target = transcoder.transcode(source, values, mappings);
+        final GraphQLContext context = GraphQLContext.of(new HashMap<String, Object>());
+        final Map<String, Object> target = transcoder.transcode(context, source, values, mappings);
         System.out.println(target);
 
         ByteString.copyFromUtf8("eyJtZXRyaWNUeXBlIjoibm9uZSIsInN1YkNoYXJ0VHlwZSI6InNlcGVyYXRlIn0=").toByteArray();

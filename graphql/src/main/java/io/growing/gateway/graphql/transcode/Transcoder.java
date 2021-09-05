@@ -2,7 +2,7 @@ package io.growing.gateway.graphql.transcode;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
-import com.google.protobuf.ByteString;
+import graphql.GraphQLContext;
 import org.apache.commons.lang3.StringUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -14,8 +14,17 @@ import java.util.Objects;
 public interface Transcoder {
 
     @SuppressWarnings("unchecked")
-    default Map<String, Object> transcode(final Map<String, Object> source, final List<String> values, final List<String> mappings) {
+    default Map<String, Object> transcode(final GraphQLContext context, final Map<String, Object> source,
+                                          final List<String> values, final List<String> mappings) {
         final Map<String, Object> parameters = new HashMap<>(source);
+        final Object dataCenterId = context.get("dataCenterId");
+        if (Objects.nonNull(dataCenterId)) {
+            parameters.put("dataCenterId", dataCenterId);
+        }
+        final Object userId = context.get("userId");
+        if (Objects.nonNull(userId)) {
+            parameters.put("userId", userId);
+        }
         values.forEach(value -> {
             final int index = value.indexOf('=');
             parameters.put(value.substring(0, index), value.substring(index + 1));

@@ -21,4 +21,6 @@ dependencies {
     implementation("com.google.dagger:dagger")
     annotationProcessor("com.google.dagger:dagger-compiler")
 
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.5")
+
 }

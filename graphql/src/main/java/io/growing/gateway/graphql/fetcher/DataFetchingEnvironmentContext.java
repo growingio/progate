@@ -1,5 +1,6 @@
 package io.growing.gateway.graphql.fetcher;
 
+import graphql.GraphQLContext;
 import graphql.schema.DataFetchingEnvironment;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.graphql.transcode.Transcoder;
@@ -14,7 +15,8 @@ public class DataFetchingEnvironmentContext implements RequestContext, Transcode
 
     public DataFetchingEnvironmentContext(DataFetchingEnvironment environment, List<String> values, List<String> mappings) {
         final EnvironmentArgumentTranscoder transcoder = new EnvironmentArgumentTranscoder();
-        this.arguments = transcoder.transcode(transcode(environment.getArguments(), values, mappings));
+        final GraphQLContext context = environment.getGraphQlContext();
+        this.arguments = transcoder.transcode(transcode(context, environment.getArguments(), values, mappings));
     }
 
     @Override
