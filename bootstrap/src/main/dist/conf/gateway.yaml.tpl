@@ -31,4 +31,4 @@ extra-plugins:
   - hash-id
 
 graphql:
-  path: /v3/data-centers/:dataCenterUid/graphql
+  path: /data-centers/:dataCenterUid/graphql
