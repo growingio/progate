@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletionException;
 
 public class SimpleDataFetcherExceptionHandler implements DataFetcherExceptionHandler {
 
@@ -22,9 +23,12 @@ public class SimpleDataFetcherExceptionHandler implements DataFetcherExceptionHa
 
     @Override
     public DataFetcherExceptionHandlerResult onException(DataFetcherExceptionHandlerParameters parameters) {
-        final Throwable t = parameters.getException();
+        final Throwable t = getRootCause(parameters);
         String message;
         ErrorType errorType = ErrorType.DataFetchingException;
+        if (t instanceof CompletionException) {
+            final CompletionException e = (CompletionException) t;
+        }
         if (t instanceof StatusRuntimeException) {
             final StatusRuntimeException e = (StatusRuntimeException) t;
             message = e.getStatus().getDescription();
@@ -43,6 +47,15 @@ public class SimpleDataFetcherExceptionHandler implements DataFetcherExceptionHa
         final GraphQLError error = GraphqlErrorBuilder.newError(parameters.getDataFetchingEnvironment())
             .errorType(errorType).message(message).build();
         return DataFetcherExceptionHandlerResult.newResult(error).build();
+    }
+
+    private Throwable getRootCause(DataFetcherExceptionHandlerParameters parameters) {
+        final Throwable t = parameters.getException();
+        if (t instanceof CompletionException) {
+            final CompletionException e = (CompletionException) t;
+            return e.getCause();
+        }
+        return t;
     }
 
 }
