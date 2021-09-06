@@ -50,7 +50,7 @@ public class GraphQLGatewayBootstrap {
         final List<Upstream> upstreams = discovery.discover();
 
         upstreams.forEach(upstream -> {
-            if(upstream.isInternal()) {
+            if (upstream.isInternal()) {
                 UserService.upstream(upstream);
             }
         });
@@ -122,7 +122,7 @@ public class GraphQLGatewayBootstrap {
         final ServiceDiscovery discovery = new GrpcReflectionServiceDiscovery();
         final List<ServiceMetadata> services = new LinkedList<>();
         upstreams.forEach(upstream -> {
-            if(!upstream.isInternal()) {
+            if (!upstream.isInternal()) {
                 services.add(discovery.discover(upstream));
             }
         });

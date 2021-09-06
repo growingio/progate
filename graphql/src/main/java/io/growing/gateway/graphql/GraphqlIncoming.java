@@ -9,7 +9,9 @@ import com.google.gson.JsonElement;
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
+import graphql.execution.DataFetcherExceptionHandler;
 import io.growing.gateway.graphql.config.GraphqlConfig;
+import io.growing.gateway.graphql.handler.SimpleDataFetcherExceptionHandler;
 import io.growing.gateway.graphql.idl.GraphqlBuilder;
 import io.growing.gateway.graphql.request.GraphqlExecutionPayload;
 import io.growing.gateway.http.HttpApi;
@@ -47,16 +49,18 @@ public class GraphqlIncoming implements Incoming {
     private final Logger logger = LoggerFactory.getLogger(GraphqlIncoming.class);
     private final Gson gson;
     private final GraphqlConfig config;
+    private final DataFetcherExceptionHandler exceptionHandler;
 
     public GraphqlIncoming(GraphqlConfig config) {
         this.config = config;
         this.gson = new GsonBuilder().serializeNulls().create();
+        this.exceptionHandler = new SimpleDataFetcherExceptionHandler();
     }
 
     @Override
     public void reload(final List<ServiceMetadata> services, final Set<Outgoing> outgoings) {
         final GraphqlBuilder builder = GraphqlBuilder.newBuilder();
-        graphQLReference.set(builder.outgoings(outgoings).services(services).build());
+        graphQLReference.set(builder.outgoings(outgoings).services(services).exceptionHandler(exceptionHandler).build());
     }
 
     @Override

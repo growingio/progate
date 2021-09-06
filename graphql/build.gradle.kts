@@ -9,6 +9,7 @@ plugins {
 dependencies {
 
     implementation(project(":core"))
+    implementation("io.grpc:grpc-stub")
     implementation("com.google.code.gson:gson")
     implementation("com.graphql-java:graphql-java")
     implementation("com.google.protobuf:protobuf-java-util")
