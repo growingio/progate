@@ -80,8 +80,8 @@ public class GraphqlBuilder {
         final GraphQLSchema graphQLSchema = generator.makeExecutableSchema(registry, runtimeWiringBuilder.build());
         return GraphQL.newGraphQL(graphQLSchema)
             .defaultDataFetcherExceptionHandler(exceptionHandler)
-            .queryExecutionStrategy(new AsyncExecutionStrategy())
-            .mutationExecutionStrategy(new AsyncExecutionStrategy()).build();
+            .queryExecutionStrategy(new AsyncExecutionStrategy(exceptionHandler))
+            .mutationExecutionStrategy(new AsyncExecutionStrategy(exceptionHandler)).build();
     }
 
     private void bindDataFetcher(final RuntimeWiring.Builder register, final ServiceMetadata service, final Map<String, Outgoing> handlers) {
