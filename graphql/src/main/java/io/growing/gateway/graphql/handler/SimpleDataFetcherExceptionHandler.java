@@ -9,7 +9,6 @@ import graphql.execution.DataFetcherExceptionHandlerParameters;
 import graphql.execution.DataFetcherExceptionHandlerResult;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +25,6 @@ public class SimpleDataFetcherExceptionHandler implements DataFetcherExceptionHa
         final Throwable t = getRootCause(parameters);
         String message;
         ErrorType errorType = ErrorType.DataFetchingException;
-        if (t instanceof CompletionException) {
-            final CompletionException e = (CompletionException) t;
-        }
         if (t instanceof StatusRuntimeException) {
             final StatusRuntimeException e = (StatusRuntimeException) t;
             message = e.getStatus().getDescription();
@@ -41,7 +37,7 @@ public class SimpleDataFetcherExceptionHandler implements DataFetcherExceptionHa
             message = t.getLocalizedMessage();
         }
         if (Objects.isNull(message)) {
-            message = StringUtils.EMPTY;
+            message = t.getClass().getSimpleName();
         }
         logger.warn(message, t);
         final GraphQLError error = GraphqlErrorBuilder.newError(parameters.getDataFetchingEnvironment())
