@@ -86,6 +86,7 @@ public class GraphQLGatewayBootstrap {
                 counter.await();
             } catch (InterruptedException e) {
                 logger.error(e.getLocalizedMessage(), e);
+                Thread.currentThread().interrupt();
             }
         }));
 

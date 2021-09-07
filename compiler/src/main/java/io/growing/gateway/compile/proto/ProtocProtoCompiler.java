@@ -41,8 +41,11 @@ public class ProtocProtoCompiler implements Compiler<ProtocCompileSpec> {
             if (CollectionUtilities.isNotEmpty(grpcSources)) {
                 Protoc.runProtoc(createGrpcCompileArgs(spec, grpcSources));
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             throw new CompilationFailedException(e);
+        } catch (InterruptedException e) {
+            logger.warn(e.getLocalizedMessage(), e);
+            Thread.currentThread().interrupt();
         }
     }
 
