@@ -74,6 +74,7 @@ public class GraphqlBuilder {
         services.forEach(service -> {
             bindDataFetcher(runtimeWiringBuilder, service, handlers);
         });
+        runtimeWiringBuilder.directive(GlobalIdSchemaDirectiveWiring.NAME, new GlobalIdSchemaDirectiveWiring());
         scalars.forEach(runtimeWiringBuilder::scalar);
         final TypeDefinitionRegistry registry = parser.parse(services);
         final SchemaGenerator generator = new SchemaGenerator();

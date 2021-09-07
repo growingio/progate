@@ -12,19 +12,20 @@ public class JobServiceImpl extends JobServiceGrpc.JobServiceImplBase {
 
     @Override
     public void getJobs(GetJobsRequest request, StreamObserver<JobDto> responseObserver) {
-        System.out.println("invoke getJobs method");
-        System.out.println(request.getIdsList());
-        for (int i = 0; i < 100; i++) {
-            final JobDto.Builder builder = JobDto.newBuilder();
-            builder.setIndex(Int32Value.newBuilder().setValue(0).build());
-            builder.setName("Hello: " + i);
-            if (i % 2 == 0) {
-                builder.setDescription(StringValue.of("hello example"));
-            }
-            builder.addAllTags(Sets.newHashSet("new", "gateway"));
-            responseObserver.onNext(builder.build());
-        }
-        responseObserver.onCompleted();
+        responseObserver.onError(new RuntimeException("Entity already exists."));
+//        System.out.println("invoke getJobs method");
+//        System.out.println(request.getIdsList());
+//        for (int i = 0; i < 100; i++) {
+//            final JobDto.Builder builder = JobDto.newBuilder();
+//            builder.setIndex(Int32Value.newBuilder().setValue(0).build());
+//            builder.setName("Hello: " + i);
+//            if (i % 2 == 0) {
+//                builder.setDescription(StringValue.of("hello example"));
+//            }
+//            builder.addAllTags(Sets.newHashSet("new", "gateway"));
+//            responseObserver.onNext(builder.build());
+//        }
+//        responseObserver.onCompleted();
     }
 
     @Override
