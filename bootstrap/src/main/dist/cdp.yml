@@ -1,6 +1,8 @@
 app: graphql-gateway
 units:
   - name: graphql-gateway
+    require:
+      jdk: 11
     ports:
       - name: jmx_exporter
         protocol: http
