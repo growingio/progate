@@ -18,9 +18,3 @@ configs:
   - path: conf/gateway.yaml.tpl
   - path: conf/log4j2.xml.tpl
   - path: conf/metrics.yml
-
-custom_configs:
-  - name: cache_enabled
-    default: true
-  - name: olap_pool
-    default: qs
