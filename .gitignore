@@ -6,6 +6,8 @@ build
 logs
 conf/gateway.yaml
 
+.scannerwork
+
 .idea/modules
 .idea/*.xml
 .idea/.gitignore
