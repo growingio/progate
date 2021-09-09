@@ -10,5 +10,6 @@ dependencies {
 
     api("com.google.guava:guava")
     api("org.apache.commons:commons-lang3")
+    api("com.github.ben-manes.caffeine:caffeine")
 
 }

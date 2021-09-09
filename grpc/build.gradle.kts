@@ -13,7 +13,7 @@ plugins {
 
 dependencies {
 
-    api(project(":api"))
+    api(project(":core"))
     implementation(project(":utilities"))
     implementation(project(":grpc-proto"))
 //    implementation("io.vertx:vertx-grpc")

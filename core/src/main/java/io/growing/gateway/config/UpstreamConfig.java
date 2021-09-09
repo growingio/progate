@@ -2,11 +2,15 @@ package io.growing.gateway.config;
 
 import io.growing.gateway.cluster.LoadBalance;
 import io.growing.gateway.cluster.RoundRobin;
+import io.growing.gateway.ctrl.HealthCheck;
+import io.growing.gateway.ctrl.HealthService;
+import io.growing.gateway.ctrl.HealthStatus;
 import io.growing.gateway.meta.ServerNode;
 import io.growing.gateway.meta.Upstream;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class UpstreamConfig {
 
@@ -85,8 +89,8 @@ public class UpstreamConfig {
             this.weight = weight;
         }
 
-        ServerNode toServerNode() {
-            return new ServerNode() {
+        ServerNode toServerNode(final HealthService healthService) {
+            final ServerNode node = new ServerNode() {
                 @Override
                 public String id() {
                     return host + ":" + port;
@@ -109,15 +113,17 @@ public class UpstreamConfig {
 
                 @Override
                 public boolean isAvailable() {
-                    return true;
+                    return HealthStatus.HEALTHY == healthService.check(this);
                 }
             };
+            healthService.watch(node, () -> TimeUnit.SECONDS.toMillis(10));
+            return node;
         }
     }
 
-    public Upstream toUpstream() {
+    public Upstream toUpstream(final HealthService healthService) {
         final List<ServerNode> servers = new LinkedList<>();
-        nodes.forEach(node -> servers.add(node.toServerNode()));
+        nodes.forEach(node -> servers.add(node.toServerNode(healthService)));
         return new Upstream() {
             @Override
             public boolean isInternal() {

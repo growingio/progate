@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * @author AI
  */
-public interface UpstreamDiscovery {
+public interface ClusterDiscoveryService {
 
     List<Upstream> discover();
 

@@ -1,13 +1,16 @@
 package io.growing.gateway.app;
 
 import com.google.common.collect.Sets;
+import io.growing.gateway.ConfigFactory;
 import io.growing.gateway.config.YamlConfigFactoryImpl;
-import io.growing.gateway.discovery.ServiceDiscovery;
-import io.growing.gateway.discovery.UpstreamDiscovery;
+import io.growing.gateway.ctrl.HealthService;
+import io.growing.gateway.discovery.ClusterDiscoveryService;
+import io.growing.gateway.discovery.EndpointDiscoveryService;
 import io.growing.gateway.graphql.GraphqlIncoming;
 import io.growing.gateway.grpc.GrpcOutgoing;
+import io.growing.gateway.grpc.ctrl.GrpcHealthService;
 import io.growing.gateway.grpc.discovery.GrpcReflectionServiceDiscovery;
-import io.growing.gateway.internal.ConfigUpstreamDiscovery;
+import io.growing.gateway.internal.discovery.ConfigClusterDiscoveryService;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Outgoing;
@@ -45,8 +48,9 @@ public class GraphQLGatewayBootstrap {
         if (Objects.nonNull(config.getHashids())) {
             System.setProperty("hashids.salt", config.getHashids().getSalt());
         }
-
-        final UpstreamDiscovery discovery = new ConfigUpstreamDiscovery(configPath);
+        final HealthService healthService = new GrpcHealthService(vertx);
+        final ConfigFactory configFactory = new YamlConfigFactoryImpl(configPath);
+        final ClusterDiscoveryService discovery = new ConfigClusterDiscoveryService(configPath, healthService, configFactory);
         final List<Upstream> upstreams = discovery.discover();
 
         upstreams.forEach(upstream -> {
@@ -120,7 +124,7 @@ public class GraphQLGatewayBootstrap {
     }
 
     private static List<ServiceMetadata> loadServices(final List<Upstream> upstreams) {
-        final ServiceDiscovery discovery = new GrpcReflectionServiceDiscovery();
+        final EndpointDiscoveryService discovery = new GrpcReflectionServiceDiscovery();
         final List<ServiceMetadata> services = new LinkedList<>();
         upstreams.forEach(upstream -> {
             if (!upstream.isInternal()) {

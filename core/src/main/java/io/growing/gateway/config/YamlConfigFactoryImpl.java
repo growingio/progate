@@ -1,7 +1,9 @@
 package io.growing.gateway.config;
 
+import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import io.growing.gateway.ConfigFactory;
+import io.growing.gateway.exception.ConfigParseException;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.representer.Representer;
@@ -23,11 +25,14 @@ public class YamlConfigFactoryImpl implements ConfigFactory {
         final Representer representer = new Representer();
         representer.getPropertyUtils().setSkipMissingProperties(true);
         final Yaml yaml = new Yaml(new Constructor(clazz), representer);
+        BufferedReader reader = null;
         try {
-            BufferedReader reader = Files.newReader(new File(configPath), StandardCharsets.UTF_8);
+            reader = Files.newReader(new File(configPath), StandardCharsets.UTF_8);
             return yaml.load(reader);
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e.getLocalizedMessage(), e);
+            throw new ConfigParseException(String.format("Cannot parse config: %s to %s", configPath, clazz.getName()), e);
+        } finally {
+            Closeables.closeQuietly(reader);
         }
     }
 

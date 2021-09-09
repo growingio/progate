@@ -10,15 +10,15 @@ import java.util.stream.Collectors;
  */
 public interface Upstream {
 
-    boolean isInternal();
-
     String name();
 
     String protocol();
 
-    List<ServerNode> nodes();
+    boolean isInternal();
 
     LoadBalance balancer();
+
+    List<ServerNode> nodes();
 
     default List<ServerNode> getAvailableNodes() {
         return nodes().stream().filter(ServerNode::isAvailable).collect(Collectors.toList());

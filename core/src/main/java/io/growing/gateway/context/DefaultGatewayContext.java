@@ -1,7 +1,5 @@
 package io.growing.gateway.context;
 
-import io.growing.gateway.config.ConfigFactory;
-
 public class DefaultGatewayContext implements GatewayContext {
 
     private final String configPath;
@@ -15,8 +13,4 @@ public class DefaultGatewayContext implements GatewayContext {
         return this.configPath;
     }
 
-    @Override
-    public ConfigFactory configFactory() {
-        return null;
-    }
 }
