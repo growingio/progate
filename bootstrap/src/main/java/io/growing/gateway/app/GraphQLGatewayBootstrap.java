@@ -5,7 +5,7 @@ import io.growing.gateway.ConfigFactory;
 import io.growing.gateway.config.YamlConfigFactoryImpl;
 import io.growing.gateway.ctrl.HealthService;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
-import io.growing.gateway.discovery.EndpointDiscoveryService;
+import io.growing.gateway.discovery.ServiceDiscoveryService;
 import io.growing.gateway.graphql.GraphqlIncoming;
 import io.growing.gateway.grpc.GrpcOutgoing;
 import io.growing.gateway.grpc.ctrl.GrpcHealthService;
@@ -124,7 +124,7 @@ public class GraphQLGatewayBootstrap {
     }
 
     private static List<ServiceMetadata> loadServices(final List<Upstream> upstreams) {
-        final EndpointDiscoveryService discovery = new GrpcReflectionServiceDiscovery();
+        final ServiceDiscoveryService discovery = new GrpcReflectionServiceDiscovery();
         final List<ServiceMetadata> services = new LinkedList<>();
         upstreams.forEach(upstream -> {
             if (!upstream.isInternal()) {
