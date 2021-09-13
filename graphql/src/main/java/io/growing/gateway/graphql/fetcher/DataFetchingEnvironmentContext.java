@@ -12,11 +12,18 @@ import java.util.Map;
 public class DataFetchingEnvironmentContext implements RequestContext, Transcoder {
 
     private final Map<String, Object> arguments;
+    private final DataFetchingEnvironment environment;
 
     public DataFetchingEnvironmentContext(DataFetchingEnvironment environment, List<String> values, List<String> mappings) {
+        this.environment = environment;
         final EnvironmentArgumentTranscoder transcoder = new EnvironmentArgumentTranscoder();
         final GraphQLContext context = environment.getGraphQlContext();
         this.arguments = transcoder.transcode(transcode(context, environment.getArguments(), values, mappings));
+    }
+
+    @Override
+    public String id() {
+        return environment.getExecutionId().toString();
     }
 
     @Override

@@ -7,6 +7,8 @@ import java.util.Map;
  */
 public interface RequestContext {
 
+    String id();
+
     <T> T getArgument(String name);
 
     Map<String, Object> getArguments();
