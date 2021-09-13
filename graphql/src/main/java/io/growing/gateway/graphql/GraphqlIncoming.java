@@ -10,6 +10,7 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.execution.DataFetcherExceptionHandler;
+import graphql.execution.ExecutionId;
 import io.growing.gateway.graphql.config.GraphqlConfig;
 import io.growing.gateway.graphql.handler.SimpleDataFetcherExceptionHandler;
 import io.growing.gateway.graphql.idl.GraphqlBuilder;
@@ -21,6 +22,7 @@ import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.PluginArguments;
 import io.growing.gateway.utilities.CollectionUtilities;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
@@ -35,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -135,7 +138,8 @@ public class GraphqlIncoming implements Incoming {
     }
 
     private ExecutionInput buildExecution(final HttpServerRequest request, final GraphqlExecutionPayload payload) {
-        final ExecutionInput.Builder builder = ExecutionInput.newExecutionInput();
+        final ExecutionId id = ExecutionId.from(getRequestId(request));
+        final ExecutionInput.Builder builder = ExecutionInput.newExecutionInput().executionId(id);
         builder.query(payload.getQuery());
         if (Objects.nonNull(payload.getVariables())) {
             builder.variables(payload.getVariables());
@@ -147,6 +151,7 @@ public class GraphqlIncoming implements Incoming {
         arguments.putAll(new PluginArguments().arguments(request));
         arguments.put("request", request);
         arguments.put("payload", payload);
+        arguments.put("address", getRemoteAddress(request));
         builder.graphQLContext(arguments);
         return builder.build();
     }
@@ -163,6 +168,26 @@ public class GraphqlIncoming implements Incoming {
         }
         builder.put("errors", Sets.newHashSet(ImmutableMap.of("message", message)));
         response.end(gson.toJson(builder.build()));
+    }
+
+    private String getRemoteAddress(final HttpServerRequest request) {
+        final MultiMap headers = request.headers();
+        String headerValue = headers.get(HttpHeaders.X_FORWARDED_FOR);
+        if (Objects.isNull(headerValue)) {
+            headerValue = headers.get("X-Real-IP");
+        }
+        if (StringUtils.isBlank(headerValue)) {
+            return request.remoteAddress().hostAddress();
+        }
+        return StringUtils.split(headerValue, ',')[0];
+    }
+
+    private String getRequestId(final HttpServerRequest request) {
+        final String headerValue = request.headers().get(HttpHeaders.X_REQUEST_ID);
+        if (Objects.isNull(headerValue)) {
+            return UUID.randomUUID().toString();
+        }
+        return headerValue;
     }
 
 }

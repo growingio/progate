@@ -1,15 +1,17 @@
 package io.growing.gateway.graphql.fetcher;
 
-import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import io.growing.gateway.graphql.exception.FetcherNotFoundException;
 
-public class NotFoundFetcher implements DataFetcher<DataFetcherResult<?>> {
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
+public class NotFoundFetcher implements DataFetcher<CompletionStage<?>> {
 
     @Override
-    public DataFetcherResult<?> get(DataFetchingEnvironment environment) throws Exception {
-        throw new FetcherNotFoundException();
+    public CompletionStage<?> get(DataFetchingEnvironment environment) throws Exception {
+        return CompletableFuture.failedFuture(new FetcherNotFoundException());
     }
 
 }

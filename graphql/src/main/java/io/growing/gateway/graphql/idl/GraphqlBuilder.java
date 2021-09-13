@@ -21,6 +21,7 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import io.growing.gateway.graphql.fetcher.AccessLogFetcher;
 import io.growing.gateway.graphql.fetcher.NotFoundFetcher;
 import io.growing.gateway.graphql.fetcher.OutgoingDataFetcher;
 import io.growing.gateway.meta.ServiceMetadata;
@@ -98,6 +99,7 @@ public class GraphqlBuilder {
             fields.forEach(field -> {
                 final Optional<Directive> endpointDirectiveOpt = field.getDirectives().stream()
                     .filter(directive -> protocols.contains(directive.getName())).findAny();
+                final String fetcherName = field.getName();
                 if (endpointDirectiveOpt.isPresent()) {
                     final Directive endpointDirective = endpointDirectiveOpt.get();
                     final String endpoint = ((StringValue) endpointDirective.getArgument("endpoint").getValue()).getValue();
@@ -106,9 +108,9 @@ public class GraphqlBuilder {
                     final Outgoing handler = handlers.get(endpointDirective.getName());
                     final boolean isListType = isListReturnType(field);
                     final DataFetcher<CompletionStage<?>> fetcher = new OutgoingDataFetcher(endpoint, service.upstream(), handler, values, mappings, isListType);
-                    register.type(type, builder -> builder.dataFetcher(field.getName(), pfb.build(field.getDirectives(), fetcher)));
+                    register.type(type, builder -> builder.dataFetcher(fetcherName, new AccessLogFetcher(fetcherName, pfb.build(field.getDirectives(), fetcher))));
                 } else {
-                    register.type(type, builder -> builder.dataFetcher(field.getName(), new NotFoundFetcher()));
+                    register.type(type, builder -> builder.dataFetcher(fetcherName, new AccessLogFetcher(fetcherName, new NotFoundFetcher())));
                 }
             });
         };
