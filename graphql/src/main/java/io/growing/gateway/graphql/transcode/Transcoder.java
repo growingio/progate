@@ -25,6 +25,10 @@ public interface Transcoder {
         if (Objects.nonNull(userId)) {
             parameters.put("userId", userId);
         }
+        final String language = context.get("language");
+        if (Objects.nonNull(language)) {
+            parameters.put("language", language);
+        }
         values.forEach(value -> {
             final int index = value.indexOf('=');
             parameters.put(value.substring(0, index), value.substring(index + 1));
