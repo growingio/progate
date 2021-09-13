@@ -116,7 +116,7 @@ public class UpstreamConfig {
                     return HealthStatus.HEALTHY == healthService.check(this);
                 }
             };
-            healthService.watch(node, () -> TimeUnit.SECONDS.toMillis(10));
+            healthService.watch(node, () -> TimeUnit.SECONDS.toMillis(1));
             return node;
         }
     }

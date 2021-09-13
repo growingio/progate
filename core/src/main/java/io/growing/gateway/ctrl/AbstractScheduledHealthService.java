@@ -2,6 +2,7 @@ package io.growing.gateway.ctrl;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import io.growing.gateway.event.ServerNodeStatusChanged;
 import io.growing.gateway.meta.ServerNode;
 import io.vertx.core.Vertx;
 import org.slf4j.Logger;
@@ -42,19 +43,22 @@ public abstract class AbstractScheduledHealthService implements HealthService {
 
     @Override
     public void watch(ServerNode node, HealthCheck check) {
+        timers.get(node, timerKey -> vertx.setPeriodic(check.interval(), id -> doCheck(node)));
         doCheck(node);
-        timers.get(node, timerKey -> vertx.setPeriodic(check.interval(), id -> {
-            doCheck(node);
-        }));
     }
 
     private void doCheck(ServerNode node) {
         final String host = node.host();
         final int port = node.port();
+        final HealthStatus theLastStatus = statusCache.getIfPresent(node);
         logger.info("Health check host: {}, port: {}", host, port);
         final HealthStatus status = checker.apply(node);
         logger.info("Health check host: {}, port: {}, status: {}", host, port, status);
         statusCache.put(node, status);
+        if (Objects.nonNull(theLastStatus) && theLastStatus != status) {
+            final ServerNodeStatusChanged event = new ServerNodeStatusChanged(node, theLastStatus, status);
+            vertx.eventBus().publish(ServerNodeStatusChanged.TOPIC, event.toJson());
+        }
     }
 
     protected abstract Function<ServerNode, HealthStatus> createChecker();
