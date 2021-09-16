@@ -32,3 +32,10 @@ extra-plugins:
 
 graphql:
   path: /v3/data-centers/:dataCenterUid/graphql
+  plugins:
+    audit:
+      host: "{{ resources.postgresql.cdp.host }}"
+      port: {{ resources.postgresql.cdp.port }}
+      dbname: "cdp"
+      username: "{{ resources.postgresql.cdp.user }}"
+      password: "{{ resources.postgresql.cdp.password }}"
