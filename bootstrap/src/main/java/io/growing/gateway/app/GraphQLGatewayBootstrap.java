@@ -1,7 +1,7 @@
 package io.growing.gateway.app;
 
 import com.google.common.collect.Sets;
-import io.growing.gateway.ConfigFactory;
+import io.growing.gateway.config.ConfigFactory;
 import io.growing.gateway.config.YamlConfigFactoryImpl;
 import io.growing.gateway.ctrl.HealthService;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
@@ -59,7 +59,7 @@ public class GraphQLGatewayBootstrap {
             }
         });
 
-        final GraphqlIncoming incoming = new GraphqlIncoming(config.getGraphql());
+        final GraphqlIncoming incoming = new GraphqlIncoming(config.getGraphql(), configFactory);
 
 
         incoming.apis().forEach(api -> {

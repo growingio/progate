@@ -1,4 +1,4 @@
-package io.growing.gateway;
+package io.growing.gateway.config;
 
 public interface ConfigFactory {
 

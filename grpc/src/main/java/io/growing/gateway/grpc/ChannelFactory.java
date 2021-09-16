@@ -10,6 +10,7 @@ import io.grpc.ManagedChannelBuilder;
 
 import javax.annotation.Nullable;
 import java.time.Duration;
+import java.util.Objects;
 
 public final class ChannelFactory {
 
@@ -17,7 +18,7 @@ public final class ChannelFactory {
         .expireAfterAccess(Duration.ofMinutes(5)).removalListener((key, value, cause) -> {
             final ManagedChannel channel = (ManagedChannel) value;
             channel.shutdown();
-        }).build(new CacheLoader<ServerNode, ManagedChannel>() {
+        }).build(new CacheLoader<>() {
             @Override
             public @Nullable
             ManagedChannel load(ServerNode key) throws Exception {
@@ -29,7 +30,13 @@ public final class ChannelFactory {
     }
 
     public static ManagedChannel get(final ServerNode node) {
-        return CHANNELS.get(node);
+        final ManagedChannel channel = CHANNELS.get(node);
+        assert Objects.nonNull(channel);
+        if (channel.isShutdown() || channel.isTerminated()) {
+            CHANNELS.invalidate(node);
+            return CHANNELS.get(node);
+        }
+        return channel;
     }
 
     public static ManagedChannel get(final Upstream upstream, final Object context) {

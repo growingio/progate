@@ -1,0 +1,5 @@
+plugins:
+  audit:
+    level: 3
+  access-log:
+    level: info

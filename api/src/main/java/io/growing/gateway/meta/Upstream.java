@@ -1,5 +1,6 @@
 package io.growing.gateway.meta;
 
+import io.growing.gateway.cluster.ClusterStateException;
 import io.growing.gateway.cluster.LoadBalance;
 
 import java.util.List;
@@ -21,7 +22,11 @@ public interface Upstream {
     List<ServerNode> nodes();
 
     default List<ServerNode> getAvailableNodes() {
-        return nodes().stream().filter(ServerNode::isAvailable).collect(Collectors.toList());
+        final List<ServerNode> availableNodes = nodes().stream().filter(ServerNode::isAvailable).collect(Collectors.toList());
+        if (availableNodes.isEmpty()) {
+            throw new ClusterStateException("Unreachable cluster " + name());
+        }
+        return availableNodes;
     }
 
 }

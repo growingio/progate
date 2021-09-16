@@ -2,7 +2,6 @@ package io.growing.gateway.config;
 
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
-import io.growing.gateway.ConfigFactory;
 import io.growing.gateway.exception.ConfigParseException;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;

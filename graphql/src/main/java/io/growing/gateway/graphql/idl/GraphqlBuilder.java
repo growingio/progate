@@ -21,6 +21,7 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import io.growing.gateway.config.ConfigFactory;
 import io.growing.gateway.graphql.fetcher.AccessLogFetcher;
 import io.growing.gateway.graphql.fetcher.NotFoundFetcher;
 import io.growing.gateway.graphql.fetcher.OutgoingDataFetcher;
@@ -43,6 +44,7 @@ import java.util.function.Consumer;
 public class GraphqlBuilder {
 
     private Set<Outgoing> outgoings;
+    private PluginFetcherBuilder pfb;
     private List<ServiceMetadata> services;
     private DataFetcherExceptionHandler exceptionHandler;
     private final Set<GraphQLScalarType> scalars = Sets.newHashSet(PluginScalars.HashId, PluginScalars.BytesJson,
@@ -60,6 +62,11 @@ public class GraphqlBuilder {
 
     public GraphqlBuilder outgoings(final Set<Outgoing> outgoings) {
         this.outgoings = outgoings;
+        return this;
+    }
+
+    public GraphqlBuilder configFactory(final ConfigFactory configFactory) {
+        this.pfb = new PluginFetcherBuilder(configFactory);
         return this;
     }
 
@@ -95,7 +102,6 @@ public class GraphqlBuilder {
                 return;
             }
             final List<FieldDefinition> fields = typeDef.getFieldDefinitions();
-            final PluginFetcherBuilder pfb = new PluginFetcherBuilder();
             fields.forEach(field -> {
                 final Optional<Directive> endpointDirectiveOpt = field.getDirectives().stream()
                     .filter(directive -> protocols.contains(directive.getName())).findAny();
