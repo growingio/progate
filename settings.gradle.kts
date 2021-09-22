@@ -4,7 +4,7 @@ include(
     "api",
     "core",
     "graphql",
-//    "restful",
+    "restful",
     "utilities",
     "compiler",
     "grpc",

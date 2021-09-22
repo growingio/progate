@@ -7,10 +7,18 @@ plugins {
 }
 
 dependencies {
-
     implementation(project(":core"))
     implementation("com.google.code.gson:gson")
     implementation("com.jayway.jsonpath:json-path")
     implementation("org.yaml:snakeyaml")
+    implementation("io.grpc:grpc-stub")
+    implementation("com.google.protobuf:protobuf-java-util")
+    api("io.growing.gateway.plugin:gateway-plugin:1.0.0-SNAPSHOT") {
+        isChanging = true
+    }
+    implementation("com.google.dagger:dagger")
+    annotationProcessor("com.google.dagger:dagger-compiler")
+
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.5")
 
 }
