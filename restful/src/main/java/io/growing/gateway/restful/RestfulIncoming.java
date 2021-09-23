@@ -1,6 +1,5 @@
 package io.growing.gateway.restful;
 
-import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.growing.gateway.config.ConfigFactory;
@@ -52,8 +51,7 @@ public class RestfulIncoming implements Incoming {
 
     @Override
     public Set<HttpApi> apis() {
-        // 从配置中加载所有预定义的接口和service 的映射
-        return Sets.newHashSet(config.getHttpApis());
+        return null;
     }
 
     @Override
