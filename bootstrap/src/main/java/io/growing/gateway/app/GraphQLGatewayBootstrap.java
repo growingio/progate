@@ -76,7 +76,7 @@ public class GraphQLGatewayBootstrap {
         final Set<Outgoing> grpcOutgoings = Sets.newHashSet(new GrpcOutgoing());
         final Set<Outgoing> restfulOutgoings = Sets.newHashSet(new GrpcOutgoing());
         router.get("/reload").handler(ctx -> {
-            //graphqlIncoming.reload(loadServices(upstreams), grpcOutgoings);
+            graphqlIncoming.reload(loadServices(upstreams), grpcOutgoings);
             restfulIncoming.reload(loadServices(upstreams), restfulOutgoings);
             ctx.response().end();
         });
@@ -107,7 +107,7 @@ public class GraphQLGatewayBootstrap {
 
         vertx.setPeriodic(1000, id -> {
             try {
-                //graphqlIncoming.reload(loadServices(upstreams), grpcOutgoings);
+                graphqlIncoming.reload(loadServices(upstreams), grpcOutgoings);
                 restfulIncoming.reload(loadServices(upstreams), restfulOutgoings);
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
