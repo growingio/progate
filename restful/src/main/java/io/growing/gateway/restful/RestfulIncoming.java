@@ -1,5 +1,6 @@
 package io.growing.gateway.restful;
 
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.growing.gateway.config.ConfigFactory;
@@ -11,9 +12,11 @@ import io.growing.gateway.restful.config.RestfulConfig;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.idl.RestfulApi;
 import io.growing.gateway.restful.idl.RestfulBuilder;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Set;
@@ -46,22 +49,33 @@ public class RestfulIncoming implements Incoming {
         // reload 加载接口的定义和映射
         logger.info("加载的service：{}");
         RestfulBuilder restfulBuilder = RestfulBuilder.newBuilder();
+        outgoings.forEach(outgoing -> {
+            logger.info("outgoing");
+        });
         restfulApiAtomicReference.set(restfulBuilder.configFactory(configFactory).outgoings(outgoings).services(services).exceptionHandler(restfulExceptionHandler).build());
     }
 
     @Override
     public Set<HttpApi> apis() {
-        return null;
+        final HttpApi httpApi = new HttpApi();
+        String path = "/api";
+        if (StringUtils.isNoneBlank(config.getPath())) {
+            path = config.getPath();
+        }
+        httpApi.setPath(path);
+        httpApi.setMethods(Sets.newHashSet(HttpMethod.POST));
+        return Sets.newHashSet(httpApi);
     }
 
     @Override
     public void handle(HttpServerRequest request) {
         // 上下文路径
-        final String contextPath = config.getContextPath();
+        final String contextPath = config.getPath();
         // accessToken
         final String accessToken = request.getParam("access_token");
         // 获取path 查找对应的service
-        request.path();
+        // request.path(); request path 必须跟
+
         restfulApiAtomicReference.get().execute(request);
     }
 

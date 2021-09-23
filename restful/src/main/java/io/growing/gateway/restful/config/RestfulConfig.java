@@ -6,13 +6,13 @@ package io.growing.gateway.restful.config;
  * @Date 2021/9/18 5:41 下午
  **/
 public class RestfulConfig {
-    private String contextPath;
+    private String path;
 
-    public String getContextPath() {
-        return contextPath;
+    public String getPath() {
+        return path;
     }
 
-    public void setContextPath(String contextPath) {
-        this.contextPath = contextPath;
+    public void setPath(String path) {
+        this.path = path;
     }
 }
