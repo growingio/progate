@@ -12,6 +12,7 @@ dependencies {
     implementation(project(":utilities"))
     implementation(project(":grpc"))
     implementation(project(":graphql"))
+    implementation(project(":restful"))
     implementation("io.vertx:vertx-web")
     implementation("org.slf4j:slf4j-api")
     implementation("com.typesafe:config")

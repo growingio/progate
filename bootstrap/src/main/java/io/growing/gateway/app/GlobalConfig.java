@@ -1,11 +1,13 @@
 package io.growing.gateway.app;
 
 import io.growing.gateway.graphql.config.GraphqlConfig;
+import io.growing.gateway.restful.config.RestfulConfig;
 
 public class GlobalConfig {
     private ServerConfig server;
     private HashIdConfig hashids;
     private GraphqlConfig graphql;
+    private RestfulConfig restful;
 
     public static class HashIdConfig {
         private String salt;
@@ -50,5 +52,13 @@ public class GlobalConfig {
 
     public void setGraphql(GraphqlConfig graphql) {
         this.graphql = graphql;
+    }
+
+    public RestfulConfig getRestful() {
+        return restful;
+    }
+
+    public void setRestful(RestfulConfig restful) {
+        this.restful = restful;
     }
 }

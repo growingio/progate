@@ -15,6 +15,7 @@ import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.iam.UserService;
+import io.growing.gateway.restful.RestfulIncoming;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServer;
@@ -60,8 +61,6 @@ public class GraphQLGatewayBootstrap {
         });
 
         final GraphqlIncoming incoming = new GraphqlIncoming(config.getGraphql(), configFactory);
-
-
         incoming.apis().forEach(api -> {
             api.getMethods().forEach(method -> {
                 router.route(method, api.getPath()).handler(event -> incoming.handle(event.request()));
@@ -73,7 +72,18 @@ public class GraphQLGatewayBootstrap {
             incoming.reload(loadServices(upstreams), outgoings);
             ctx.response().end();
         });
-
+        // Restful 接口
+        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), configFactory);
+        restfulIncoming.apis().forEach(api -> {
+            api.getMethods().forEach(method -> {
+                router.route(method, api.getPath()).handler(event -> incoming.handle(event.request()));
+            });
+        });
+        final Set<Outgoing> restfulOutgoings = Sets.newHashSet(new GrpcOutgoing());
+        router.get("/reload").handler(ctx -> {
+            restfulIncoming.reload(loadServices(upstreams), outgoings);
+            ctx.response().end();
+        });
         final HealthyCheck check = new HealthyCheck();
 
         router.get(check.path).handler(check);
