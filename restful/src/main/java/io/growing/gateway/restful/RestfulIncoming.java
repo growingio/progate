@@ -12,15 +12,24 @@ import io.growing.gateway.restful.config.RestfulConfig;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.idl.RestfulApi;
 import io.growing.gateway.restful.idl.RestfulBuilder;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.Paths;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
-import org.apache.commons.lang3.StringUtils;
+import io.vertx.core.json.Json;
+import org.yaml.snakeyaml.Yaml;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /***
  * @date: 2021/9/18 5:38 下午
@@ -29,9 +38,8 @@ import java.util.concurrent.atomic.AtomicReference;
  **/
 public class RestfulIncoming implements Incoming {
 
-    private final String contentType = "application/json;charset=utf-8";
     private final Logger logger = LoggerFactory.getLogger(RestfulIncoming.class);
-    private final AtomicReference<RestfulApi> restfulApiAtomicReference = new AtomicReference<>();
+    private final AtomicReference<Set<RestfulApi>> restfulApiAtomicReference = new AtomicReference<>();
 
     private final RestfulExceptionHandler restfulExceptionHandler = new RestfulExceptionHandler();
     private final Gson gson;
@@ -47,36 +55,67 @@ public class RestfulIncoming implements Incoming {
     @Override
     public void reload(final List<ServiceMetadata> services, final Set<Outgoing> outgoings) {
         // reload 加载接口的定义和映射
-        logger.info("加载的service：{}");
         RestfulBuilder restfulBuilder = RestfulBuilder.newBuilder();
-        outgoings.forEach(outgoing -> {
-            logger.info("outgoing");
-        });
-        restfulApiAtomicReference.set(restfulBuilder.configFactory(configFactory).outgoings(outgoings).services(services).exceptionHandler(restfulExceptionHandler).build());
+        restfulApiAtomicReference.set(restfulBuilder.outgoings(outgoings).services(services).exceptionHandler(restfulExceptionHandler).build());
     }
 
     @Override
     public Set<HttpApi> apis() {
-        final HttpApi httpApi = new HttpApi();
-        String path = "/api";
-        if (StringUtils.isNoneBlank(config.getPath())) {
-            path = config.getPath();
+        return null;
+    }
+
+    @Override
+    public Set<HttpApi> apis(List<ServiceMetadata> services) {
+        // 初始化所有路由
+        final String basePath = config.getPath();
+        Set<HttpApi> httpApis = Sets.newHashSet();
+        if (Objects.nonNull(services)) {
+            services.forEach(serviceMetadata -> {
+                serviceMetadata.restfulDefinitions().forEach(endpointDefinition -> {
+                    final String content = new String(endpointDefinition.getContent(), StandardCharsets.UTF_8);
+                    final Yaml yaml = new Yaml();
+                    final OpenAPI openAPI = yaml.loadAs(content, OpenAPI.class);
+                    final String version = openAPI.getInfo().getVersion();
+                    final Paths paths = openAPI.getPaths();
+                    for (Map.Entry<String, PathItem> path : paths.entrySet()) {
+                        final String pathKey = path.getKey();
+                        PathItem pathItem = null;
+                        if (path.getValue() instanceof PathItem) {
+                            pathItem = path.getValue();
+                        } else {
+                            final String encode = Json.encode(path.getValue());
+                            pathItem = Json.decodeValue(encode, PathItem.class);
+                        }
+                        Set<HttpMethod> methods = Sets.newHashSet();
+                        if (Objects.nonNull(pathItem)) {
+                            HttpApi httpApi = new HttpApi();
+                            httpApi.setPath(basePath + pathKey);
+                            final Set<PathItem.HttpMethod> httpMethods = pathItem.readOperationsMap().keySet();
+                            httpMethods.forEach(httpMethod -> {
+                                methods.add(new HttpMethod(httpMethod.name()));
+                            });
+                            httpApi.setGrpcService(pathItem.getSummary());
+                            httpApi.setUpstreamName("");
+                            httpApis.add(httpApi);
+                        }
+                    }
+                });
+            });
         }
-        httpApi.setPath(path);
-        httpApi.setMethods(Sets.newHashSet(HttpMethod.POST));
-        return Sets.newHashSet(httpApi);
+        return httpApis;
     }
 
     @Override
     public void handle(HttpServerRequest request) {
-        // 上下文路径
-        final String contextPath = config.getPath();
-        // accessToken
-        final String accessToken = request.getParam("access_token");
-        // 获取path 查找对应的service
-        // request.path(); request path 必须跟
-
-        restfulApiAtomicReference.get().execute(request);
     }
 
+    @Override
+    public void handle(HttpApi httpApi, HttpServerRequest request) {
+        Optional<RestfulApi> restfulApi = restfulApiAtomicReference.get().stream().filter(api -> {
+            return api.getGrpcService().equalsIgnoreCase(httpApi.getGrpcService());
+        }).collect(Collectors.toList()).stream().findFirst();
+        if (restfulApi.isPresent()) {
+            restfulApi.get().execute(config.getPath(), httpApi, request);
+        }
+    }
 }

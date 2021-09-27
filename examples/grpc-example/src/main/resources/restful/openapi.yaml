@@ -6,41 +6,27 @@ info:
 paths:
   /getJobs:
     get:
-      summary: 获取所有Jobs
+      summary: io.growing.gateway.example.JobService
       description: 获取所有Jobs.
-    parameters:
-      -name: accessToken
-        in: query
-    responses:
-      "200":
-        description: "success"
-        content:
-          application/json:
-            schema: object
-      "404":
-        "not found"
-      "405":
-        "method not supported"
-  /createJob:
-    put:
-      summary: 创建jobs
-      description: 创建jobs.
-    requestBody:
-      reqired: true
-      content:
-        application/json:
+      parameters:
+        - name: accessToken
+          in: query
+          allowEmptyValue: false
+          required: true
           schema:
             type: string
-    responses:
-      "200":
-        description: "success"
-        content:
-          application/json:
-            schema: object
-      "404":
-        "not found"
-      "405":
-        "method not supported"
+      responses:
+        "200":
+          description: "success"
+          content:
+            application/json:
+              schema:
+                type: object
+        "404":
+          description: "not found"
+        "405":
+          description: "method not supported"
+
 
 
 

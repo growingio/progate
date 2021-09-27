@@ -59,27 +59,32 @@ public class GraphQLGatewayBootstrap {
                 UserService.upstream(upstream);
             }
         });
-
+        final List<ServiceMetadata> serviceMetadata = loadServices(upstreams);
+        // Grpc 接口
+        final Set<Outgoing> grpcOutgoings = Sets.newHashSet(new GrpcOutgoing());
         final GraphqlIncoming graphqlIncoming = new GraphqlIncoming(config.getGraphql(), configFactory);
+
+        // Restful 接口
+        final Set<Outgoing> restfulOutgoings = Sets.newHashSet(new GrpcOutgoing());
+        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), configFactory);
+        // 先加载
+        router.get("/reload").handler(ctx -> {
+            graphqlIncoming.reload(serviceMetadata, grpcOutgoings);
+            restfulIncoming.reload(serviceMetadata, restfulOutgoings);
+            ctx.response().end();
+        });
+        // 设置路由
         graphqlIncoming.apis().forEach(api -> {
             api.getMethods().forEach(method -> {
                 router.route(method, api.getPath()).handler(event -> graphqlIncoming.handle(event.request()));
             });
         });
-        // Restful 接口
-        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), configFactory);
-        restfulIncoming.apis().forEach(api -> {
+        restfulIncoming.apis(serviceMetadata).forEach(api -> {
             api.getMethods().forEach(method -> {
-                router.route(method, api.getPath()).handler(event -> restfulIncoming.handle(event.request()));
+                router.route(method, api.getPath()).handler(event -> restfulIncoming.handle(api, event.request()));
             });
         });
-        final Set<Outgoing> grpcOutgoings = Sets.newHashSet(new GrpcOutgoing());
-        final Set<Outgoing> restfulOutgoings = Sets.newHashSet(new GrpcOutgoing());
-        router.get("/reload").handler(ctx -> {
-            graphqlIncoming.reload(loadServices(upstreams), grpcOutgoings);
-            restfulIncoming.reload(loadServices(upstreams), restfulOutgoings);
-            ctx.response().end();
-        });
+
         final HealthyCheck check = new HealthyCheck();
 
         router.get(check.path).handler(check);
@@ -107,8 +112,9 @@ public class GraphQLGatewayBootstrap {
 
         vertx.setPeriodic(1000, id -> {
             try {
-                graphqlIncoming.reload(loadServices(upstreams), grpcOutgoings);
-                restfulIncoming.reload(loadServices(upstreams), restfulOutgoings);
+                final List<ServiceMetadata> reloadServiceMetadata = loadServices(upstreams);
+                //graphqlIncoming.reload(loadServices(upstreams), grpcOutgoings);
+                restfulIncoming.reload(reloadServiceMetadata, restfulOutgoings);
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
                 logger.error(e.getLocalizedMessage(), e);

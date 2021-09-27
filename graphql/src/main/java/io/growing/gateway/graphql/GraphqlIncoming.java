@@ -82,6 +82,11 @@ public class GraphqlIncoming implements Incoming {
     }
 
     @Override
+    public Set<HttpApi> apis(List<ServiceMetadata> services) {
+        return null;
+    }
+
+    @Override
     public void handle(HttpServerRequest request) {
         final GraphQL graphql = graphQLReference.get();
         if (Objects.isNull(graphql)) {
@@ -138,6 +143,11 @@ public class GraphqlIncoming implements Incoming {
                 endForError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, e, gson);
             }
         });
+    }
+
+    @Override
+    public void handle(HttpApi httpApi, HttpServerRequest request) {
+
     }
 
     private ExecutionInput buildExecution(final HttpServerRequest request, final GraphqlExecutionPayload payload) {
