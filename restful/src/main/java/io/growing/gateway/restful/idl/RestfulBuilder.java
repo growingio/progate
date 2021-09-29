@@ -6,7 +6,9 @@ import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.fetcher.PluginFetcherBuilder;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
+import io.growing.gateway.restful.utils.RestfulConstants;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
 import io.vertx.core.json.Json;
@@ -79,7 +81,11 @@ public class RestfulBuilder {
                             final String encode = Json.encode(path.getValue());
                             pathItem = Json.decodeValue(encode, PathItem.class);
                         }
-                        restfulApis.addAll(bind(pathItem, outgoings, serviceMetadata));
+                        final Map<PathItem.HttpMethod, Operation> operationMap = pathItem.readOperationsMap();
+                        operationMap.forEach((httpMethod, operation) -> {
+                            restfulApis.addAll(bind(operation, outgoings, serviceMetadata));
+
+                        });
                     }
                 });
             });
@@ -87,13 +93,15 @@ public class RestfulBuilder {
         return restfulApis;
     }
 
-    private Set<RestfulApi> bind(PathItem pathItem, Set<Outgoing> outgoings, ServiceMetadata serviceMetadata) {
+    private Set<RestfulApi> bind(Operation operation, Set<Outgoing> outgoings, ServiceMetadata serviceMetadata) {
         Set<RestfulApi> restfulApis = Sets.newHashSet();
-        outgoings.forEach(outgoing -> {
-            restfulApis.add(new RestfulApi(serviceMetadata, pathItem.getSummary(), outgoing, exceptionHandler, pfb));
-        });
-        return restfulApis;
+        final Object endpoint = operation.getExtensions().get(RestfulConstants.X_GRPC_ENDPOINT);
+        if (Objects.nonNull(endpoint)) {
+            outgoings.forEach(outgoing -> {
+                restfulApis.add(new RestfulApi(serviceMetadata, endpoint.toString(), outgoing, exceptionHandler, pfb));
+            });
+            return restfulApis;
+        }
+        throw new RuntimeException("x-grpc-endpoint must defined in you proto file");
     }
-
-
 }

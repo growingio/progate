@@ -1,5 +1,7 @@
 package io.growing.gateway.restful.idl;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
@@ -7,9 +9,14 @@ import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.fetcher.PluginFetcherBuilder;
 import io.growing.gateway.restful.api.RestfulRequestContext;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
+import io.growing.gateway.restful.utils.RestfulResult;
+import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @Description: RestApi 定义
@@ -18,18 +25,20 @@ import java.util.Map;
  **/
 public class RestfulApi {
     private ServiceMetadata serviceMetadata;
-    private String grpcService;
+    private String grpcDefination;
     private Outgoing outgoing;
     private RestfulExceptionHandler exceptionHandler;
     private PluginFetcherBuilder pfb;
+    private Gson gson;
 
     public RestfulApi() {
     }
 
-    public RestfulApi(ServiceMetadata serviceMetadata, String grpcService, Outgoing outgoing, RestfulExceptionHandler exceptionHandler, PluginFetcherBuilder pfb) {
+    public RestfulApi(ServiceMetadata serviceMetadata, String grpcDefination, Outgoing outgoing, RestfulExceptionHandler exceptionHandler, PluginFetcherBuilder pfb) {
         this.serviceMetadata = serviceMetadata;
-        this.grpcService = grpcService;
+        this.grpcDefination = grpcDefination;
         this.outgoing = outgoing;
+        this.gson = new GsonBuilder().serializeNulls().create();
         this.exceptionHandler = exceptionHandler;
         this.pfb = pfb;
     }
@@ -43,12 +52,12 @@ public class RestfulApi {
         this.serviceMetadata = serviceMetadata;
     }
 
-    public String getGrpcService() {
-        return grpcService;
+    public String getGrpcDefination() {
+        return grpcDefination;
     }
 
-    public void setGrpcService(String grpcService) {
-        this.grpcService = grpcService;
+    public void setGrpcDefination(String grpcDefination) {
+        this.grpcDefination = grpcDefination;
     }
 
     public RestfulExceptionHandler getExceptionHandler() {
@@ -75,10 +84,25 @@ public class RestfulApi {
         this.outgoing = outgoing;
     }
 
-    public void execute(String path, HttpApi httpApi, HttpServerRequest request) {
-        final String upstreamName = httpApi.getUpstreamName();
-        RequestContext requestContext = new RestfulRequestContext((Map<String, Object>) request.params());
-        outgoing.handle(serviceMetadata.upstream(), grpcService, null);
+    public CompletableFuture<RestfulResult> execute(String path, HttpApi httpApi, HttpServerRequest request) {
+        Map<String, Object> params = new HashMap<>(request.params().size());
+        final MultiMap requestParams = request.params();
+        requestParams.forEach(param -> {
+            params.put(param.getKey(), param.getValue());
+        });
+        params.put("id", "1");
+        RequestContext requestContext = new RestfulRequestContext(params);
+        final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefination, requestContext);
+        return completionStage.thenApply(result -> {
+            final Object value = wrap(result);
+            RestfulResult restfulResult = new RestfulResult();
+            restfulResult.add(Json.encode(value));
+            return restfulResult;
+        });
     }
 
+    private Object wrap(final Object value) {
+        System.out.println(value);
+        return value;
+    }
 }

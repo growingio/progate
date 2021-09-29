@@ -61,16 +61,15 @@ public class GraphQLGatewayBootstrap {
         });
         final List<ServiceMetadata> serviceMetadata = loadServices(upstreams);
         // Grpc 接口
-        final Set<Outgoing> grpcOutgoings = Sets.newHashSet(new GrpcOutgoing());
+        final Set<Outgoing> outgoings = Sets.newHashSet(new GrpcOutgoing());
         final GraphqlIncoming graphqlIncoming = new GraphqlIncoming(config.getGraphql(), configFactory);
 
         // Restful 接口
-        final Set<Outgoing> restfulOutgoings = Sets.newHashSet(new GrpcOutgoing());
         final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), configFactory);
         // 先加载
         router.get("/reload").handler(ctx -> {
-            graphqlIncoming.reload(serviceMetadata, grpcOutgoings);
-            restfulIncoming.reload(serviceMetadata, restfulOutgoings);
+            graphqlIncoming.reload(serviceMetadata, outgoings);
+            restfulIncoming.reload(serviceMetadata, outgoings);
             ctx.response().end();
         });
         // 设置路由
@@ -113,8 +112,8 @@ public class GraphQLGatewayBootstrap {
         vertx.setPeriodic(1000, id -> {
             try {
                 final List<ServiceMetadata> reloadServiceMetadata = loadServices(upstreams);
-                //graphqlIncoming.reload(loadServices(upstreams), grpcOutgoings);
-                restfulIncoming.reload(reloadServiceMetadata, restfulOutgoings);
+                //graphqlIncoming.reload(loadServices(upstreams), outgoings);
+                restfulIncoming.reload(reloadServiceMetadata, outgoings);
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
                 logger.error(e.getLocalizedMessage(), e);

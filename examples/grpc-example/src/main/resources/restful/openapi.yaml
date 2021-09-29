@@ -4,10 +4,14 @@ info:
   description: 测试项目
   version: v1
 paths:
-  /getJobs:
+  /jobs:
+    summary: JOBService
+    description: JOBService
     get:
-      summary: io.growing.gateway.example.JobService
+      summary: 获取所有Jobs.
       description: 获取所有Jobs.
+      extensions:
+        x-grpc-endpoint: growing.graphql.example.JobService/GetJob
       parameters:
         - name: accessToken
           in: query
@@ -22,11 +26,16 @@ paths:
             application/json:
               schema:
                 type: object
-        "404":
-          description: "not found"
-        "405":
-          description: "method not supported"
-
-
-
-
+                properties:
+                  name:
+                    type: string
+                    description: "jobname"
+                  description:
+                    type: string
+                    description: "描述"
+                  tags:
+                    type: array
+                    description: "标签"
+                  index:
+                    type: integer
+                    description: "序号"

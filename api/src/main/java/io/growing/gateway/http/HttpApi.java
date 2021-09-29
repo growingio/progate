@@ -8,9 +8,8 @@ import java.util.Set;
  * @author AI
  */
 public class HttpApi {
-    private String upstreamName;
     private String path;
-    private String grpcService;
+
     private Set<HttpMethod> methods;
 
     public String getPath() {
@@ -29,19 +28,4 @@ public class HttpApi {
         this.methods = methods;
     }
 
-    public String getGrpcService() {
-        return grpcService;
-    }
-
-    public void setGrpcService(String grpcService) {
-        this.grpcService = grpcService;
-    }
-
-    public String getUpstreamName() {
-        return upstreamName;
-    }
-
-    public void setUpstreamName(String upstreamName) {
-        this.upstreamName = upstreamName;
-    }
 }

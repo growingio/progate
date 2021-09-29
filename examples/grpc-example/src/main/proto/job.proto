@@ -17,19 +17,28 @@ message JobDto {
 
 service JobService {
 
-  rpc GetJobs(GetJobsRequest) returns (stream JobDto){
+  rpc GetJob(GetJobRequest) returns (stream JobDto){
   }
 
   rpc CreateJob(CreateJobRequest) returns (JobDto){
   }
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse){
+  }
 
 }
 
-message GetJobsRequest {
-  repeated int32 ids = 1;
+message GetJobRequest {
+  int64 id = 1;
 }
 
 message CreateJobRequest {
   JobDto job = 1;
   string type = 2;
+}
+message ListJobsRequest {
+  JobDto job = 1;
+}
+
+message ListJobsResponse {
+  repeated JobDto books = 1;
 }
