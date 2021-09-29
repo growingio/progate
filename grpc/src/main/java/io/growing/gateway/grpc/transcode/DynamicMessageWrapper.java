@@ -162,4 +162,8 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
         return Optional.empty();
     }
 
+    @Override
+    public Collection<Object> values() {
+        return values.values();
+    }
 }

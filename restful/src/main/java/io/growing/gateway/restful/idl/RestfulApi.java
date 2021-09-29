@@ -3,6 +3,7 @@ package io.growing.gateway.restful.idl;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.growing.gateway.context.RequestContext;
+import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
 import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
@@ -14,6 +15,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -94,15 +96,16 @@ public class RestfulApi {
         RequestContext requestContext = new RestfulRequestContext(params);
         final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefination, requestContext);
         return completionStage.thenApply(result -> {
-            final Object value = wrap(result);
-            RestfulResult restfulResult = new RestfulResult();
-            restfulResult.add(Json.encode(value));
-            return restfulResult;
+            if (result instanceof Collection) {
+                final Object res = ((Collection) result).iterator().next();
+                if (res instanceof DynamicMessageWrapper) {
+                    final Collection<Object> values = ((DynamicMessageWrapper) res).values();
+                    RestfulResult restfulResult = new RestfulResult();
+                    restfulResult.add(Json.encode(values));
+                    return restfulResult;
+                }
+            }
+            return null;
         });
-    }
-
-    private Object wrap(final Object value) {
-        System.out.println(value);
-        return value;
     }
 }
