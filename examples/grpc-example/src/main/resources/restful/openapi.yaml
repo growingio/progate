@@ -20,22 +20,35 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        default:
           description: "success"
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  name:
+                  code:
                     type: string
-                    description: "jobname"
-                  description:
+                    description: "响应码"
+                  error:
                     type: string
-                    description: "描述"
-                  tags:
-                    type: array
-                    description: "标签"
-                  index:
+                    description: "错误信息"
+                  data:
+                    title: object
+                    description: "响应数据"
+                    properties:
+                      name:
+                        type: string
+                        description: "jobname"
+                      description:
+                        type: string
+                        description: "描述"
+                      tags:
+                        type: array
+                        description: "标签"
+                      index:
+                        type: integer
+                        description: "序号"
+                  elasped:
                     type: integer
-                    description: "序号"
+                    description: "执行耗时（单位毫秒）"

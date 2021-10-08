@@ -15,7 +15,6 @@ import io.growing.gateway.restful.idl.RestfulApi;
 import io.growing.gateway.restful.idl.RestfulBuilder;
 import io.growing.gateway.restful.idl.RestfulHttpApi;
 import io.growing.gateway.restful.utils.RestfulConstants;
-import io.growing.gateway.restful.utils.RestfulResult;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -125,11 +124,12 @@ public class RestfulIncoming implements Incoming {
     public void handle(HttpApi httpApi, HttpServerRequest request) {
         if (httpApi instanceof RestfulHttpApi) {
             final RestfulHttpApi restfulHttpApi = (RestfulHttpApi) httpApi;
+
             Optional<RestfulApi> restfulApi = restfulApiAtomicReference.get().stream().filter(api -> {
                 return api.getGrpcDefination().equalsIgnoreCase(restfulHttpApi.getGrpcDefination());
             }).collect(Collectors.toList()).stream().findFirst();
             if (restfulApi.isPresent()) {
-                final CompletableFuture<RestfulResult> completableFuture = restfulApi.get().execute(config.getPath(), httpApi, request);
+                final CompletableFuture<Object> completableFuture = restfulApi.get().execute(config.getPath(), restfulHttpApi, request);
                 completableFuture.whenComplete((result, t) -> {
                     HttpServerResponse response = request.response();
                     response.headers().set(HttpHeaders.CONTENT_TYPE, RestfulConstants.CONTENT_TYPE);

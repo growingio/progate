@@ -4,13 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
-import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.fetcher.PluginFetcherBuilder;
 import io.growing.gateway.restful.api.RestfulRequestContext;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.utils.RestfulResult;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
@@ -86,7 +87,7 @@ public class RestfulApi {
         this.outgoing = outgoing;
     }
 
-    public CompletableFuture<RestfulResult> execute(String path, HttpApi httpApi, HttpServerRequest request) {
+    public CompletableFuture<Object> execute(String path, RestfulHttpApi httpApi, HttpServerRequest request) {
         Map<String, Object> params = new HashMap<>(request.params().size());
         final MultiMap requestParams = request.params();
         requestParams.forEach(param -> {
@@ -96,16 +97,48 @@ public class RestfulApi {
         RequestContext requestContext = new RestfulRequestContext(params);
         final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefination, requestContext);
         return completionStage.thenApply(result -> {
-            if (result instanceof Collection) {
-                final Object res = ((Collection) result).iterator().next();
-                if (res instanceof DynamicMessageWrapper) {
-                    final Collection<Object> values = ((DynamicMessageWrapper) res).values();
-                    RestfulResult restfulResult = new RestfulResult();
-                    restfulResult.add(Json.encode(values));
-                    return restfulResult;
-                }
-            }
-            return null;
+            return wrap(result, httpApi.getApiResponses().getDefault());
         });
+    }
+
+    /***
+     * @date: 2021/10/8 11:17 上午
+     * @description: 结果包装
+     * @author: zhuhongbin
+     **/
+    private Object wrap(final Object result, ApiResponse apiResponse) {
+        final Object res = ((Collection) result).iterator().next();
+        if (result instanceof Collection) {
+            if (res instanceof DynamicMessageWrapper) {
+                final DynamicMessageWrapper messageWrapper = ((DynamicMessageWrapper) res);
+                final Object definationSchema = apiResponse.getContent().get("application/json").getSchema().getProperties().get("data");
+                final Schema schema = Json.decodeValue(Json.encode(definationSchema), Schema.class);
+                final Map<String, Object> properties = schema.getProperties();
+                Map<String, Object> resultData = new HashMap<>();
+                properties.keySet().forEach(key -> {
+                    resultData.put(key, messageWrapper.get(key));
+                });
+                RestfulResult restfulResult = new RestfulResult();
+                restfulResult.setCode("200");
+                restfulResult.setData(resultData);
+                restfulResult.setElasped(10000);
+                restfulResult.setError("");
+                return restfulResult;
+            } else {
+                RestfulResult restfulResult = new RestfulResult();
+                restfulResult.setCode("400");
+                restfulResult.setData(null);
+                restfulResult.setElasped(10000);
+                restfulResult.setError("失败");
+                return restfulResult;
+            }
+        } else {
+            RestfulResult restfulResult = new RestfulResult();
+            restfulResult.setCode("400");
+            restfulResult.setData(null);
+            restfulResult.setElasped(10000);
+            restfulResult.setError("失败");
+            return restfulResult;
+        }
     }
 }

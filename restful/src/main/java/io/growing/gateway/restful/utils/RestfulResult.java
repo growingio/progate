@@ -1,34 +1,47 @@
 package io.growing.gateway.restful.utils;
 
-import io.vertx.core.json.Json;
+import java.io.Serializable;
 
-import java.util.ArrayList;
-import java.util.List;
+/***
+ * @date: 2021/9/30 3:16 下午
+ * @description: restful 响应结果处理
+ * @author: zhuhongbin
+ **/
+public class RestfulResult implements Serializable {
+    private String code;
+    private String error;
+    private Integer elasped;
+    private Object data;
 
-import static java.util.stream.Collectors.toList;
-
-/**
- * @author zhuhongbin
- */
-public class RestfulResult {
-    private List<String> results;
-
-    public RestfulResult() {
-        this.results = new ArrayList<>();
+    public String getCode() {
+        return code;
     }
 
-    public void add(String jsonText) {
-        results.add(jsonText);
+    public void setCode(String code) {
+        this.code = code;
     }
 
-    public List<String> asList() {
-        return results;
+    public String getError() {
+        return error;
     }
 
-    public Object asJSON() {
-        if (results.size() == 1) {
-            return Json.encode(results.get(0));
-        }
-        return results.stream().map(Json::encode).collect(toList());
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public Integer getElasped() {
+        return elasped;
+    }
+
+    public void setElasped(Integer elasped) {
+        this.elasped = elasped;
+    }
+
+    public Object getData() {
+        return data;
+    }
+
+    public void setData(Object data) {
+        this.data = data;
     }
 }
