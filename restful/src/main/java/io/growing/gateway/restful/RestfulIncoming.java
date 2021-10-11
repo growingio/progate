@@ -28,6 +28,7 @@ import io.vertx.core.json.Json;
 import org.yaml.snakeyaml.Yaml;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -67,7 +68,14 @@ public class RestfulIncoming implements Incoming {
 
     @Override
     public Set<HttpApi> apis() {
-        return null;
+        // 初始化所有路由
+        Set<HttpApi> httpApis = Sets.newHashSet();
+        final HttpApi httpApi = new HttpApi();
+        final HashSet<HttpMethod> httpMethods = Sets.newHashSet();
+        HttpMethod.values().forEach(httpMethod -> httpMethods.add(httpMethod));
+        httpApi.setMethods(httpMethods);
+        new HttpApi().setPath(config.getPath() + "/**");
+        return httpApis;
     }
 
     @Override
@@ -83,7 +91,6 @@ public class RestfulIncoming implements Incoming {
                     final OpenAPI openAPI = yaml.loadAs(content, OpenAPI.class);
                     final Paths paths = openAPI.getPaths();
                     for (Map.Entry<String, PathItem> path : paths.entrySet()) {
-                        final String pathKey = path.getKey();
                         PathItem pathItem = null;
                         if (path.getValue() instanceof PathItem) {
                             pathItem = path.getValue();
@@ -100,6 +107,7 @@ public class RestfulIncoming implements Incoming {
                                 }
                                 RestfulHttpApi restfulHttpApi = new RestfulHttpApi();
                                 Set<HttpMethod> methods = Sets.newHashSet();
+                                final String pathKey = path.getKey().replace("{projectId}", ":projectId");
                                 restfulHttpApi.setPath(basePath + pathKey);
                                 methods.add(new HttpMethod(httpMethod.name()));
                                 restfulHttpApi.setMethods(methods);
