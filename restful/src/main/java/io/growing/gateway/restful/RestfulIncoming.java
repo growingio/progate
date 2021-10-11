@@ -81,7 +81,6 @@ public class RestfulIncoming implements Incoming {
                     final String content = new String(endpointDefinition.getContent(), StandardCharsets.UTF_8);
                     final Yaml yaml = new Yaml();
                     final OpenAPI openAPI = yaml.loadAs(content, OpenAPI.class);
-                    final String version = openAPI.getInfo().getVersion();
                     final Paths paths = openAPI.getPaths();
                     for (Map.Entry<String, PathItem> path : paths.entrySet()) {
                         final String pathKey = path.getKey();
