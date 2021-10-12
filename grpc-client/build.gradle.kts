@@ -12,3 +12,8 @@ dependencies {
     api("io.grpc:grpc-services")
     implementation(project(":utilities"))
 }
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
