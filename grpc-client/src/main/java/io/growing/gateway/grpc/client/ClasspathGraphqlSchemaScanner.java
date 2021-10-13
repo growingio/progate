@@ -35,7 +35,7 @@ public class ClasspathGraphqlSchemaScanner {
     }
 
     public List<FileDescriptorDto> scan(ClassLoader[] classLoaders, final String root) throws IOException {
-        logger.info("文件扫描的类加载器：{}", classLoaders);
+        logger.info("文件扫描的类加载器：[]", classLoaders);
         Arrays.stream(classLoaders).forEach(classLoader -> {
             logger.info("文件扫描的类加载器：{}", classLoader);
         });
