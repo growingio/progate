@@ -22,7 +22,11 @@ public class SchemeService extends SchemeServiceGrpc.SchemeServiceImplBase {
     private final ClasspathOpenApiSchemaScanner openApiSchemaScanner = new ClasspathOpenApiSchemaScanner();
 
     public SchemeService() {
-        this.setClassLoaders(new ClassLoader[]{this.getClass().getClassLoader()});
+        this.classLoaders = new ClassLoader[]{this.getClass().getClassLoader()};
+    }
+
+    public SchemeService(ClassLoader[] classLoaders) {
+        this.classLoaders = classLoaders;
     }
 
     @Override
