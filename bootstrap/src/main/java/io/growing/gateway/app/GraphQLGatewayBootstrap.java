@@ -15,6 +15,7 @@ import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.iam.UserService;
+import io.growing.gateway.plugin.lang.HashIdCodec;
 import io.growing.gateway.restful.RestfulIncoming;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
@@ -63,9 +64,9 @@ public class GraphQLGatewayBootstrap {
         // Grpc 接口
         final Set<Outgoing> outgoings = Sets.newHashSet(new GrpcOutgoing());
         final GraphqlIncoming graphqlIncoming = new GraphqlIncoming(config.getGraphql(), configFactory);
-
+        final HashIdCodec hashIdCodec = new HashIdCodec(config.getHashids().getSalt(), config.getHashids().getLength());
         // Restful 接口
-        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), configFactory);
+        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, configFactory);
         // 先加载
         router.get("/reload").handler(ctx -> {
             graphqlIncoming.reload(serviceMetadata, outgoings);
@@ -75,12 +76,12 @@ public class GraphQLGatewayBootstrap {
         // 设置路由
         graphqlIncoming.apis().forEach(api -> {
             api.getMethods().forEach(method -> {
-                router.route(method, api.getPath()).handler(event -> graphqlIncoming.handle(event.request()));
+                router.route(method, api.getPath()).handler(context -> graphqlIncoming.handle(context.request()));
             });
         });
         restfulIncoming.apis(serviceMetadata).forEach(api -> {
             api.getMethods().forEach(method -> {
-                router.route(method, api.getPath()).handler(event -> restfulIncoming.handle(api, event.request()));
+                router.route(method, api.getPath()).handler(context -> restfulIncoming.handle(api, context.request()));
             });
         });
 
