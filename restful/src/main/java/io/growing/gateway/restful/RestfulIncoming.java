@@ -9,6 +9,7 @@ import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.plugin.lang.HashIdCodec;
 import io.growing.gateway.restful.config.RestfulConfig;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.idl.RestfulApi;
@@ -25,9 +26,12 @@ import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -51,10 +55,12 @@ public class RestfulIncoming implements Incoming {
     private final RestfulExceptionHandler restfulExceptionHandler = new RestfulExceptionHandler();
     private final Gson gson;
     private final RestfulConfig config;
+    private final HashIdCodec hashIdCodec;
     private final ConfigFactory configFactory;
 
-    public RestfulIncoming(RestfulConfig config, ConfigFactory configFactory) {
+    public RestfulIncoming(RestfulConfig config, HashIdCodec hashIdCodec, ConfigFactory configFactory) {
         this.config = config;
+        this.hashIdCodec = hashIdCodec;
         this.configFactory = configFactory;
         this.gson = new GsonBuilder().serializeNulls().create();
     }
@@ -129,27 +135,43 @@ public class RestfulIncoming implements Incoming {
 
     @Override
     public void handle(HttpApi httpApi, HttpServerRequest request) {
-        if (httpApi instanceof RestfulHttpApi) {
-            final RestfulHttpApi restfulHttpApi = (RestfulHttpApi) httpApi;
-
-            Optional<RestfulApi> restfulApi = restfulApiAtomicReference.get().stream().filter(api -> {
-                return api.getGrpcDefination().equalsIgnoreCase(restfulHttpApi.getGrpcDefination());
-            }).collect(Collectors.toList()).stream().findFirst();
-            if (restfulApi.isPresent()) {
-                final CompletableFuture<Object> completableFuture = restfulApi.get().execute(config.getPath(), restfulHttpApi, request);
-                completableFuture.whenComplete((result, t) -> {
-                    HttpServerResponse response = request.response();
-                    response.headers().set(HttpHeaders.CONTENT_TYPE, RestfulConstants.CONTENT_TYPE);
-                    String chunk = gson.toJson(result);
-                    response.end(chunk);
-                });
+        request.bodyHandler(handle -> {
+            final JsonObject jsonObject = handle.toJsonObject();
+            Map<String, Object> params = new HashMap<>();
+            if (Objects.nonNull(jsonObject)) {
+                params = Json.decodeValue(jsonObject.toString(), Map.class);
             }
-            if (restfulApi.isEmpty()) {
-                // TODO
+            Map<String, Object> finalParams = params;
+            request.params().forEach(param -> {
+                finalParams.put(param.getKey(), param.getValue());
+            });
+            if (httpApi instanceof RestfulHttpApi) {
+                final RestfulHttpApi restfulHttpApi = (RestfulHttpApi) httpApi;
+                final String projectId = request.getParam("projectId");
+                if (StringUtils.isNotBlank(projectId)) {
+                    finalParams.put("projectId", hashIdCodec.decode(projectId));
+                }
+                finalParams.put("id", "1");
+                Optional<RestfulApi> restfulApi = restfulApiAtomicReference.get().stream().filter(api -> {
+                    return api.getGrpcDefination().equalsIgnoreCase(restfulHttpApi.getGrpcDefination());
+                }).collect(Collectors.toList()).stream().findFirst();
+                if (restfulApi.isPresent()) {
+                    final CompletableFuture<Object> completableFuture = restfulApi.get().execute(config.getPath(), restfulHttpApi, finalParams);
+                    completableFuture.whenComplete((result, t) -> {
+                        HttpServerResponse response = request.response();
+                        response.headers().set(HttpHeaders.CONTENT_TYPE, RestfulConstants.CONTENT_TYPE);
+                        String chunk = gson.toJson(result);
+                        response.end(chunk);
+                    });
+                }
+                if (restfulApi.isEmpty()) {
+                    // TODO
+                    return;
+                }
+            } else {
+                // 抛出异常
                 return;
             }
-        } else {
-            // 抛出异常
-        }
+        });
     }
 }

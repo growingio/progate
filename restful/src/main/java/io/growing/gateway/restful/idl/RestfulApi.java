@@ -12,10 +12,6 @@ import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.utils.RestfulResult;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
-import io.vertx.core.Future;
-import io.vertx.core.MultiMap;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
 
 import java.util.Collection;
@@ -89,19 +85,13 @@ public class RestfulApi {
         this.outgoing = outgoing;
     }
 
-    public CompletableFuture<Object> execute(String path, RestfulHttpApi httpApi, HttpServerRequest request) {
-        final Future<Buffer> body = request.body();
-        Map<String, Object> params = new HashMap<>(request.params().size());
-        final MultiMap requestParams = request.params();
-        requestParams.forEach(param -> {
-            params.put(param.getKey(), param.getValue());
-        });
-        params.put("id", "1");
+    public CompletableFuture<Object> execute(String path, RestfulHttpApi httpApi, Map<String, Object> params) {
         RequestContext requestContext = new RestfulRequestContext(params);
         final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefination, requestContext);
         return completionStage.thenApply(result -> {
             return wrap(result, httpApi.getApiResponses().getDefault());
         });
+
     }
 
     /***

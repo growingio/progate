@@ -14,7 +14,7 @@ paths:
         x-grpc-endpoint: growing.graphql.example.JobService/GetJob
       parameters:
         - name: accessToken
-          in: query
+          in: path
           allowEmptyValue: false
           required: true
           schema:
