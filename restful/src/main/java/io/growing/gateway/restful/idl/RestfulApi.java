@@ -13,6 +13,8 @@ import io.growing.gateway.restful.utils.RestfulResult;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.vertx.core.json.Json;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
  * @Date 2021/9/22 1:58 下午
  **/
 public class RestfulApi {
+    private final Logger logger = LoggerFactory.getLogger(RestfulApi.class);
     private ServiceMetadata serviceMetadata;
     private String grpcDefination;
     private Outgoing outgoing;
@@ -110,7 +113,6 @@ public class RestfulApi {
                 final Schema schema = Json.decodeValue(Json.encode(definationSchema), Schema.class);
                 final Map<String, Object> properties = schema.getProperties();
                 Map<String, Object> resultData = new HashMap<>();
-                final Collection<Object> objectCollection = messageWrapper.values();
                 properties.keySet().forEach(key -> {
                     resultData.put(key, messageWrapper.get(key));
                 });

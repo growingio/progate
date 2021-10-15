@@ -23,11 +23,11 @@ import io.swagger.v3.oas.models.Paths;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.nio.charset.StandardCharsets;
@@ -135,10 +135,10 @@ public class RestfulIncoming implements Incoming {
 
     @Override
     public void handle(HttpApi httpApi, HttpServerRequest request) {
-        // null 处理
         if (Objects.isNull(request) || Objects.isNull(httpApi)) {
-            throw new RuntimeException("");
+            throw new RuntimeException(" 不合法的请求");
         }
+        logger.info("restful 请求入口，Restful请求：{},请求头信息：{}", httpApi, request.getHeader("Authorize"));
         request.bodyHandler(handle -> {
             final JsonObject jsonObject = handle.toJsonObject();
             Map<String, Object> params = new HashMap<>();
@@ -165,14 +165,13 @@ public class RestfulIncoming implements Incoming {
                         response.headers().set(HttpHeaders.CONTENT_TYPE, RestfulConstants.CONTENT_TYPE);
                         response.end(gson.toJson(result));
                     });
-                }
-                if (restfulApi.isEmpty()) {
-                    // TODO
-                    throw new RuntimeException("");
+                } else {
+                    logger.warn("restful 当前请求路径尚未开放: {}", httpApi.getPath());
+                    throw new RuntimeException("当前请求路径尚未开放");
                 }
             } else {
-                // 抛出异常
-                throw new RuntimeException("");
+                logger.error("当前请求不是restful 请求，请校验请求路径");
+                throw new RuntimeException("当前请求不是restful 请求，请校验请求路径");
             }
         });
     }
