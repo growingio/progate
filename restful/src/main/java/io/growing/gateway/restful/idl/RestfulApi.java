@@ -110,6 +110,7 @@ public class RestfulApi {
                 final Schema schema = Json.decodeValue(Json.encode(definationSchema), Schema.class);
                 final Map<String, Object> properties = schema.getProperties();
                 Map<String, Object> resultData = new HashMap<>();
+                final Collection<Object> objectCollection = messageWrapper.values();
                 properties.keySet().forEach(key -> {
                     resultData.put(key, messageWrapper.get(key));
                 });

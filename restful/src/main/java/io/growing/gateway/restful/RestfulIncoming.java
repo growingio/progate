@@ -155,8 +155,6 @@ public class RestfulIncoming implements Incoming {
                 if (StringUtils.isNotBlank(projectId)) {
                     finalParams.put(RestfulConstants.PROJECT_KEY, hashIdCodec.decode(projectId));
                 }
-                // id 参数待定
-                finalParams.put("id", "1");
                 Optional<RestfulApi> restfulApi = restfulApiAtomicReference.get().stream().filter(api -> {
                     return api.getGrpcDefination().equalsIgnoreCase(restfulHttpApi.getGrpcDefination());
                 }).collect(Collectors.toList()).stream().findFirst();
@@ -165,8 +163,7 @@ public class RestfulIncoming implements Incoming {
                     completableFuture.whenComplete((result, t) -> {
                         HttpServerResponse response = request.response();
                         response.headers().set(HttpHeaders.CONTENT_TYPE, RestfulConstants.CONTENT_TYPE);
-                        String chunk = gson.toJson(result);
-                        response.end(chunk);
+                        response.end(gson.toJson(result));
                     });
                 }
                 if (restfulApi.isEmpty()) {
