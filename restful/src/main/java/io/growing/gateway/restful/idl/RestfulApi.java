@@ -88,7 +88,10 @@ public class RestfulApi {
         final long start = System.currentTimeMillis();
         final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefination, requestContext);
         return completionStage.thenApply(result -> {
-            return wrap(result, httpApi.getApiResponses().getDefault());
+            final RestfulResult restfulResult = wrap(result, httpApi.getApiResponses().getDefault());
+            final long end = System.currentTimeMillis();
+            restfulResult.setElasped(end - start);
+            return restfulResult;
         });
 
     }
@@ -98,7 +101,7 @@ public class RestfulApi {
      * @description: 结果包装
      * @author: zhuhongbin
      **/
-    private Object wrap(final Object result, ApiResponse apiResponse) {
+    private RestfulResult wrap(final Object result, ApiResponse apiResponse) {
         final Object res = ((Collection) result).iterator().next();
         if (result instanceof Collection) {
             if (res instanceof DynamicMessageWrapper) {
@@ -113,23 +116,20 @@ public class RestfulApi {
                 RestfulResult restfulResult = new RestfulResult();
                 restfulResult.setCode(ResultCode.SUCCESS.code());
                 restfulResult.setData(resultData);
-                restfulResult.setElasped(10000);
-                restfulResult.setError("");
+                restfulResult.setError(null);
                 return restfulResult;
             } else {
                 RestfulResult restfulResult = new RestfulResult();
                 restfulResult.setCode(ResultCode.ERROR.code());
                 restfulResult.setData(null);
-                restfulResult.setElasped(10000);
-                restfulResult.setError("失败");
+                restfulResult.setError(ResultCode.ERROR.desc());
                 return restfulResult;
             }
         } else {
             RestfulResult restfulResult = new RestfulResult();
             restfulResult.setCode(ResultCode.ERROR.code());
             restfulResult.setData(null);
-            restfulResult.setElasped(10000);
-            restfulResult.setError("失败");
+            restfulResult.setError(ResultCode.ERROR.desc());
             return restfulResult;
         }
     }

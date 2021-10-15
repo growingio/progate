@@ -10,7 +10,7 @@ import java.io.Serializable;
 public class RestfulResult implements Serializable {
     private String code;
     private String error;
-    private Integer elasped;
+    private Long elasped;
     private Object data;
 
     public String getCode() {
@@ -29,11 +29,11 @@ public class RestfulResult implements Serializable {
         this.error = error;
     }
 
-    public Integer getElasped() {
+    public Long getElasped() {
         return elasped;
     }
 
-    public void setElasped(Integer elasped) {
+    public void setElasped(Long elasped) {
         this.elasped = elasped;
     }
 
