@@ -1,14 +1,14 @@
 package io.growing.gateway.restful.idl;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.fetcher.PluginFetcherBuilder;
 import io.growing.gateway.restful.api.RestfulRequestContext;
+import io.growing.gateway.restful.enums.ResultCode;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
+import io.growing.gateway.restful.utils.RestfulConstants;
 import io.growing.gateway.restful.utils.RestfulResult;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
@@ -30,7 +30,6 @@ public class RestfulApi {
     private Outgoing outgoing;
     private RestfulExceptionHandler exceptionHandler;
     private PluginFetcherBuilder pfb;
-    private Gson gson;
 
     public RestfulApi() {
     }
@@ -39,7 +38,6 @@ public class RestfulApi {
         this.serviceMetadata = serviceMetadata;
         this.grpcDefination = grpcDefination;
         this.outgoing = outgoing;
-        this.gson = new GsonBuilder().serializeNulls().create();
         this.exceptionHandler = exceptionHandler;
         this.pfb = pfb;
     }
@@ -87,6 +85,7 @@ public class RestfulApi {
 
     public CompletableFuture<Object> execute(String path, RestfulHttpApi httpApi, Map<String, Object> params) {
         RequestContext requestContext = new RestfulRequestContext(params);
+        final long start = System.currentTimeMillis();
         final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefination, requestContext);
         return completionStage.thenApply(result -> {
             return wrap(result, httpApi.getApiResponses().getDefault());
@@ -104,7 +103,7 @@ public class RestfulApi {
         if (result instanceof Collection) {
             if (res instanceof DynamicMessageWrapper) {
                 final DynamicMessageWrapper messageWrapper = ((DynamicMessageWrapper) res);
-                final Object definationSchema = apiResponse.getContent().get("application/json").getSchema().getProperties().get("data");
+                final Object definationSchema = apiResponse.getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema().getProperties().get(RestfulConstants.RESULT_DATA);
                 final Schema schema = Json.decodeValue(Json.encode(definationSchema), Schema.class);
                 final Map<String, Object> properties = schema.getProperties();
                 Map<String, Object> resultData = new HashMap<>();
@@ -112,14 +111,14 @@ public class RestfulApi {
                     resultData.put(key, messageWrapper.get(key));
                 });
                 RestfulResult restfulResult = new RestfulResult();
-                restfulResult.setCode("200");
+                restfulResult.setCode(ResultCode.SUCCESS.code());
                 restfulResult.setData(resultData);
                 restfulResult.setElasped(10000);
                 restfulResult.setError("");
                 return restfulResult;
             } else {
                 RestfulResult restfulResult = new RestfulResult();
-                restfulResult.setCode("400");
+                restfulResult.setCode(ResultCode.ERROR.code());
                 restfulResult.setData(null);
                 restfulResult.setElasped(10000);
                 restfulResult.setError("失败");
@@ -127,7 +126,7 @@ public class RestfulApi {
             }
         } else {
             RestfulResult restfulResult = new RestfulResult();
-            restfulResult.setCode("400");
+            restfulResult.setCode(ResultCode.ERROR.code());
             restfulResult.setData(null);
             restfulResult.setElasped(10000);
             restfulResult.setError("失败");

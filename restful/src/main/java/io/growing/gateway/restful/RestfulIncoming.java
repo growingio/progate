@@ -74,7 +74,7 @@ public class RestfulIncoming implements Incoming {
 
     @Override
     public Set<HttpApi> apis() {
-        // 初始化所有路由
+        // 初始化所有路由（不会使用）
         Set<HttpApi> httpApis = Sets.newHashSet();
         final HttpApi httpApi = new HttpApi();
         final HashSet<HttpMethod> httpMethods = Sets.newHashSet();
@@ -113,7 +113,7 @@ public class RestfulIncoming implements Incoming {
                                 }
                                 RestfulHttpApi restfulHttpApi = new RestfulHttpApi();
                                 Set<HttpMethod> methods = Sets.newHashSet();
-                                final String pathKey = path.getKey().replace("{projectId}", ":projectId");
+                                final String pathKey = path.getKey().replace(RestfulConstants.REST_PATH_KEY, RestfulConstants.VERTX_PATH_KEY);
                                 restfulHttpApi.setPath(basePath + pathKey);
                                 methods.add(new HttpMethod(httpMethod.name()));
                                 restfulHttpApi.setMethods(methods);
@@ -135,6 +135,10 @@ public class RestfulIncoming implements Incoming {
 
     @Override
     public void handle(HttpApi httpApi, HttpServerRequest request) {
+        // null 处理
+        if (Objects.isNull(request) || Objects.isNull(httpApi)) {
+            throw new RuntimeException("");
+        }
         request.bodyHandler(handle -> {
             final JsonObject jsonObject = handle.toJsonObject();
             Map<String, Object> params = new HashMap<>();
@@ -147,10 +151,11 @@ public class RestfulIncoming implements Incoming {
             });
             if (httpApi instanceof RestfulHttpApi) {
                 final RestfulHttpApi restfulHttpApi = (RestfulHttpApi) httpApi;
-                final String projectId = request.getParam("projectId");
+                final String projectId = request.getParam(RestfulConstants.PROJECT_KEY);
                 if (StringUtils.isNotBlank(projectId)) {
-                    finalParams.put("projectId", hashIdCodec.decode(projectId));
+                    finalParams.put(RestfulConstants.PROJECT_KEY, hashIdCodec.decode(projectId));
                 }
+                // id 参数待定
                 finalParams.put("id", "1");
                 Optional<RestfulApi> restfulApi = restfulApiAtomicReference.get().stream().filter(api -> {
                     return api.getGrpcDefination().equalsIgnoreCase(restfulHttpApi.getGrpcDefination());
@@ -166,11 +171,11 @@ public class RestfulIncoming implements Incoming {
                 }
                 if (restfulApi.isEmpty()) {
                     // TODO
-                    return;
+                    throw new RuntimeException("");
                 }
             } else {
                 // 抛出异常
-                return;
+                throw new RuntimeException("");
             }
         });
     }
