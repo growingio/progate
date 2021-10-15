@@ -106,6 +106,7 @@ public class RestfulApi {
      **/
     private RestfulResult wrap(final Object result, ApiResponse apiResponse) {
         final Object res = ((Collection) result).iterator().next();
+        RestfulResult restfulResult = new RestfulResult();
         if (result instanceof Collection) {
             if (res instanceof DynamicMessageWrapper) {
                 final DynamicMessageWrapper messageWrapper = ((DynamicMessageWrapper) res);
@@ -116,20 +117,17 @@ public class RestfulApi {
                 properties.keySet().forEach(key -> {
                     resultData.put(key, messageWrapper.get(key));
                 });
-                RestfulResult restfulResult = new RestfulResult();
                 restfulResult.setCode(ResultCode.SUCCESS.code());
                 restfulResult.setData(resultData);
                 restfulResult.setError(null);
                 return restfulResult;
             } else {
-                RestfulResult restfulResult = new RestfulResult();
                 restfulResult.setCode(ResultCode.ERROR.code());
                 restfulResult.setData(null);
                 restfulResult.setError(ResultCode.ERROR.desc());
                 return restfulResult;
             }
         } else {
-            RestfulResult restfulResult = new RestfulResult();
             restfulResult.setCode(ResultCode.ERROR.code());
             restfulResult.setData(null);
             restfulResult.setError(ResultCode.ERROR.desc());
