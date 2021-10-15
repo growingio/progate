@@ -3,12 +3,14 @@ package io.growing.gateway.grpc.json;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 public class Jackson {
     private Jackson() {
     }
 
     public static final ObjectMapper MAPPER;
+    public static final ObjectMapper YAMLMAPPPER;
 
     static {
         MAPPER = new ObjectMapper();
@@ -18,5 +20,6 @@ public class Jackson {
 //        mapper.registerModule(DefaultScalaModule)
 //        mapper.registerModule(new JavaTimeModule())
 //        mapper.registerModule(new ProtobufModule())
+        YAMLMAPPPER = new ObjectMapper(new YAMLFactory());
     }
 }
