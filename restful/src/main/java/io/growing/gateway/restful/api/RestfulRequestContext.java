@@ -1,6 +1,7 @@
 package io.growing.gateway.restful.api;
 
 import io.growing.gateway.context.RequestContext;
+import io.growing.gateway.restful.utils.RestfulConstants;
 
 import java.util.Map;
 
@@ -17,7 +18,7 @@ public class RestfulRequestContext implements RequestContext {
 
     @Override
     public String id() {
-        return (String) arguments.get("id");
+        return (String) arguments.get(RestfulConstants.X_REQUEST_ID);
     }
 
     @Override

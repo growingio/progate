@@ -32,7 +32,8 @@ public class RestfulConstants {
     public static final String OPENAPI_MEDIA_TYPE = "application/json";
 
     public static final String RESULT_DATA = "data";
-
+    public static final String X_REQUEST_ID = "x-request-id";
+    public static final String AUTHORIZE = "authorize";
 
 
 }

@@ -143,6 +143,7 @@ public class RestfulIncoming implements Incoming {
             request.params().forEach(param -> {
                 finalParams.put(param.getKey(), param.getValue());
             });
+            finalParams.put(RestfulConstants.X_REQUEST_ID, request.getHeader(RestfulConstants.X_REQUEST_ID));
             if (httpApi instanceof RestfulHttpApi) {
                 final RestfulHttpApi restfulHttpApi = (RestfulHttpApi) httpApi;
                 final String projectId = request.getParam(RestfulConstants.PROJECT_KEY);
@@ -158,7 +159,7 @@ public class RestfulIncoming implements Incoming {
                         HttpServerResponse response = request.response();
                         response.headers().set(HttpHeaders.CONTENT_TYPE, RestfulConstants.CONTENT_TYPE);
                         response.end(gson.toJson(result));
-                    });
+                    }).completeExceptionally(restfulExceptionHandler);
                 } else {
                     logger.warn("restful 当前请求路径尚未开放: {}", httpApi.getPath());
                     throw new RuntimeException("当前请求路径尚未开放");
