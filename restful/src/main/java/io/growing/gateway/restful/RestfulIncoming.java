@@ -203,7 +203,13 @@ public class RestfulIncoming implements Incoming {
                 }).collect(Collectors.toList()).stream().findFirst();
                 if (restfulApi.isPresent()) {
                     final CompletableFuture<Object> completableFuture = restfulApi.get().execute(config.getPath(), restfulHttpApi, finalParams);
-                    completableFuture.whenComplete((result, t) -> {
+                    completableFuture.whenComplete((result, throwable) -> {
+                        if (Objects.nonNull(throwable)) {
+                            logger.warn("请求异常: {}", httpApi.getPath());
+                            restfulResult.setCode(ResultCode.ERROR.code());
+                            restfulResult.setError(throwable.getMessage());
+                            response.end(gson.toJson(restfulResult));
+                        }
                         response.end(gson.toJson(result));
                     });
                 } else {
