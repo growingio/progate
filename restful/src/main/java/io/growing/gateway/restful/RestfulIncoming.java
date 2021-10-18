@@ -139,14 +139,16 @@ public class RestfulIncoming implements Incoming {
         if (Objects.isNull(request) || Objects.isNull(httpApi)) {
             throw new RuntimeException(" 不合法的请求");
         }
+        request.pause();
         final String oauthToken = request.getHeader(RestfulConstants.AUTHORIZE);
         logger.info("restful 请求入口，Restful请求：{},请求头信息：{}", httpApi, oauthToken);
         // Token 校验
         webClient.get(oAuth2Config.getAuthServer(), oAuth2Config.getTokenCheckUrl())
             .bearerTokenAuthentication(oauthToken)
             .send()
-            .onSuccess(response -> {
-                logger.info("token 认证通过");
+            .onSuccess(check -> {
+                logger.info("token 认证通过。:{}", check);
+                request.resume();
                 doHandle(httpApi, request);
             })
             .onFailure(error -> {
@@ -158,7 +160,7 @@ public class RestfulIncoming implements Incoming {
 
     /***
      * @date: 2021/10/18 1:23 下午
-     * @description:
+     * @description: 解析执行
      * @author: zhuhongbin
      **/
     private void doHandle(HttpApi httpApi, HttpServerRequest request) {
