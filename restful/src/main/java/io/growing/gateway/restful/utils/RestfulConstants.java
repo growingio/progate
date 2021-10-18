@@ -33,7 +33,7 @@ public class RestfulConstants {
 
     public static final String RESULT_DATA = "data";
     public static final String X_REQUEST_ID = "x-request-id";
-    public static final String AUTHORIZE = "authorize";
+    public static final String AUTHORIZE = "Authorization";
 
 
 }

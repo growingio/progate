@@ -5,6 +5,7 @@ import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.growing.gateway.config.ConfigFactory;
+import io.growing.gateway.config.OAuth2Config;
 import io.growing.gateway.grpc.json.Jackson;
 import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
@@ -25,6 +26,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,14 +56,18 @@ public class RestfulIncoming implements Incoming {
     private final RestfulExceptionHandler restfulExceptionHandler = new RestfulExceptionHandler();
     private final Gson gson;
     private final RestfulConfig config;
+    private final WebClient webClient;
     private final HashIdCodec hashIdCodec;
     private final ConfigFactory configFactory;
+    private final OAuth2Config oAuth2Config;
 
-    public RestfulIncoming(RestfulConfig config, HashIdCodec hashIdCodec, ConfigFactory configFactory) {
+    public RestfulIncoming(RestfulConfig config, HashIdCodec hashIdCodec, ConfigFactory configFactory, WebClient webClient, OAuth2Config oAuth2Config) {
         this.config = config;
         this.hashIdCodec = hashIdCodec;
         this.configFactory = configFactory;
         this.gson = new GsonBuilder().serializeNulls().create();
+        this.webClient = webClient;
+        this.oAuth2Config = oAuth2Config;
     }
 
     @Override
@@ -125,6 +131,7 @@ public class RestfulIncoming implements Incoming {
 
     @Override
     public void handle(HttpServerRequest request) {
+        // donoting
     }
 
     @Override
@@ -132,7 +139,29 @@ public class RestfulIncoming implements Incoming {
         if (Objects.isNull(request) || Objects.isNull(httpApi)) {
             throw new RuntimeException(" 不合法的请求");
         }
-        logger.info("restful 请求入口，Restful请求：{},请求头信息：{}", httpApi, request.getHeader("Authorize"));
+        final String oauthToken = request.getHeader(RestfulConstants.AUTHORIZE);
+        logger.info("restful 请求入口，Restful请求：{},请求头信息：{}", httpApi, oauthToken);
+        // Token 校验
+        webClient.get(oAuth2Config.getAuthServer(), oAuth2Config.getTokenCheckUrl())
+            .bearerTokenAuthentication(oauthToken)
+            .send()
+            .onSuccess(response -> {
+                logger.info("token 认证通过");
+                doHandle(httpApi, request);
+            })
+            .onFailure(error -> {
+                logger.warn("token 认证失败，{}", error);
+                throw new RuntimeException(" token 认证失败");
+            });
+
+    }
+
+    /***
+     * @date: 2021/10/18 1:23 下午
+     * @description:
+     * @author: zhuhongbin
+     **/
+    private void doHandle(HttpApi httpApi, HttpServerRequest request) {
         request.bodyHandler(handle -> {
             final JsonObject jsonObject = handle.toJsonObject();
             Map<String, Object> params = new HashMap<>();
@@ -159,7 +188,7 @@ public class RestfulIncoming implements Incoming {
                         HttpServerResponse response = request.response();
                         response.headers().set(HttpHeaders.CONTENT_TYPE, RestfulConstants.CONTENT_TYPE);
                         response.end(gson.toJson(result));
-                    }).completeExceptionally(restfulExceptionHandler);
+                    });
                 } else {
                     logger.warn("restful 当前请求路径尚未开放: {}", httpApi.getPath());
                     throw new RuntimeException("当前请求路径尚未开放");

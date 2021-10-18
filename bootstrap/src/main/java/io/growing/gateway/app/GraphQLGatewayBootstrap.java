@@ -21,6 +21,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,7 @@ public class GraphQLGatewayBootstrap {
             System.setProperty("hashids.salt", config.getHashids().getSalt());
         }
         final HealthService healthService = new GrpcHealthService(vertx);
+        final WebClient webClient = WebClient.create(vertx);
         final ConfigFactory configFactory = new YamlConfigFactoryImpl(configPath);
         final ClusterDiscoveryService discovery = new ConfigClusterDiscoveryService(configPath, healthService, configFactory);
         final List<Upstream> upstreams = discovery.discover();
@@ -66,7 +68,7 @@ public class GraphQLGatewayBootstrap {
         final GraphqlIncoming graphqlIncoming = new GraphqlIncoming(config.getGraphql(), configFactory);
         final HashIdCodec hashIdCodec = new HashIdCodec(config.getHashids().getSalt(), config.getHashids().getLength());
         // Restful 接口
-        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, configFactory);
+        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, configFactory, webClient, config.getOauth2());
         // 先加载
         router.get("/reload").handler(ctx -> {
             graphqlIncoming.reload(serviceMetadata, outgoings);
@@ -113,7 +115,7 @@ public class GraphQLGatewayBootstrap {
         vertx.setPeriodic(1000, id -> {
             try {
                 final List<ServiceMetadata> reloadServiceMetadata = loadServices(upstreams);
-                //graphqlIncoming.reload(loadServices(upstreams), outgoings);
+                // graphqlIncoming.reload(loadServices(upstreams), outgoings);
                 restfulIncoming.reload(reloadServiceMetadata, outgoings);
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
