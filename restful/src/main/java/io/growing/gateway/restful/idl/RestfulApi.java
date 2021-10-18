@@ -111,7 +111,6 @@ public class RestfulApi {
             return RestfulResult.success(null);
         }
         final Collection results = (Collection) result;
-        RestfulResult restfulResult = new RestfulResult();
         final Object definationSchema = apiResponse.getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema().getProperties().get(RestfulConstants.RESULT_DATA);
         final Schema schema = Json.decodeValue(Json.encode(definationSchema), Schema.class);
         final Map<String, Object> properties = schema.getProperties();
