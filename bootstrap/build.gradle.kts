@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":graphql"))
     implementation(project(":restful"))
     implementation("io.vertx:vertx-web")
+    implementation("io.vertx:vertx-web-client")
     implementation("org.slf4j:slf4j-api")
     implementation("com.typesafe:config")
     implementation("org.apache.commons:commons-text")
