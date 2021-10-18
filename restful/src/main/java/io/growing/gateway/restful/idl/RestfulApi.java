@@ -6,7 +6,6 @@ import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.fetcher.PluginFetcherBuilder;
 import io.growing.gateway.restful.api.RestfulRequestContext;
-import io.growing.gateway.restful.enums.ResultCode;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.utils.RestfulConstants;
 import io.growing.gateway.restful.utils.RestfulResult;
@@ -16,9 +15,12 @@ import io.vertx.core.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -105,33 +107,42 @@ public class RestfulApi {
      * @author: zhuhongbin
      **/
     private RestfulResult wrap(final Object result, ApiResponse apiResponse) {
-        final Object res = ((Collection) result).iterator().next();
-        RestfulResult restfulResult = new RestfulResult();
-        if (result instanceof Collection) {
-            if (res instanceof DynamicMessageWrapper) {
-                final DynamicMessageWrapper messageWrapper = ((DynamicMessageWrapper) res);
-                final Object definationSchema = apiResponse.getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema().getProperties().get(RestfulConstants.RESULT_DATA);
-                final Schema schema = Json.decodeValue(Json.encode(definationSchema), Schema.class);
-                final Map<String, Object> properties = schema.getProperties();
-                Map<String, Object> resultData = new HashMap<>();
-                properties.keySet().forEach(key -> {
-                    resultData.put(key, messageWrapper.get(key));
-                });
-                restfulResult.setCode(ResultCode.SUCCESS.code());
-                restfulResult.setData(resultData);
-                restfulResult.setError(null);
-                return restfulResult;
-            } else {
-                restfulResult.setCode(ResultCode.ERROR.code());
-                restfulResult.setData(null);
-                restfulResult.setError(ResultCode.ERROR.desc());
-                return restfulResult;
-            }
-        } else {
-            restfulResult.setCode(ResultCode.ERROR.code());
-            restfulResult.setData(null);
-            restfulResult.setError(ResultCode.ERROR.desc());
-            return restfulResult;
+        if (Objects.isNull(result)) {
+            return RestfulResult.success(null);
         }
+        final Collection results = (Collection) result;
+        RestfulResult restfulResult = new RestfulResult();
+        final Object definationSchema = apiResponse.getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema().getProperties().get(RestfulConstants.RESULT_DATA);
+        final Schema schema = Json.decodeValue(Json.encode(definationSchema), Schema.class);
+        final Map<String, Object> properties = schema.getProperties();
+        if (results.size() == 1) {
+            Object res = results.iterator().next();
+            final DynamicMessageWrapper messageWrapper = ((DynamicMessageWrapper) res);
+            if (res instanceof DynamicMessageWrapper) {
+                final Map<String, Object> resultWrap = resultWrap(messageWrapper, properties);
+                return RestfulResult.success(resultWrap);
+            }
+            return RestfulResult.success(res);
+        } else {
+            final List<DynamicMessageWrapper> messageWrappers = (List<DynamicMessageWrapper>) result;
+            List<Map<String, Object>> res = new ArrayList<>();
+            messageWrappers.forEach(dynamicMessageWrapper -> {
+                res.add(resultWrap(dynamicMessageWrapper, properties));
+            });
+            return RestfulResult.success(res);
+        }
+    }
+
+    /***
+     * @date: 2021/10/18 6:51 下午
+     * @description: 结果包装
+     * @author: zhuhongbin
+     **/
+    private Map<String, Object> resultWrap(DynamicMessageWrapper messageWrapper, Map<String, Object> properties) {
+        Map<String, Object> resultData = new HashMap<>();
+        properties.keySet().forEach(key -> {
+            resultData.put(key, messageWrapper.get(key));
+        });
+        return resultData;
     }
 }

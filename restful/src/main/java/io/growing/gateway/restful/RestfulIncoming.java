@@ -13,7 +13,6 @@ import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.lang.HashIdCodec;
 import io.growing.gateway.restful.config.RestfulConfig;
-import io.growing.gateway.restful.enums.ResultCode;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.idl.RestfulApi;
 import io.growing.gateway.restful.idl.RestfulBuilder;
@@ -138,18 +137,15 @@ public class RestfulIncoming implements Incoming {
 
     @Override
     public void handle(HttpApi httpApi, HttpServerRequest request) {
+        final HttpServerResponse response = request.response();
         if (Objects.isNull(request) || Objects.isNull(httpApi)) {
-            throw new RuntimeException(" 不合法的请求");
+            response.end(gson.toJson(RestfulResult.error("不合法的请求")));
         }
         request.pause();
-        final HttpServerResponse response = request.response();
         final String oauthToken = request.getHeader(RestfulConstants.AUTHORIZE);
         logger.info("restful 请求入口，Restful请求：{},请求头信息：{}", httpApi, oauthToken);
         if (StringUtils.isBlank(oauthToken)) {
-            RestfulResult restfulResult = new RestfulResult();
-            restfulResult.setCode(ResultCode.ERROR.code());
-            restfulResult.setError("token 认证失败");
-            response.end(gson.toJson(restfulResult));
+            response.end(gson.toJson(RestfulResult.error("token 认证失败")));
         }
         // Token 校验
         webClient.get(oAuth2Config.getAuthServer(), oAuth2Config.getTokenCheckUrl())
@@ -162,10 +158,7 @@ public class RestfulIncoming implements Incoming {
             })
             .onFailure(error -> {
                 logger.warn("token 认证失败，{}", error);
-                RestfulResult restfulResult = new RestfulResult();
-                restfulResult.setCode(ResultCode.ERROR.code());
-                restfulResult.setError("token 认证失败");
-                response.end(gson.toJson(restfulResult));
+                response.end(gson.toJson(RestfulResult.error("token 认证失败")));
             });
 
     }
@@ -176,7 +169,6 @@ public class RestfulIncoming implements Incoming {
      * @author: zhuhongbin
      **/
     private void doHandle(HttpApi httpApi, HttpServerRequest request) {
-        RestfulResult restfulResult = new RestfulResult();
         request.bodyHandler(handle -> {
             // 响应 response（全局）
             HttpServerResponse response = request.response();
@@ -206,22 +198,17 @@ public class RestfulIncoming implements Incoming {
                     completableFuture.whenComplete((result, throwable) -> {
                         if (Objects.nonNull(throwable)) {
                             logger.warn("请求异常: {}", httpApi.getPath());
-                            restfulResult.setCode(ResultCode.ERROR.code());
-                            restfulResult.setError(throwable.getMessage());
-                            response.end(gson.toJson(restfulResult));
+                            response.end(gson.toJson(RestfulResult.error(throwable.getMessage())));
                         }
                         response.end(gson.toJson(result));
                     });
                 } else {
                     logger.warn("restful 当前请求路径尚未开放: {}", httpApi.getPath());
-                    restfulResult.setCode(ResultCode.ERROR.code());
-                    restfulResult.setError("restful 当前请求路径尚未开放");
-                    response.end(gson.toJson(restfulResult));
+                    response.end(gson.toJson(RestfulResult.error("restful 当前请求路径尚未开放")));
                 }
             } else {
                 logger.error("当前请求不是restful 请求，请校验请求路径");
-                restfulResult.setCode(ResultCode.ERROR.code());
-                restfulResult.setError("当前请求不是restful 请求，请校验请求路径");
+                response.end(gson.toJson(RestfulResult.error("当前请求不是restful 请求，请校验请求路径")));
             }
         });
     }

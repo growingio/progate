@@ -1,5 +1,7 @@
 package io.growing.gateway.restful.utils;
 
+import io.growing.gateway.restful.enums.ResultCode;
+
 import java.io.Serializable;
 
 /***
@@ -7,11 +9,30 @@ import java.io.Serializable;
  * @description: restful 响应结果处理
  * @author: zhuhongbin
  **/
-public class RestfulResult implements Serializable {
+public class RestfulResult<T> implements Serializable {
     private String code;
     private String error;
     private Long elasped;
     private Object data;
+
+    public RestfulResult() {
+    }
+
+    public RestfulResult(String code, T data, Long elasped) {
+        this.code = code;
+        this.data = data;
+        this.elasped = elasped;
+    }
+
+    public RestfulResult(String code, String error) {
+        this.code = code;
+        this.error = error;
+    }
+
+    public RestfulResult(String code, T data) {
+        this.code = code;
+        this.data = data;
+    }
 
     public String getCode() {
         return code;
@@ -43,5 +64,30 @@ public class RestfulResult implements Serializable {
 
     public void setData(Object data) {
         this.data = data;
+    }
+
+    public static <T> RestfulResult<T> success(T data) {
+        return new RestfulResult<T>(ResultCode.SUCCESS.code(), data);
+    }
+
+    /**
+     * Success.
+     *
+     * @param <T>  the generic type
+     * @param data the data
+     * @return the result vo
+     */
+    public static <T> RestfulResult<T> success(T data, Long elasped) {
+        return new RestfulResult<T>(ResultCode.SUCCESS.code(), data, elasped);
+    }
+
+    /**
+     * Error.
+     *
+     * @param <T> the generic type
+     * @return the result vo
+     */
+    public static <T> RestfulResult<T> error(String error) {
+        return new RestfulResult<T>(ResultCode.ERROR.code(), error);
     }
 }
