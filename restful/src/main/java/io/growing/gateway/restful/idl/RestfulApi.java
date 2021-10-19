@@ -88,7 +88,7 @@ public class RestfulApi {
         this.outgoing = outgoing;
     }
 
-    public CompletableFuture<Object> execute(String path, RestfulHttpApi httpApi, Map<String, Object> params) {
+    public CompletableFuture<Object> execute(final String path, final RestfulHttpApi httpApi, final Map<String, Object> params) {
         RequestContext requestContext = new RestfulRequestContext(params);
         final long start = System.currentTimeMillis();
         final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefination, requestContext);
@@ -106,7 +106,7 @@ public class RestfulApi {
      * @description: 结果包装
      * @author: zhuhongbin
      **/
-    private RestfulResult wrap(final Object result, ApiResponse apiResponse) {
+    private RestfulResult wrap(final Object result, final ApiResponse apiResponse) {
         if (Objects.isNull(result)) {
             return RestfulResult.success(null);
         }
@@ -114,6 +114,7 @@ public class RestfulApi {
         final Object definationSchema = apiResponse.getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema().getProperties().get(RestfulConstants.RESULT_DATA);
         final Schema schema = Json.decodeValue(Json.encode(definationSchema), Schema.class);
         final Map<String, Object> properties = schema.getProperties();
+
         if (results.size() == 1) {
             Object res = results.iterator().next();
             final DynamicMessageWrapper messageWrapper = ((DynamicMessageWrapper) res);
