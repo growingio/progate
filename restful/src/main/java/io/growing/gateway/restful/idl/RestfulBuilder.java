@@ -2,7 +2,6 @@ package io.growing.gateway.restful.idl;
 
 import com.google.common.collect.Sets;
 import io.growing.gateway.config.ConfigFactory;
-import io.growing.gateway.grpc.json.Jackson;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.fetcher.PluginFetcherBuilder;
@@ -12,10 +11,12 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
+import io.swagger.v3.parser.OpenAPIV3Parser;
+import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -67,20 +68,18 @@ public class RestfulBuilder {
         if (Objects.nonNull(services)) {
             services.forEach(serviceMetadata -> {
                 serviceMetadata.restfulDefinitions().forEach(endpointDefinition -> {
-                    try {
-                        OpenAPI openAPI = Jackson.YAMLMAPPPER.readValue(endpointDefinition.getContent(), OpenAPI.class);
-                        final String version = openAPI.getInfo().getVersion();
-                        final Paths paths = openAPI.getPaths();
-                        for (Map.Entry<String, PathItem> path : paths.entrySet()) {
-                            PathItem pathItem = path.getValue();
-                            final Map<PathItem.HttpMethod, Operation> operationMap = pathItem.readOperationsMap();
-                            operationMap.forEach((httpMethod, operation) -> {
-                                restfulApis.addAll(bind(operation, outgoings, serviceMetadata));
+                    final OpenAPIV3Parser openAPIV3Parser = new OpenAPIV3Parser();
+                    final SwaggerParseResult swaggerParseResult = openAPIV3Parser.readContents(new String(endpointDefinition.getContent(), StandardCharsets.UTF_8));
+                    OpenAPI openAPI = swaggerParseResult.getOpenAPI();
+                    final String version = openAPI.getInfo().getVersion();
+                    final Paths paths = openAPI.getPaths();
+                    for (Map.Entry<String, PathItem> path : paths.entrySet()) {
+                        PathItem pathItem = path.getValue();
+                        final Map<PathItem.HttpMethod, Operation> operationMap = pathItem.readOperationsMap();
+                        operationMap.forEach((httpMethod, operation) -> {
+                            restfulApis.addAll(bind(operation, outgoings, serviceMetadata));
 
-                            });
-                        }
-                    } catch (IOException e) {
-                        logger.warn("openapi yaml 格式定义错误，当前服务是：{}", serviceMetadata.upstream());
+                        });
                     }
                 });
             });
