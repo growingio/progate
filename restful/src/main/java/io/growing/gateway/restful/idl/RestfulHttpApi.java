@@ -9,16 +9,15 @@ import io.swagger.v3.oas.models.responses.ApiResponses;
  * @Date 2021/9/29 11:32 上午
  **/
 public class RestfulHttpApi extends HttpApi {
-    // TODO 
-    private String grpcDefination;
+    private String grpcDefinition;
     private ApiResponses apiResponses;
 
-    public String getGrpcDefination() {
-        return grpcDefination;
+    public String getGrpcDefinition() {
+        return grpcDefinition;
     }
 
-    public void setGrpcDefination(String grpcDefination) {
-        this.grpcDefination = grpcDefination;
+    public void setGrpcDefinition(String grpcDefinition) {
+        this.grpcDefinition = grpcDefinition;
     }
 
     public ApiResponses getApiResponses() {

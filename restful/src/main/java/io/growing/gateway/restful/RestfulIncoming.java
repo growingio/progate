@@ -21,6 +21,7 @@ import io.growing.gateway.restful.utils.RestfulResult;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.Paths;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import io.vertx.core.http.HttpMethod;
@@ -100,10 +101,10 @@ public class RestfulIncoming implements Incoming {
                 serviceMetadata.restfulDefinitions().forEach(endpointDefinition -> {
                     final OpenAPIV3Parser openAPIV3Parser = new OpenAPIV3Parser();
                     final SwaggerParseResult swaggerParseResult = openAPIV3Parser.readContents(new String(endpointDefinition.getContent(), StandardCharsets.UTF_8));
-                    OpenAPI openAPI = swaggerParseResult.getOpenAPI();
-                    for (Map.Entry<String, PathItem> path : openAPI.getPaths().entrySet()) {
-                        final PathItem pathItem = path.getValue();
-                        if (Objects.nonNull(pathItem)) {
+                    final OpenAPI openAPI = swaggerParseResult.getOpenAPI();
+                    final Paths paths = openAPI.getPaths();
+                    if (Objects.nonNull(paths) && !paths.isEmpty()) {
+                        paths.forEach((key, pathItem) -> {
                             final Map<PathItem.HttpMethod, Operation> operationMap = pathItem.readOperationsMap();
                             operationMap.forEach((httpMethod, operation) -> {
                                 final Object endpoint = operation.getExtensions().get(RestfulConstants.X_GRPC_ENDPOINT);
@@ -112,17 +113,16 @@ public class RestfulIncoming implements Incoming {
                                 }
                                 RestfulHttpApi restfulHttpApi = new RestfulHttpApi();
                                 Set<HttpMethod> methods = Sets.newHashSet();
-                                final String pathKey = path.getKey().replace(RestfulConstants.REST_PATH_KEY, RestfulConstants.VERTX_PATH_KEY);
+                                final String pathKey = key.replace(RestfulConstants.REST_PATH_KEY, RestfulConstants.VERTX_PATH_KEY);
                                 restfulHttpApi.setPath(basePath + pathKey);
                                 methods.add(new HttpMethod(httpMethod.name()));
                                 restfulHttpApi.setMethods(methods);
-                                restfulHttpApi.setGrpcDefination(endpoint.toString());
+                                restfulHttpApi.setGrpcDefinition(endpoint.toString());
                                 restfulHttpApi.setApiResponses(operation.getResponses());
                                 httpApis.add(restfulHttpApi);
                             });
-                        }
+                        });
                     }
-
                 });
             });
         }
@@ -190,7 +190,7 @@ public class RestfulIncoming implements Incoming {
                     finalParams.put(RestfulConstants.PROJECT_KEY, hashIdCodec.decode(projectId));
                 }
                 Optional<RestfulApi> restfulApi = restfulApiAtomicReference.get().stream().filter(api -> {
-                    return api.getGrpcDefination().equalsIgnoreCase(restfulHttpApi.getGrpcDefination());
+                    return api.getGrpcDefination().equalsIgnoreCase(restfulHttpApi.getGrpcDefinition());
                 }).collect(Collectors.toList()).stream().findFirst();
 
                 if (restfulApi.isPresent()) {
