@@ -68,7 +68,7 @@ public class GraphQLGatewayBootstrap {
         final GraphqlIncoming graphqlIncoming = new GraphqlIncoming(config.getGraphql(), configFactory);
         final HashIdCodec hashIdCodec = new HashIdCodec(config.getHashids().getSalt(), config.getHashids().getLength());
         // Restful 接口
-        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, configFactory, webClient, config.getOauth2());
+        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, webClient, config.getOauth2());
         // 先加载
         router.get("/reload").handler(ctx -> {
             graphqlIncoming.reload(serviceMetadata, outgoings);

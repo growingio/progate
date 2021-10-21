@@ -4,7 +4,6 @@ import com.google.common.collect.Sets;
 import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import io.growing.gateway.config.ConfigFactory;
 import io.growing.gateway.config.OAuth2Config;
 import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
@@ -60,13 +59,11 @@ public class RestfulIncoming implements Incoming {
     private final RestfulConfig config;
     private final WebClient webClient;
     private final HashIdCodec hashIdCodec;
-    private final ConfigFactory configFactory;
     private final OAuth2Config oAuth2Config;
 
-    public RestfulIncoming(RestfulConfig config, HashIdCodec hashIdCodec, ConfigFactory configFactory, WebClient webClient, OAuth2Config oAuth2Config) {
+    public RestfulIncoming(RestfulConfig config, HashIdCodec hashIdCodec, WebClient webClient, OAuth2Config oAuth2Config) {
         this.config = config;
         this.hashIdCodec = hashIdCodec;
-        this.configFactory = configFactory;
         this.gson = new GsonBuilder().serializeNulls().create();
         this.webClient = webClient;
         this.oAuth2Config = oAuth2Config;
@@ -85,7 +82,7 @@ public class RestfulIncoming implements Incoming {
         Set<HttpApi> httpApis = Sets.newHashSet();
         final HttpApi httpApi = new HttpApi();
         final HashSet<HttpMethod> httpMethods = Sets.newHashSet();
-        HttpMethod.values().forEach(httpMethod -> httpMethods.add(httpMethod));
+        httpMethods.addAll(HttpMethod.values());
         httpApi.setMethods(httpMethods);
         new HttpApi().setPath(config.getPath() + "/**");
         return httpApis;
@@ -156,7 +153,7 @@ public class RestfulIncoming implements Incoming {
                 doHandle(httpApi, request);
             })
             .onFailure(error -> {
-                logger.warn("token 认证失败，{}", error);
+                logger.error("token 认证失败", error);
                 response.end(gson.toJson(RestfulResult.error("token 认证失败")));
             });
 
@@ -178,9 +175,7 @@ public class RestfulIncoming implements Incoming {
                 params = Json.decodeValue(handle, Map.class);
             }
             Map<String, Object> finalParams = params;
-            request.params().forEach(param -> {
-                finalParams.put(param.getKey(), param.getValue());
-            });
+            request.params().forEach(param -> finalParams.put(param.getKey(), param.getValue()));
             finalParams.put(RestfulConstants.X_REQUEST_ID, request.getHeader(RestfulConstants.X_REQUEST_ID));
 
             if (httpApi instanceof RestfulHttpApi) {
