@@ -27,6 +27,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -104,6 +105,8 @@ public class RestfulIncoming implements Incoming {
                         paths.forEach((key, pathItem) -> {
                             final Map<PathItem.HttpMethod, Operation> operationMap = pathItem.readOperationsMap();
                             operationMap.forEach((httpMethod, operation) -> {
+
+                                // final Schema schema = operation.getRequestBody().getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema();
                                 final Object endpoint = operation.getExtensions().get(RestfulConstants.X_GRPC_ENDPOINT);
                                 if (Objects.isNull(endpoint)) {
                                     throw new RuntimeException("x-grpc-endpoint must defined in you proto file");
@@ -147,10 +150,12 @@ public class RestfulIncoming implements Incoming {
         webClient.get(oAuth2Config.getAuthServer(), oAuth2Config.getTokenCheckUrl())
             .bearerTokenAuthentication(oauthToken)
             .send()
-            .onSuccess(check -> {
-                logger.info("token 认证通过。:{}", check);
+            .onSuccess(handler -> {
+                logger.info("token 认证通过。:{}", handler);
                 request.resume();
-                doHandle(httpApi, request);
+                final JsonObject jsonObject = handler.bodyAsJsonObject();
+                final String clientId = jsonObject.getString("client_id");
+                doHandle(httpApi, request, clientId);
             })
             .onFailure(error -> {
                 logger.error("token 认证失败", error);
@@ -164,7 +169,7 @@ public class RestfulIncoming implements Incoming {
      * @description: 解析执行
      * @author: zhuhongbin
      **/
-    private void doHandle(HttpApi httpApi, HttpServerRequest request) {
+    private void doHandle(HttpApi httpApi, HttpServerRequest request, String clientId) {
         request.bodyHandler(handle -> {
             // 响应 response（全局）
             HttpServerResponse response = request.response();
