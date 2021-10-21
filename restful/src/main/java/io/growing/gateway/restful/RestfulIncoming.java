@@ -27,7 +27,6 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -174,11 +173,9 @@ public class RestfulIncoming implements Incoming {
             HttpServerResponse response = request.response();
             response.headers().set(HttpHeaders.CONTENT_TYPE, RestfulConstants.CONTENT_TYPE);
             // 请求 request
-            final JsonObject jsonObject = handle.toJsonObject();
             Map<String, Object> params = new HashMap<>();
-            if (Objects.nonNull(jsonObject)) {
-                // TODO
-                params = Json.decodeValue(jsonObject.toString(), Map.class);
+            if (Objects.nonNull(handle)) {
+                params = Json.decodeValue(handle, Map.class);
             }
             Map<String, Object> finalParams = params;
             request.params().forEach(param -> {
