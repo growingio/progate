@@ -11,7 +11,6 @@ import io.growing.gateway.restful.utils.RestfulConstants;
 import io.growing.gateway.restful.utils.RestfulResult;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
-import io.vertx.core.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,14 +110,12 @@ public class RestfulApi {
             return RestfulResult.success(null);
         }
         final Collection results = (Collection) result;
-        final Object definationSchema = apiResponse.getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema().getProperties().get(RestfulConstants.RESULT_DATA);
-        final Schema schema = Json.decodeValue(Json.encode(definationSchema), Schema.class);
+        final Schema schema = (Schema) apiResponse.getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema().getProperties().get(RestfulConstants.RESULT_DATA);
         final Map<String, Object> properties = schema.getProperties();
-
         if (results.size() == 1) {
             Object res = results.iterator().next();
-            final DynamicMessageWrapper messageWrapper = ((DynamicMessageWrapper) res);
             if (res instanceof DynamicMessageWrapper) {
+                final DynamicMessageWrapper messageWrapper = ((DynamicMessageWrapper) res);
                 final Map<String, Object> resultWrap = resultWrap(messageWrapper, properties);
                 return RestfulResult.success(resultWrap);
             }
