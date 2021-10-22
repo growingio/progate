@@ -18,6 +18,7 @@ import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.UInt32Value;
 import com.google.protobuf.UInt64Value;
 import com.google.protobuf.util.JsonFormat;
+import io.growing.gateway.grpc.helper.MapWrapper;
 import io.growing.gateway.utilities.CollectionUtilities;
 
 import java.util.Collection;
@@ -29,7 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class DynamicMessageWrapper extends HashMap<String, Object> {
+public class DynamicMessageWrapper extends MapWrapper<String, Object> {
     private static final Set<String> WELL_KNOWN_VALUE_FIELDS = Sets.newHashSet(
         createFieldName(BoolValue.getDescriptor().getFullName()),
         createFieldName(Int32Value.getDescriptor().getFullName()),
@@ -47,19 +48,19 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
         return fullTypeName + ".value";
     }
 
-    private final Map<String, Object> values;
+//    private final Map<String, Object> values;
     private final Set<Descriptors.Descriptor> descriptors;
 
     public DynamicMessageWrapper(DynamicMessage origin, Set<Descriptors.Descriptor> descriptors) {
-        this.values = new HashMap<>();
+        super(new HashMap<String, Object>());
+        Map<String, Object> underlying = super.getUnderlying();
         try {
             final TypeRegistry.Builder builder = TypeRegistry.newBuilder();
             descriptors.forEach(builder::add);
             final String json = JsonFormat.printer().includingDefaultValueFields().usingTypeRegistry(builder.build()).print(origin);
             Map map = new Gson().fromJson(json, Map.class);
-            values.putAll(map);
+            underlying.putAll(map);
         } catch (InvalidProtocolBufferException e) {
-
             e.printStackTrace();
         }
 
@@ -78,11 +79,11 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
         origin.getDescriptorForType().getFields().forEach(field -> {
             if (field.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE) {
                 final Object defaultValue = field.getDefaultValue();
-                if (!values.containsKey(field.getName())) {
-                    values.put(field.getName(), defaultValue);
+                if (!underlying.containsKey(field.getName())) {
+                    underlying.put(field.getName(), defaultValue);
                 }
-                if (!values.containsKey(field.getJsonName())) {
-                    values.put(field.getJsonName(), defaultValue);
+                if (!underlying.containsKey(field.getJsonName())) {
+                    underlying.put(field.getJsonName(), defaultValue);
                 }
             }
         });
@@ -92,7 +93,7 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
     @Override
     public Object get(Object key) {
         if (containsKey(key)) {
-            final Object value = values.get(key);
+            final Object value = getUnderlying().get(key);
             if (value instanceof Collection<?>) {
                 final Collection<?> collection = (Collection<?>) value;
                 if (CollectionUtilities.isNotEmpty(collection) && collection.iterator().next() instanceof DynamicMessage) {
@@ -106,11 +107,6 @@ public class DynamicMessageWrapper extends HashMap<String, Object> {
             }
         }
         return null;
-    }
-
-    @Override
-    public boolean containsKey(Object key) {
-        return values.containsKey(key);
     }
 
     private Object wrapObject(final Object value) {
