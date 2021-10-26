@@ -23,3 +23,10 @@ extra-plugins:
 
 graphql:
   path: "/graphql"
+  plugins:
+    audit:
+      host: "localhost"
+      port: 5432
+      dbname: "audit"
+      username: "audit"
+      password: "none"
