@@ -56,9 +56,7 @@ public class GrpcOutgoing implements Outgoing {
         try {
             message = transcode(request, methodDescriptor.getInputType(), resolver.getTypeDescriptors());
         } catch (Exception e) {
-            final CompletableFuture<?> future = new CompletableFuture<>();
-            future.completeExceptionally(e);
-            return future;
+            return CompletableFuture.failedFuture(e);
         }
         if (methodDescriptor.isServerStreaming()) {
             final CollectionObserver<DynamicMessage> observer = new CollectionObserver<>();
