@@ -14,7 +14,11 @@ public interface Incoming {
 
     Set<HttpApi> apis();
 
+    Set<HttpApi> apis(List<ServiceMetadata> services);
+
     void handle(HttpServerRequest request);
+
+    void handle(HttpApi httpApi, HttpServerRequest request);
 
     void reload(List<ServiceMetadata> services, Set<Outgoing> outgoings);
 

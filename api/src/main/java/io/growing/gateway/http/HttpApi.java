@@ -9,6 +9,7 @@ import java.util.Set;
  */
 public class HttpApi {
     private String path;
+
     private Set<HttpMethod> methods;
 
     public String getPath() {
@@ -26,4 +27,5 @@ public class HttpApi {
     public void setMethods(Set<HttpMethod> methods) {
         this.methods = methods;
     }
+
 }

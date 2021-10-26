@@ -25,6 +25,7 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java-util")
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.5")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.12.5")
 
     if (JavaVersion.current().isJava9Compatible) {
         compileOnly("javax.annotation:javax.annotation-api:1.3.2")

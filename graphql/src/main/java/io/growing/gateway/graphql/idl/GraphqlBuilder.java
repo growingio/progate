@@ -43,7 +43,7 @@ import java.util.function.Consumer;
 
 public class GraphqlBuilder {
 
-    private Set<Outgoing> outgoings;
+    private Set<Outgoing>  outgoings;
     private PluginFetcherBuilder pfb;
     private List<ServiceMetadata> services;
     private DataFetcherExceptionHandler exceptionHandler;

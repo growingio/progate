@@ -15,10 +15,13 @@ import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.iam.UserService;
+import io.growing.gateway.plugin.lang.HashIdCodec;
+import io.growing.gateway.restful.RestfulIncoming;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +52,7 @@ public class GraphQLGatewayBootstrap {
             System.setProperty("hashids.salt", config.getHashids().getSalt());
         }
         final HealthService healthService = new GrpcHealthService(vertx);
+        final WebClient webClient = WebClient.create(vertx);
         final ConfigFactory configFactory = new YamlConfigFactoryImpl(configPath);
         final ClusterDiscoveryService discovery = new ConfigClusterDiscoveryService(configPath, healthService, configFactory);
         final List<Upstream> upstreams = discovery.discover();
@@ -58,20 +62,29 @@ public class GraphQLGatewayBootstrap {
                 UserService.upstream(upstream);
             }
         });
-
-        final GraphqlIncoming incoming = new GraphqlIncoming(config.getGraphql(), configFactory);
-
-
-        incoming.apis().forEach(api -> {
+        final List<ServiceMetadata> serviceMetadata = loadServices(upstreams);
+        // Grpc 接口
+        final Set<Outgoing> outgoings = Sets.newHashSet(new GrpcOutgoing());
+        final GraphqlIncoming graphqlIncoming = new GraphqlIncoming(config.getGraphql(), configFactory);
+        final HashIdCodec hashIdCodec = new HashIdCodec(config.getHashids().getSalt(), config.getHashids().getLength());
+        // Restful 接口
+        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, webClient, config.getOauth2());
+        // 先加载
+        router.get("/reload").handler(ctx -> {
+            graphqlIncoming.reload(serviceMetadata, outgoings);
+            restfulIncoming.reload(serviceMetadata, outgoings);
+            ctx.response().end();
+        });
+        // 设置路由
+        graphqlIncoming.apis().forEach(api -> {
             api.getMethods().forEach(method -> {
-                router.route(method, api.getPath()).handler(event -> incoming.handle(event.request()));
+                router.route(method, api.getPath()).handler(context -> graphqlIncoming.handle(context.request()));
             });
         });
-        final Set<Outgoing> outgoings = Sets.newHashSet(new GrpcOutgoing());
-
-        router.get("/reload").handler(ctx -> {
-            incoming.reload(loadServices(upstreams), outgoings);
-            ctx.response().end();
+        restfulIncoming.apis(serviceMetadata).forEach(api -> {
+            api.getMethods().forEach(method -> {
+                router.route(method, api.getPath()).handler(context -> restfulIncoming.handle(api, context.request()));
+            });
         });
 
         final HealthyCheck check = new HealthyCheck();
@@ -101,7 +114,9 @@ public class GraphQLGatewayBootstrap {
 
         vertx.setPeriodic(1000, id -> {
             try {
-                incoming.reload(loadServices(upstreams), outgoings);
+                final List<ServiceMetadata> reloadServiceMetadata = loadServices(upstreams);
+                // graphqlIncoming.reload(loadServices(upstreams), outgoings);
+                restfulIncoming.reload(reloadServiceMetadata, outgoings);
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
                 logger.error(e.getLocalizedMessage(), e);

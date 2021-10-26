@@ -22,6 +22,8 @@ dependencies {
         implementation("com.github.ben-manes.caffeine:caffeine:2.9.0")
         implementation("io.vertx:vertx-web:${ComponentVersions.vertx}")
         implementation("io.vertx:vertx-core:${ComponentVersions.vertx}")
+        implementation("io.vertx:vertx-web-client:${ComponentVersions.vertx}")
+        //implementation("io.vertx:vertx-auth-oauth2:${ComponentVersions.vertx}")
         implementation("org.apache.logging.log4j:log4j-api:${ComponentVersions.log4j}")
         implementation("org.apache.logging.log4j:log4j-core:${ComponentVersions.log4j}")
         implementation("org.apache.logging.log4j:log4j-slf4j-impl:${ComponentVersions.log4j}")

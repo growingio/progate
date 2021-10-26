@@ -1,11 +1,15 @@
 package io.growing.gateway.app;
 
+import io.growing.gateway.config.OAuth2Config;
 import io.growing.gateway.graphql.config.GraphqlConfig;
+import io.growing.gateway.restful.config.RestfulConfig;
 
 public class GlobalConfig {
     private ServerConfig server;
     private HashIdConfig hashids;
     private GraphqlConfig graphql;
+    private RestfulConfig restful;
+    private OAuth2Config oauth2;
 
     public static class HashIdConfig {
         private String salt;
@@ -50,5 +54,21 @@ public class GlobalConfig {
 
     public void setGraphql(GraphqlConfig graphql) {
         this.graphql = graphql;
+    }
+
+    public RestfulConfig getRestful() {
+        return restful;
+    }
+
+    public void setRestful(RestfulConfig restful) {
+        this.restful = restful;
+    }
+
+    public OAuth2Config getOauth2() {
+        return oauth2;
+    }
+
+    public void setOauth2(OAuth2Config oauth2) {
+        this.oauth2 = oauth2;
     }
 }
