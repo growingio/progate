@@ -13,7 +13,7 @@ paths:
       extensions:
         x-grpc-endpoint: growing.graphql.example.JobService/GetJob
       parameters:
-        - name: accessToken
+        - name: Authorization
           in: path
           allowEmptyValue: false
           required: true
