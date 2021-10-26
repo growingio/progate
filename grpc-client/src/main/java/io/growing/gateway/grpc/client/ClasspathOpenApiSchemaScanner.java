@@ -15,6 +15,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * @author zhuhongbin
+ */
 public class ClasspathOpenApiSchemaScanner {
     private static final Logger logger = LoggerFactory.getLogger(ClasspathOpenApiSchemaScanner.class);
 
@@ -35,7 +38,7 @@ public class ClasspathOpenApiSchemaScanner {
 
     public List<FileDescriptorDto> scan(ClassLoader[] classLoaders, final String root) throws IOException {
         Arrays.stream(classLoaders).forEach(classLoader -> {
-            logger.info("文件扫描的类加载器：{}", classLoader);
+            logger.info("openapi schema scan classloader：{}", classLoader);
         });
         final Set<ClassPath.ResourceInfo> resourceInfos = Sets.newHashSet();
         final List<FileDescriptorDto> files = new LinkedList<>();

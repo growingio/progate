@@ -35,7 +35,7 @@ public class ClasspathGraphqlSchemaScanner {
 
     public List<FileDescriptorDto> scan(ClassLoader[] classLoaders, final String root) throws IOException {
         Arrays.stream(classLoaders).forEach(classLoader -> {
-            logger.info("文件扫描的类加载器：{}", classLoader);
+            logger.info("graphql schema scan classLoader：{}", classLoader);
         });
         Set<ClassPath.ResourceInfo> resourceInfos = Sets.newHashSet();
         List<FileDescriptorDto> files = new LinkedList<>();
