@@ -28,7 +28,6 @@ public class ClasspathGraphqlSchemaScanner {
                     final FileDescriptorDto descriptor = FileDescriptorDto.newBuilder().setName(name).setContent(ByteString.readFrom(is)).build();
                     files.add(descriptor);
                 }
-
             }
         }
         return files;
@@ -44,7 +43,7 @@ public class ClasspathGraphqlSchemaScanner {
             try {
                 resourceInfos.addAll(ClassPath.from(classLoader).getResources());
             } catch (IOException e) {
-                // 日志处理
+                logger.error("graphql schema load exception", e);
             }
         });
         for (ClassPath.ResourceInfo resourceInfo : resourceInfos) {
@@ -54,7 +53,6 @@ public class ClasspathGraphqlSchemaScanner {
                     final FileDescriptorDto descriptor = FileDescriptorDto.newBuilder().setName(name).setContent(ByteString.readFrom(is)).build();
                     files.add(descriptor);
                 }
-
             }
         }
         return files;

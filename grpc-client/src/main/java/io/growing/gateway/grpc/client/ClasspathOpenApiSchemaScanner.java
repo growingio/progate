@@ -43,7 +43,7 @@ public class ClasspathOpenApiSchemaScanner {
             try {
                 resourceInfos.addAll(ClassPath.from(classLoader).getResources());
             } catch (IOException e) {
-                // 日志处理
+                logger.error("openapi schema load exception", e);
             }
         });
         for (ClassPath.ResourceInfo resourceInfo : resourceInfos) {

@@ -105,8 +105,6 @@ public class RestfulIncoming implements Incoming {
                         paths.forEach((key, pathItem) -> {
                             final Map<PathItem.HttpMethod, Operation> operationMap = pathItem.readOperationsMap();
                             operationMap.forEach((httpMethod, operation) -> {
-
-                                // final Schema schema = operation.getRequestBody().getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema();
                                 final Object endpoint = operation.getExtensions().get(RestfulConstants.X_GRPC_ENDPOINT);
                                 if (Objects.isNull(endpoint)) {
                                     throw new RuntimeException("x-grpc-endpoint must defined in you proto file");
