@@ -4,7 +4,7 @@
 
 plugins {
     distribution
-    id("io.growing.gateway.java-application-conventions")
+    id("io.growing.progate.java-application-conventions")
 }
 
 dependencies {

@@ -1,6 +1,6 @@
 plugins {
     `maven-publish`
-    id("io.growing.gateway.java-library-conventions")
+    id("io.growing.progate.java-library-conventions")
 }
 
 group = "io.growing.gateway"

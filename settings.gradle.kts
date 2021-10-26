@@ -1,4 +1,4 @@
-rootProject.name = "graphql-gateway"
+rootProject.name = "progate"
 include(
     "bootstrap",
     "api",

@@ -6,7 +6,7 @@ import com.google.protobuf.gradle.*
 plugins {
     idea
     id("com.google.protobuf") version "0.8.17"
-    id("io.growing.gateway.java-publishing-conventions")
+    id("io.growing.progate.java-publishing-conventions")
 }
 
 dependencies {

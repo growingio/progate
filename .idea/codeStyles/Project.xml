@@ -12,6 +12,7 @@
       <option name="classCountToUseImportOnDemand" value="10" />
       <option name="collectImports" value="false" />
       <option name="SCALAFMT_REFORMAT_ON_FILES_SAVE" value="true" />
+      <option name="MULTILINE_STRING_CLOSING_QUOTES_ON_NEW_LINE" value="true" />
     </ScalaCodeStyleSettings>
     <codeStyleSettings language="JAVA">
       <indentOptions>
