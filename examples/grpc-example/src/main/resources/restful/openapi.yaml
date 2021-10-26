@@ -5,8 +5,8 @@ info:
   version: v1
 paths:
   /jobs:
-    summary: JOBService
-    description: JOBService
+    summary: JobService
+    description: JobService
     get:
       summary: 获取所有Jobs.
       description: 获取所有Jobs.
