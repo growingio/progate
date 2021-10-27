@@ -16,7 +16,7 @@ public class DataFetchingEnvironmentContext implements RequestContext, Transcode
 
     public DataFetchingEnvironmentContext(DataFetchingEnvironment environment, List<String> values, List<String> mappings) {
         this.environment = environment;
-        final EnvironmentArgumentTranscoder transcoder = new EnvironmentArgumentTranscoder();
+        final EnvironmentArgumentTranscoder transcoder = new EnvironmentArgumentTranscoder(environment);
         final GraphQLContext context = environment.getGraphQlContext();
         this.arguments = transcoder.transcode(transcode(context, environment.getArguments(), values, mappings));
     }

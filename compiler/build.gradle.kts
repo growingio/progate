@@ -3,7 +3,7 @@
  */
 
 plugins {
-    id("io.growing.progate.java-library-conventions")
+    id("io.growing.progate.java-publishing-conventions")
 }
 
 dependencies {

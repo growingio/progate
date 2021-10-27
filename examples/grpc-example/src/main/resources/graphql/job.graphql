@@ -9,6 +9,11 @@ type Job {
     description: String
     tags: [String]
     index: Int
+    node: Node
+}
+
+type Node {
+    id: String
 }
 
 input JobInput {
@@ -18,7 +23,7 @@ input JobInput {
 
 type Query {
 
-    jobs: [Job]! @grpc(endpoint: "growing.graphql.example.JobService/GetJobs")
+    jobs: [Job]! @grpc(endpoint: "growing.graphql.example.JobService/ListJobs")
 
     job(id: Int!): Job @grpc(endpoint: "growing.graphql.example.JobService/GetJobs", mappings: ["id=ids.add"])
 

@@ -68,11 +68,11 @@ public class GraphQLGatewayBootstrap {
         final GraphqlIncoming graphqlIncoming = new GraphqlIncoming(config.getGraphql(), configFactory);
         final HashIdCodec hashIdCodec = new HashIdCodec(config.getHashids().getSalt(), config.getHashids().getLength());
         // Restful 接口
-        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, webClient, config.getOauth2());
+//        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, webClient, config.getOauth2());
         // 先加载
         router.get("/reload").handler(ctx -> {
             graphqlIncoming.reload(serviceMetadata, outgoings);
-            restfulIncoming.reload(serviceMetadata, outgoings);
+//            restfulIncoming.reload(serviceMetadata, outgoings);
             ctx.response().end();
         });
         // 设置路由
@@ -81,11 +81,11 @@ public class GraphQLGatewayBootstrap {
                 router.route(method, api.getPath()).handler(context -> graphqlIncoming.handle(context.request()));
             });
         });
-        restfulIncoming.apis(serviceMetadata).forEach(api -> {
-            api.getMethods().forEach(method -> {
-                router.route(method, api.getPath()).handler(context -> restfulIncoming.handle(api, context.request()));
-            });
-        });
+//        restfulIncoming.apis(serviceMetadata).forEach(api -> {
+//            api.getMethods().forEach(method -> {
+//                router.route(method, api.getPath()).handler(context -> restfulIncoming.handle(api, context.request()));
+//            });
+//        });
 
         final HealthyCheck check = new HealthyCheck();
 
@@ -116,7 +116,7 @@ public class GraphQLGatewayBootstrap {
             try {
                 final List<ServiceMetadata> reloadServiceMetadata = loadServices(upstreams);
                 graphqlIncoming.reload(reloadServiceMetadata, outgoings);
-                restfulIncoming.reload(reloadServiceMetadata, outgoings);
+//                restfulIncoming.reload(reloadServiceMetadata, outgoings);
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
                 logger.error(e.getLocalizedMessage(), e);

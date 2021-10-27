@@ -3,8 +3,8 @@ plugins {
     id("io.growing.progate.java-library-conventions")
 }
 
-group = "io.growing.gateway"
-version = "1.0.0-SNAPSHOT"
+group = "io.growing.progate"
+version = "1.0.1-SNAPSHOT"
 
 publishing {
     repositories {
