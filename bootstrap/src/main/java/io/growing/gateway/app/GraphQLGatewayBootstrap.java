@@ -115,7 +115,7 @@ public class GraphQLGatewayBootstrap {
         vertx.setPeriodic(1000, id -> {
             try {
                 final List<ServiceMetadata> reloadServiceMetadata = loadServices(upstreams);
-                // graphqlIncoming.reload(loadServices(upstreams), outgoings);
+                graphqlIncoming.reload(reloadServiceMetadata, outgoings);
                 restfulIncoming.reload(reloadServiceMetadata, outgoings);
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
