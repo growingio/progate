@@ -136,13 +136,13 @@ public class RestfulIncoming implements Incoming {
     public void handle(HttpApi httpApi, HttpServerRequest request) {
         final HttpServerResponse response = request.response();
         if (Objects.isNull(request) || Objects.isNull(httpApi)) {
-            response.end(gson.toJson(RestfulResult.error("不合法的请求")));
+            response.end(gson.toJson(RestfulResult.error("Illeagal request")));
         }
         request.pause();
         final String oauthToken = request.getHeader(RestfulConstants.AUTHORIZE);
-        logger.info("restful 请求入口，Restful请求：{},请求头信息：{}", httpApi, oauthToken);
+        logger.info("restful request entrence，request：{},head：{}", httpApi, oauthToken);
         if (StringUtils.isBlank(oauthToken)) {
-            response.end(gson.toJson(RestfulResult.error("token 认证失败")));
+            response.end(gson.toJson(RestfulResult.error("token authorizer faild")));
         }
         // Token 校验
         webClient.get(oAuth2Config.getAuthServer(), oAuth2Config.getTokenCheckUrl())
@@ -150,15 +150,15 @@ public class RestfulIncoming implements Incoming {
             .bearerTokenAuthentication(oauthToken)
             .send()
             .onSuccess(handler -> {
-                logger.info("token 认证通过。:{}", handler);
+                logger.info("token authorizer success。:{}", handler);
                 request.resume();
                 final JsonObject jsonObject = handler.bodyAsJsonObject();
-                final String clientId = jsonObject.getString("client_id");
+                final String clientId = jsonObject.getString(RestfulConstants.CLIENT_ID);
                 doHandle(httpApi, request, clientId);
             })
             .onFailure(error -> {
-                logger.error("token 认证失败", error);
-                response.end(gson.toJson(RestfulResult.error("token 认证失败")));
+                logger.error("token authorizer faild", error);
+                response.end(gson.toJson(RestfulResult.error("token authorizer faild")));
             });
 
     }
@@ -196,18 +196,18 @@ public class RestfulIncoming implements Incoming {
                     final CompletableFuture<Object> completableFuture = restfulApi.get().execute(config.getPath(), restfulHttpApi, finalParams);
                     completableFuture.whenComplete((result, throwable) -> {
                         if (Objects.nonNull(throwable)) {
-                            logger.warn("请求异常: {}", httpApi.getPath());
+                            logger.warn("request exception: {}", httpApi.getPath());
                             response.end(gson.toJson(RestfulResult.error(throwable.getMessage())));
                         }
                         response.end(gson.toJson(result));
                     });
                 } else {
-                    logger.warn("restful 当前请求路径尚未开放: {}", httpApi.getPath());
-                    response.end(gson.toJson(RestfulResult.error("restful 当前请求路径尚未开放")));
+                    logger.warn("restful current request path not allowed : {}", httpApi.getPath());
+                    response.end(gson.toJson(RestfulResult.error("restful current request path not allowed")));
                 }
             } else {
-                logger.error("当前请求不是restful 请求，请校验请求路径");
-                response.end(gson.toJson(RestfulResult.error("当前请求不是restful 请求，请校验请求路径")));
+                logger.error("current request path is not a restful request，please check");
+                response.end(gson.toJson(RestfulResult.error("current request path is not a restful request，please check")));
             }
         });
     }
