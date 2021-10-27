@@ -11,8 +11,6 @@ import io.growing.gateway.restful.utils.RestfulConstants;
 import io.growing.gateway.restful.utils.RestfulResult;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,7 +26,6 @@ import java.util.concurrent.CompletableFuture;
  * @Date 2021/9/22 1:58 下午
  **/
 public class RestfulApi {
-    private final Logger logger = LoggerFactory.getLogger(RestfulApi.class);
     private ServiceMetadata serviceMetadata;
     private String grpcDefination;
     private Outgoing outgoing;
