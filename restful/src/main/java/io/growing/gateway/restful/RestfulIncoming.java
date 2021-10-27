@@ -146,6 +146,7 @@ public class RestfulIncoming implements Incoming {
         }
         // Token 校验
         webClient.get(oAuth2Config.getAuthServer(), oAuth2Config.getTokenCheckUrl())
+            .addQueryParam(RestfulConstants.TOKEN, oauthToken)
             .bearerTokenAuthentication(oauthToken)
             .send()
             .onSuccess(handler -> {
