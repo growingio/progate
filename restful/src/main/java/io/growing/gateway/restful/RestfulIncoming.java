@@ -11,17 +11,21 @@ import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.lang.HashIdCodec;
 import io.growing.gateway.restful.config.RestfulConfig;
+import io.growing.gateway.restful.enums.DataTypeFormat;
 import io.growing.gateway.restful.handler.RestfulException;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.idl.RestfulApi;
 import io.growing.gateway.restful.idl.RestfulBuilder;
 import io.growing.gateway.restful.idl.RestfulHttpApi;
+import io.growing.gateway.restful.idl.RestfulRequest;
 import io.growing.gateway.restful.utils.RestfulConstants;
 import io.growing.gateway.restful.utils.RestfulResult;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import io.vertx.core.http.HttpMethod;
@@ -112,9 +116,13 @@ public class RestfulIncoming implements Incoming {
                                 }
                                 RestfulHttpApi restfulHttpApi = new RestfulHttpApi();
                                 Set<HttpMethod> methods = Sets.newHashSet();
+                                final Map<String, Schema> properties = operation.getRequestBody().getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema().getProperties();
+                                final List<Parameter> parameters = operation.getParameters();
+                                final RestfulRequest restfulRequest = new RestfulRequest(parameters, properties);
                                 final String pathKey = key.replace(RestfulConstants.REST_PATH_KEY, RestfulConstants.VERTX_PATH_KEY);
                                 restfulHttpApi.setPath(basePath + pathKey);
                                 methods.add(new HttpMethod(httpMethod.name()));
+                                restfulHttpApi.setRestfulRequest(restfulRequest);
                                 restfulHttpApi.setMethods(methods);
                                 restfulHttpApi.setGrpcDefinition(endpoint.toString());
                                 restfulHttpApi.setApiResponses(operation.getResponses());
@@ -182,19 +190,20 @@ public class RestfulIncoming implements Incoming {
             Map<String, Object> finalParams = params;
             request.params().forEach(param -> finalParams.put(param.getKey(), param.getValue()));
             finalParams.put(RestfulConstants.X_REQUEST_ID, request.getHeader(RestfulConstants.X_REQUEST_ID));
-
             if (httpApi instanceof RestfulHttpApi) {
                 final RestfulHttpApi restfulHttpApi = (RestfulHttpApi) httpApi;
                 final String projectId = request.getParam(RestfulConstants.PROJECT_KEY);
                 if (StringUtils.isNotBlank(projectId)) {
-                    finalParams.put(RestfulConstants.PROJECT_KEY, hashIdCodec.decode(projectId));
+                    finalParams.put(RestfulConstants.PROJECT_KEY, projectId);
                 }
+                // 参数转码处理
+                paramsTranscode(restfulHttpApi.getRestfulRequest(), finalParams);
                 Optional<RestfulApi> restfulApi = restfulApiAtomicReference.get().stream().filter(api -> {
                     return api.getGrpcDefinition().equalsIgnoreCase(restfulHttpApi.getGrpcDefinition());
                 }).collect(Collectors.toList()).stream().findFirst();
 
                 if (restfulApi.isPresent()) {
-                    final CompletableFuture<Object> completableFuture = restfulApi.get().execute(config.getPath(), restfulHttpApi, finalParams);
+                    final CompletableFuture<Object> completableFuture = restfulApi.get().execute(config.getPath(), restfulHttpApi, finalParams, hashIdCodec);
                     completableFuture.whenComplete((result, throwable) -> {
                         if (Objects.nonNull(throwable)) {
                             logger.warn("request exception: {}", httpApi.getPath());
@@ -211,5 +220,22 @@ public class RestfulIncoming implements Incoming {
                 response.end(gson.toJson(RestfulResult.error("current request path is not a restful request，please check")));
             }
         });
+    }
+
+    private final void paramsTranscode(RestfulRequest restfulRequest, Map<String, Object> params) {
+        if (Objects.nonNull(restfulRequest.getMaps()) && !restfulRequest.getMaps().isEmpty()) {
+            restfulRequest.getMaps().forEach((key, value) -> {
+                if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(value.getFormat())) {
+                    params.put(key, hashIdCodec.encode(Long.parseLong(params.get(key).toString())));
+                }
+            });
+        }
+        if (Objects.nonNull(restfulRequest.getParameters()) && !restfulRequest.getParameters().isEmpty()) {
+            restfulRequest.getParameters().forEach(parameter -> {
+                if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(parameter.getSchema().getFormat())) {
+                    params.put(parameter.getName(), hashIdCodec.decode(params.get(parameter.getName()).toString()));
+                }
+            });
+        }
     }
 }

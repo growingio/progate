@@ -5,7 +5,9 @@ import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.fetcher.PluginFetcherBuilder;
+import io.growing.gateway.plugin.lang.HashIdCodec;
 import io.growing.gateway.restful.api.RestfulRequestContext;
+import io.growing.gateway.restful.enums.DataTypeFormat;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.utils.RestfulConstants;
 import io.growing.gateway.restful.utils.RestfulResult;
@@ -84,12 +86,12 @@ public class RestfulApi {
         this.outgoing = outgoing;
     }
 
-    public CompletableFuture<Object> execute(final String path, final RestfulHttpApi httpApi, final Map<String, Object> params) {
+    public CompletableFuture<Object> execute(final String path, final RestfulHttpApi httpApi, final Map<String, Object> params, HashIdCodec hashIdCodec) {
         RequestContext requestContext = new RestfulRequestContext(params);
         final long start = System.currentTimeMillis();
         final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefinition, requestContext);
         return completionStage.thenApply(result -> {
-            final RestfulResult restfulResult = wrap(result, httpApi.getApiResponses().getDefault());
+            final RestfulResult restfulResult = wrap(result, httpApi.getApiResponses().getDefault(), hashIdCodec);
             final long end = System.currentTimeMillis();
             restfulResult.setElasped(end - start);
             return restfulResult;
@@ -102,7 +104,7 @@ public class RestfulApi {
      * @description: 结果包装
      * @author: zhuhongbin
      **/
-    private RestfulResult wrap(final Object result, final ApiResponse apiResponse) {
+    private RestfulResult wrap(final Object result, final ApiResponse apiResponse, HashIdCodec hashIdCodec) {
         if (Objects.isNull(result)) {
             return RestfulResult.success("");
         }
@@ -113,7 +115,7 @@ public class RestfulApi {
             Object res = results.iterator().next();
             if (res instanceof DynamicMessageWrapper) {
                 final DynamicMessageWrapper messageWrapper = ((DynamicMessageWrapper) res);
-                final Map<String, Object> resultWrap = resultWrap(messageWrapper, properties);
+                final Map<String, Object> resultWrap = resultWrap(messageWrapper, properties, hashIdCodec);
                 return RestfulResult.success(resultWrap);
             }
             return RestfulResult.success(res);
@@ -121,7 +123,7 @@ public class RestfulApi {
             final List<DynamicMessageWrapper> messageWrappers = (List<DynamicMessageWrapper>) result;
             List<Map<String, Object>> res = new ArrayList<>();
             messageWrappers.forEach(dynamicMessageWrapper -> {
-                res.add(resultWrap(dynamicMessageWrapper, properties));
+                res.add(resultWrap(dynamicMessageWrapper, properties, hashIdCodec));
             });
             return RestfulResult.success(res);
         }
@@ -132,10 +134,19 @@ public class RestfulApi {
      * @description: 结果包装
      * @author: zhuhongbin
      **/
-    private Map<String, Object> resultWrap(DynamicMessageWrapper messageWrapper, Map<String, Schema> properties) {
+    private Map<String, Object> resultWrap(DynamicMessageWrapper messageWrapper, Map<String, Schema> properties, HashIdCodec hashIdCodec) {
         Map<String, Object> resultData = new HashMap<>();
         properties.keySet().forEach(key -> {
-            resultData.put(key, messageWrapper.get(key));
+            final Schema schema = properties.get(key);
+            final String format = schema.getFormat();
+            if (Objects.nonNull(messageWrapper.get(key)) && Objects.nonNull(format)) {
+                if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(format)) {
+                    resultData.put(key, hashIdCodec.encode(Long.valueOf(messageWrapper.get(key).toString())));
+                }
+            } else {
+                resultData.put(key, messageWrapper.get(key));
+            }
+
         });
         return resultData;
     }
