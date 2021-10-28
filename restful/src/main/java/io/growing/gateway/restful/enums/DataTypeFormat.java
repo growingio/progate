@@ -6,7 +6,7 @@ package io.growing.gateway.restful.enums;
  * @Date 2021/10/28 4:55 下午
  **/
 public enum DataTypeFormat {
-    HASHID("hashid", "针对id 的一些处理");
+    HASHID("hashid", "for hashid");
 
     DataTypeFormat(String name, String desc) {
         this.name = name;
