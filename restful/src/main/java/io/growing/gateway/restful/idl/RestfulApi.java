@@ -52,11 +52,11 @@ public class RestfulApi {
         this.serviceMetadata = serviceMetadata;
     }
 
-    public String getGrpcDefination() {
+    public String getGrpcDefinition() {
         return grpcDefinition;
     }
 
-    public void setGrpcDefination(String grpcDefination) {
+    public void setGrpcDefination(String grpcDefinition) {
         this.grpcDefinition = grpcDefinition;
     }
 

@@ -190,7 +190,7 @@ public class RestfulIncoming implements Incoming {
                     finalParams.put(RestfulConstants.PROJECT_KEY, hashIdCodec.decode(projectId));
                 }
                 Optional<RestfulApi> restfulApi = restfulApiAtomicReference.get().stream().filter(api -> {
-                    return api.getGrpcDefination().equalsIgnoreCase(restfulHttpApi.getGrpcDefinition());
+                    return api.getGrpcDefinition().equalsIgnoreCase(restfulHttpApi.getGrpcDefinition());
                 }).collect(Collectors.toList()).stream().findFirst();
 
                 if (restfulApi.isPresent()) {
