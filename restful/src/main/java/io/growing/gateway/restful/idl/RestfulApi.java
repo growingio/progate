@@ -104,11 +104,11 @@ public class RestfulApi {
      **/
     private RestfulResult wrap(final Object result, final ApiResponse apiResponse) {
         if (Objects.isNull(result)) {
-            return RestfulResult.success(null);
+            return RestfulResult.success("");
         }
         final Collection results = (Collection) result;
         final Schema schema = (Schema) apiResponse.getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema().getProperties().get(RestfulConstants.RESULT_DATA);
-        final Map<String, Object> properties = schema.getProperties();
+        final Map<String, Schema> properties = schema.getProperties();
         if (results.size() == 1) {
             Object res = results.iterator().next();
             if (res instanceof DynamicMessageWrapper) {
@@ -132,7 +132,7 @@ public class RestfulApi {
      * @description: 结果包装
      * @author: zhuhongbin
      **/
-    private Map<String, Object> resultWrap(DynamicMessageWrapper messageWrapper, Map<String, Object> properties) {
+    private Map<String, Object> resultWrap(DynamicMessageWrapper messageWrapper, Map<String, Schema> properties) {
         Map<String, Object> resultData = new HashMap<>();
         properties.keySet().forEach(key -> {
             resultData.put(key, messageWrapper.get(key));
