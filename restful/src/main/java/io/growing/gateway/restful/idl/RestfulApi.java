@@ -27,7 +27,7 @@ import java.util.concurrent.CompletableFuture;
  **/
 public class RestfulApi {
     private ServiceMetadata serviceMetadata;
-    private String grpcDefination;
+    private String grpcDefinition;
     private Outgoing outgoing;
     private RestfulExceptionHandler exceptionHandler;
     private PluginFetcherBuilder pfb;
@@ -35,9 +35,9 @@ public class RestfulApi {
     public RestfulApi() {
     }
 
-    public RestfulApi(ServiceMetadata serviceMetadata, String grpcDefination, Outgoing outgoing, RestfulExceptionHandler exceptionHandler, PluginFetcherBuilder pfb) {
+    public RestfulApi(ServiceMetadata serviceMetadata, String grpcDefinition, Outgoing outgoing, RestfulExceptionHandler exceptionHandler, PluginFetcherBuilder pfb) {
         this.serviceMetadata = serviceMetadata;
-        this.grpcDefination = grpcDefination;
+        this.grpcDefinition = grpcDefinition;
         this.outgoing = outgoing;
         this.exceptionHandler = exceptionHandler;
         this.pfb = pfb;
@@ -53,11 +53,11 @@ public class RestfulApi {
     }
 
     public String getGrpcDefination() {
-        return grpcDefination;
+        return grpcDefinition;
     }
 
     public void setGrpcDefination(String grpcDefination) {
-        this.grpcDefination = grpcDefination;
+        this.grpcDefinition = grpcDefinition;
     }
 
     public RestfulExceptionHandler getExceptionHandler() {
@@ -87,7 +87,7 @@ public class RestfulApi {
     public CompletableFuture<Object> execute(final String path, final RestfulHttpApi httpApi, final Map<String, Object> params) {
         RequestContext requestContext = new RestfulRequestContext(params);
         final long start = System.currentTimeMillis();
-        final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefination, requestContext);
+        final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefinition, requestContext);
         return completionStage.thenApply(result -> {
             final RestfulResult restfulResult = wrap(result, httpApi.getApiResponses().getDefault());
             final long end = System.currentTimeMillis();
