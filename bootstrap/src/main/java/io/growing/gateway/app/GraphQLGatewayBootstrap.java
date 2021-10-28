@@ -52,7 +52,6 @@ public class GraphQLGatewayBootstrap {
             System.setProperty("hashids.salt", config.getHashids().getSalt());
         }
         final HealthService healthService = new GrpcHealthService(vertx);
-        final WebClient webClient = WebClient.create(vertx);
         final ConfigFactory configFactory = new YamlConfigFactoryImpl(configPath);
         final ClusterDiscoveryService discovery = new ConfigClusterDiscoveryService(configPath, healthService, configFactory);
         final List<Upstream> upstreams = discovery.discover();
@@ -68,7 +67,7 @@ public class GraphQLGatewayBootstrap {
         final GraphqlIncoming graphqlIncoming = new GraphqlIncoming(config.getGraphql(), configFactory);
         final HashIdCodec hashIdCodec = new HashIdCodec(config.getHashids().getSalt(), config.getHashids().getLength());
         // Restful 接口
-        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, webClient, config.getOauth2());
+        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, WebClient.create(vertx), config.getOauth2());
         // 先加载
         router.get("/reload").handler(ctx -> {
             graphqlIncoming.reload(serviceMetadata, outgoings);
