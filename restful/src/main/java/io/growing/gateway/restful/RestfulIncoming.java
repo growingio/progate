@@ -11,6 +11,7 @@ import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.lang.HashIdCodec;
 import io.growing.gateway.restful.config.RestfulConfig;
+import io.growing.gateway.restful.handler.RestfulException;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.idl.RestfulApi;
 import io.growing.gateway.restful.idl.RestfulBuilder;
@@ -107,7 +108,7 @@ public class RestfulIncoming implements Incoming {
                             operationMap.forEach((httpMethod, operation) -> {
                                 final Object endpoint = operation.getExtensions().get(RestfulConstants.X_GRPC_ENDPOINT);
                                 if (Objects.isNull(endpoint)) {
-                                    throw new RuntimeException("x-grpc-endpoint must defined in you proto file");
+                                    throw new RestfulException("x-grpc-endpoint must defined in you proto file");
                                 }
                                 RestfulHttpApi restfulHttpApi = new RestfulHttpApi();
                                 Set<HttpMethod> methods = Sets.newHashSet();
@@ -135,14 +136,14 @@ public class RestfulIncoming implements Incoming {
     @Override
     public void handle(HttpApi httpApi, HttpServerRequest request) {
         final HttpServerResponse response = request.response();
-        if (Objects.isNull(request) || Objects.isNull(httpApi)) {
-            response.end(gson.toJson(RestfulResult.error("Illeagal request")));
+        if (Objects.isNull(httpApi)) {
+            response.end(gson.toJson(RestfulResult.error("Illegal Request")));
         }
         request.pause();
         final String oauthToken = request.getHeader(RestfulConstants.AUTHORIZE);
-        logger.info("restful request entrence，request：{},head：{}", httpApi, oauthToken);
+        logger.info("restful request entrance，request：{},head：{}", httpApi, oauthToken);
         if (StringUtils.isBlank(oauthToken)) {
-            response.end(gson.toJson(RestfulResult.error("token authorizer faild")));
+            response.end(gson.toJson(RestfulResult.error(RestfulConstants.TOKEN_AUTHORIZER_FIAL)));
         }
         // Token 校验
         webClient.get(oAuth2Config.getAuthServer(), oAuth2Config.getTokenCheckUrl())
@@ -157,8 +158,8 @@ public class RestfulIncoming implements Incoming {
                 doHandle(httpApi, request, clientId);
             })
             .onFailure(error -> {
-                logger.error("token authorizer faild", error);
-                response.end(gson.toJson(RestfulResult.error("token authorizer faild")));
+                logger.error(RestfulConstants.TOKEN_AUTHORIZER_FIAL, error);
+                response.end(gson.toJson(RestfulResult.error(RestfulConstants.TOKEN_AUTHORIZER_FIAL)));
             });
 
     }

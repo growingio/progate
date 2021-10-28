@@ -27,4 +27,5 @@ public class RestfulHttpApi extends HttpApi {
     public void setApiResponses(ApiResponses apiResponses) {
         this.apiResponses = apiResponses;
     }
+
 }

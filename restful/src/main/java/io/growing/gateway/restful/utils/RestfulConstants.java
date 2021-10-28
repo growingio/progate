@@ -37,5 +37,7 @@ public class RestfulConstants {
     public static final String TOKEN = "token";
     public static final String AUTHORIZE = "Authorization";
 
+    public static final String TOKEN_AUTHORIZER_FIAL = "token authorizer failed";
+
 
 }
