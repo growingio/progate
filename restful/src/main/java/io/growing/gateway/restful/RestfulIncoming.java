@@ -130,7 +130,7 @@ public class RestfulIncoming implements Incoming {
 
     @Override
     public void handle(HttpServerRequest request) {
-        // donoting
+        // donating
     }
 
     @Override
