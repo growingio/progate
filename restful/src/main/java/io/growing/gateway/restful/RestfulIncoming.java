@@ -116,8 +116,8 @@ public class RestfulIncoming implements Incoming {
                                 final Map<String, Schema> properties = operation.getRequestBody().getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema().getProperties();
                                 final List<Parameter> parameters = operation.getParameters();
                                 final RestfulRequest restfulRequest = new RestfulRequest(parameters, properties);
-                                final String pathKey = key.replace(RestfulConstants.REST_PATH_KEY, RestfulConstants.VERTX_PATH_KEY);
-                                restfulHttpApi.setPath(basePath + pathKey);
+                                final String path = key.replace(RestfulConstants.REST_PATH_KEY, RestfulConstants.VERTX_PATH_KEY);
+                                restfulHttpApi.setPath(basePath + path);
                                 methods.add(new HttpMethod(httpMethod.name()));
                                 restfulHttpApi.setRestfulRequest(restfulRequest);
                                 restfulHttpApi.setMethods(methods);
