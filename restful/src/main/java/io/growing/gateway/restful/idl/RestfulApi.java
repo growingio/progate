@@ -138,7 +138,7 @@ public class RestfulApi {
      * @author: zhuhongbin
      **/
     private Map<String, Object> resultWrap(DynamicMessageWrapper messageWrapper, Map<String, Schema> properties, HashIdCodec hashIdCodec) {
-        Map<String, Object> resultData = new HashMap<>();
+        Map<String, Object> resultData = new HashMap<>(messageWrapper.values().size());
         properties.keySet().forEach(key -> {
             final Schema schema = properties.get(key);
             if (schema instanceof StringSchema) {
