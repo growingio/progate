@@ -3,6 +3,7 @@ package io.growing.gateway.graphql.transcode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -22,10 +23,19 @@ class TranscoderTest {
         final Transcoder transcoder = new Transcoder() {
         };
         final Map<String, Object> target = transcoder.transcode(source, values, mappings);
-        System.out.println(target);
 
         ByteString.copyFromUtf8("eyJtZXRyaWNUeXBlIjoibm9uZSIsInN1YkNoYXJ0VHlwZSI6InNlcGVyYXRlIn0=").toByteArray();
         //assertions
+
+        Assertions.assertEquals("name", target.get("name"));
+        Assertions.assertEquals("json", target.get("type"));
+        Assertions.assertEquals("NONE", target.get("stage"));
+
+        final Map<String, String> params = (Map<String, String>) target.get("params");
+        Assertions.assertEquals("/AnyDto", params.get("@type"));
+        final Object[] ids = (Object[]) target.get("ids");
+        Assertions.assertEquals(1, ids[0]);
+        Assertions.assertEquals(1, ids.length);
     }
 
 }
