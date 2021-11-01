@@ -225,7 +225,7 @@ public class RestfulIncoming implements Incoming {
                 if (schema instanceof StringSchema) {
                     final String format = StringUtils.isBlank(schema.getFormat()) ? "" : schema.getFormat();
                     if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(format)) {
-                        params.put(key, hashIdCodec.encode(Long.parseLong(params.get(key).toString())));
+                        params.put(key, hashIdCodec.decode(params.get(key).toString()));
                     }
                 }
                 if (schema instanceof ArraySchema) {
@@ -257,12 +257,12 @@ public class RestfulIncoming implements Incoming {
     private void arraySchemaWraper(ArraySchema arraySchema, Map<String, Object> params, String key) {
         final String format = StringUtils.isBlank(arraySchema.getItems().getFormat()) ? "" : arraySchema.getItems().getFormat();
         if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(format)) {
-            String[] encodes = new String[]{};
+            Long[] decodes = new Long[]{};
             final String[] originals = params.get(key).toString().split(",");
             for (int i = 0; i < originals.length; i++) {
-                encodes[i] = hashIdCodec.encode(Long.parseLong(originals[i]));
+                decodes[i] = hashIdCodec.decode(originals[i]);
             }
-            params.put(key, encodes);
+            params.put(key, decodes);
         }
     }
 }
