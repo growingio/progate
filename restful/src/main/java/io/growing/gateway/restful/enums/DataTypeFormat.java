@@ -13,7 +13,13 @@ public enum DataTypeFormat {
         this.desc = desc;
     }
 
+    /***
+     *  数据类型名称
+     **/
     private String name;
+    /***
+     *  数据类型描述
+     **/
     private String desc;
 
     public String getName() {
