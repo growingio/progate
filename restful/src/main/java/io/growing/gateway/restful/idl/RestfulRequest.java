@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @Description: 描述
+ * @Description: 用来记录openapi 请求的定义（requestbody 和普通request 参数）
  * @Author: zhuhongbin
  * @Date 2021/10/28 5:23 下午
  **/

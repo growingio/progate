@@ -11,8 +11,11 @@ import io.growing.gateway.restful.enums.DataTypeFormat;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.utils.RestfulConstants;
 import io.growing.gateway.restful.utils.RestfulResult;
+import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,7 +61,7 @@ public class RestfulApi {
         return grpcDefinition;
     }
 
-    public void setGrpcDefination(String grpcDefinition) {
+    public void setGrpcDefinition(String grpcDefinition) {
         this.grpcDefinition = grpcDefinition;
     }
 
@@ -138,15 +141,33 @@ public class RestfulApi {
         Map<String, Object> resultData = new HashMap<>();
         properties.keySet().forEach(key -> {
             final Schema schema = properties.get(key);
-            final String format = schema.getFormat();
-            if (Objects.nonNull(messageWrapper.get(key)) && Objects.nonNull(format)) {
+            if (schema instanceof StringSchema) {
+                StringSchema stringSchema = (StringSchema) schema;
+                final String format = StringUtils.isBlank(stringSchema.getFormat()) ? "" : stringSchema.getFormat();
+                if (Objects.nonNull(messageWrapper.get(key)) && StringUtils.isNotBlank(format)) {
+                    if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(format)) {
+                        resultData.put(key, hashIdCodec.encode(Long.valueOf(messageWrapper.get(key).toString())));
+                    } else {
+                        resultData.put(key, messageWrapper.get(key));
+                    }
+                }
+            } else if (schema instanceof ArraySchema) {
+                ArraySchema arraySchema = (ArraySchema) schema;
+                final String format = StringUtils.isBlank(arraySchema.getItems().getFormat()) ? "" : arraySchema.getItems().getFormat();
                 if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(format)) {
-                    resultData.put(key, hashIdCodec.encode(Long.valueOf(messageWrapper.get(key).toString())));
+                    // 对结果集做处理
+                    String[] encodes = new String[]{};
+                    final String[] results = messageWrapper.get(key).toString().split(",");
+                    for (int i = 0; i < results.length; i++) {
+                        encodes[i] = hashIdCodec.encode(Long.parseLong(results[i]));
+                    }
+                    resultData.put(key, encodes);
+                } else {
+                    resultData.put(key, messageWrapper.get(key));
                 }
             } else {
                 resultData.put(key, messageWrapper.get(key));
             }
-
         });
         return resultData;
     }

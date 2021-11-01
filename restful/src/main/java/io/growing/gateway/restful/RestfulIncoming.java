@@ -24,7 +24,9 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.Paths;
+import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.SwaggerParseResult;
@@ -50,11 +52,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-/***
- * @date: 2021/9/18 5:38 下午
- * @description: restful
- * @author: zhuhongbin
- **/
 public class RestfulIncoming implements Incoming {
 
     private final Logger logger = LoggerFactory.getLogger(RestfulIncoming.class);
@@ -173,9 +170,7 @@ public class RestfulIncoming implements Incoming {
     }
 
     /***
-     * @date: 2021/10/18 1:23 下午
      * @description: 解析执行
-     * @author: zhuhongbin
      **/
     private void doHandle(HttpApi httpApi, HttpServerRequest request, String clientId) {
         request.bodyHandler(handle -> {
@@ -201,7 +196,6 @@ public class RestfulIncoming implements Incoming {
                 Optional<RestfulApi> restfulApi = restfulApiAtomicReference.get().stream().filter(api -> {
                     return api.getGrpcDefinition().equalsIgnoreCase(restfulHttpApi.getGrpcDefinition());
                 }).collect(Collectors.toList()).stream().findFirst();
-
                 if (restfulApi.isPresent()) {
                     final CompletableFuture<Object> completableFuture = restfulApi.get().execute(config.getPath(), restfulHttpApi, finalParams, hashIdCodec);
                     completableFuture.whenComplete((result, throwable) -> {
@@ -222,20 +216,53 @@ public class RestfulIncoming implements Incoming {
         });
     }
 
-    private final void paramsTranscode(RestfulRequest restfulRequest, Map<String, Object> params) {
+    /***
+     * @description: 说明在做参数处理的时候，有可能存在套娃的情况存在，目前只处理参数本身，套娃不处理（无法估计到参数嵌套的层数）。
+    无法估计到参数嵌套的层数     **/
+    private void paramsTranscode(RestfulRequest restfulRequest, Map<String, Object> params) {
         if (Objects.nonNull(restfulRequest.getMaps()) && !restfulRequest.getMaps().isEmpty()) {
-            restfulRequest.getMaps().forEach((key, value) -> {
-                if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(value.getFormat())) {
-                    params.put(key, hashIdCodec.encode(Long.parseLong(params.get(key).toString())));
+            restfulRequest.getMaps().forEach((key, schema) -> {
+                if (schema instanceof StringSchema) {
+                    final String format = StringUtils.isBlank(schema.getFormat()) ? "" : schema.getFormat();
+                    if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(format)) {
+                        params.put(key, hashIdCodec.encode(Long.parseLong(params.get(key).toString())));
+                    }
+                }
+                if (schema instanceof ArraySchema) {
+                    final ArraySchema arraySchema = (ArraySchema) schema;
+                    arraySchemaWraper(arraySchema, params, key);
                 }
             });
         }
         if (Objects.nonNull(restfulRequest.getParameters()) && !restfulRequest.getParameters().isEmpty()) {
             restfulRequest.getParameters().forEach(parameter -> {
-                if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(parameter.getSchema().getFormat())) {
-                    params.put(parameter.getName(), hashIdCodec.decode(params.get(parameter.getName()).toString()));
+                final Schema parameterSchema = parameter.getSchema();
+                if (parameterSchema instanceof StringSchema) {
+                    final String format = StringUtils.isBlank(parameterSchema.getFormat()) ? "" : parameterSchema.getFormat();
+                    if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(format)) {
+                        params.put(parameter.getName(), hashIdCodec.decode(params.get(parameter.getName()).toString()));
+                    }
+                }
+                if (parameterSchema instanceof ArraySchema) {
+                    final ArraySchema arraySchema = (ArraySchema) parameterSchema;
+                    arraySchemaWraper(arraySchema, params, parameter.getName());
                 }
             });
+        }
+    }
+
+    /***
+     * 数组类型参数处理
+     **/
+    private void arraySchemaWraper(ArraySchema arraySchema, Map<String, Object> params, String key) {
+        final String format = StringUtils.isBlank(arraySchema.getItems().getFormat()) ? "" : arraySchema.getItems().getFormat();
+        if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(format)) {
+            String[] encodes = new String[]{};
+            final String[] originals = params.get(key).toString().split(",");
+            for (int i = 0; i < originals.length; i++) {
+                encodes[i] = hashIdCodec.encode(Long.parseLong(originals[i]));
+            }
+            params.put(key, encodes);
         }
     }
 }
