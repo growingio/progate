@@ -20,7 +20,6 @@ import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
-import io.growing.gateway.plugin.PluginArguments;
 import io.growing.gateway.utilities.CollectionUtilities;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.MultiMap;
@@ -66,7 +65,7 @@ public class GraphqlIncoming implements Incoming {
     @Override
     public void reload(final List<ServiceMetadata> services, final Set<Outgoing> outgoings) {
         final GraphqlBuilder builder = GraphqlBuilder.newBuilder();
-        graphQLReference.set(builder.outgoings(outgoings).services(services).exceptionHandler(exceptionHandler).configFactory(configFactory).build());
+//        graphQLReference.set(builder.outgoings(outgoings).services(services).exceptionHandler(exceptionHandler).configFactory(configFactory).build());
     }
 
     @Override
@@ -161,7 +160,7 @@ public class GraphqlIncoming implements Incoming {
             builder.operationName(payload.getOperationName());
         }
         final Map<String, Object> arguments = new HashMap<>();
-        arguments.putAll(new PluginArguments().arguments(request));
+//        arguments.putAll(new PluginArguments().arguments(request));
         arguments.put("request", request);
         arguments.put("payload", payload);
         arguments.put("address", getRemoteAddress(request));

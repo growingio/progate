@@ -3,25 +3,25 @@ package io.growing.gateway.graphql.transcode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
-import graphql.GraphQLContext;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TranscoderTests {
+class TranscoderTest {
 
     @Test
-    public void test() {
+    void test() {
         final Map<String, Object> attrs = ImmutableMap.of("type", "json", "name", "name");
-        final Map<String, Object> source = ImmutableMap.of("id", 1, "attrs", attrs);
+        final Map<String, Object> source = new HashMap<>();
+        source.put("id", 1);
+        source.put("attrs", attrs);
         final List<String> mappings = Lists.newArrayList("id=ids.add", "attrs=...", "attrs=params.any:/AnyDto");
         final List<String> values = Lists.newArrayList("stage=NONE");
         final Transcoder transcoder = new Transcoder() {
         };
-        final GraphQLContext context = GraphQLContext.of(new HashMap<String, Object>());
-        final Map<String, Object> target = transcoder.transcode(context, source, values, mappings);
+        final Map<String, Object> target = transcoder.transcode(source, values, mappings);
         System.out.println(target);
 
         ByteString.copyFromUtf8("eyJtZXRyaWNUeXBlIjoibm9uZSIsInN1YkNoYXJ0VHlwZSI6InNlcGVyYXRlIn0=").toByteArray();

@@ -11,6 +11,14 @@ publishing {
         publications {
             create<MavenPublication>(project.name) {
                 from(components["java"])
+                versionMapping {
+                    usage("java-api") {
+                        fromResolutionOf("runtimeClasspath")
+                    }
+                    usage("java-runtime") {
+                        fromResolutionResult()
+                    }
+                }
             }
         }
         maven {

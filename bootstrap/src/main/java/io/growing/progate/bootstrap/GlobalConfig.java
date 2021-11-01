@@ -1,8 +1,9 @@
-package io.growing.gateway.app;
+package io.growing.progate.bootstrap;
 
 import io.growing.gateway.config.OAuth2Config;
 import io.growing.gateway.graphql.config.GraphqlConfig;
 import io.growing.gateway.restful.config.RestfulConfig;
+import io.growing.progate.bootstrap.config.ServerConfig;
 
 public class GlobalConfig {
     private ServerConfig server;

@@ -13,12 +13,10 @@ import java.util.stream.Collectors;
  * @author AI
  */
 public class ConfigClusterDiscoveryService implements ClusterDiscoveryService {
-    private final String configPath;
     private final HealthService healthService;
     private final ConfigFactory configFactory;
 
-    public ConfigClusterDiscoveryService(String configPath, HealthService healthService, ConfigFactory configFactory) {
-        this.configPath = configPath;
+    public ConfigClusterDiscoveryService(HealthService healthService, ConfigFactory configFactory) {
         this.healthService = healthService;
         this.configFactory = configFactory;
     }
