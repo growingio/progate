@@ -28,6 +28,7 @@ import io.grpc.stub.ClientCalls;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -62,11 +63,11 @@ public class GrpcOutgoing implements Outgoing {
             final CollectionObserver<DynamicMessage> observer = new CollectionObserver<>();
             ClientCalls.asyncServerStreamingCall(call, message, observer);
             return observer.toCompletionStage().thenApply(collection -> {
-                final List<DynamicMessageWrapper> wrappers = new LinkedList<>();
+                final List<Object> values = new LinkedList<>();
                 for (DynamicMessage dm : collection) {
-                    wrappers.add(new DynamicMessageWrapper(dm, resolver.getTypeDescriptors()));
+                    values.add(transcodeResponse(dm, resolver.getTypeDescriptors()));
                 }
-                return wrappers;
+                return values;
             });
         } else {
             final UnaryObserver<DynamicMessage> observer = new UnaryObserver<>();
@@ -75,7 +76,7 @@ public class GrpcOutgoing implements Outgoing {
                 if (methodDescriptor.getOutputType().getFullName().equals(Empty.getDescriptor().getFullName())) {
                     return true;
                 } else {
-                    return new DynamicMessageWrapper(dm, resolver.getTypeDescriptors());
+                    return transcodeResponse(dm, resolver.getTypeDescriptors());
                 }
             });
         }
@@ -100,6 +101,11 @@ public class GrpcOutgoing implements Outgoing {
         final ManagedChannel origin = ChannelFactory.get(upstream, request);
         final RequestLogInterceptor interceptor = new RequestLogInterceptor(request.id());
         return ClientInterceptors.intercept(origin, interceptor);
+    }
+
+    private Object transcodeResponse(final DynamicMessage dm, final Set<Descriptors.Descriptor> descriptors) {
+        final Optional<Object> valueOpt = DynamicMessageWrapper.extractValue(dm);
+        return valueOpt.orElseGet(() -> new DynamicMessageWrapper(dm, descriptors));
     }
 
 }

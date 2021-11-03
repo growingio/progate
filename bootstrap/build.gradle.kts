@@ -3,8 +3,7 @@
  */
 
 plugins {
-    distribution
-    id("io.growing.progate.java-application-conventions")
+    id("io.growing.progate.java-publishing-conventions")
 }
 
 dependencies {
@@ -25,18 +24,4 @@ dependencies {
     implementation("com.google.dagger:dagger")
     annotationProcessor("com.google.dagger:dagger-compiler")
 
-}
-
-application {
-    // Define the main class for the application.
-    mainClass.set("io.growing.gateway.app.GraphQLGatewayBootstrap")
-}
-
-distributions {
-
-    main {
-        if (project.hasProperty("packageName")) {
-            distributionBaseName.set(project.property("packageName").toString())
-        }
-    }
 }

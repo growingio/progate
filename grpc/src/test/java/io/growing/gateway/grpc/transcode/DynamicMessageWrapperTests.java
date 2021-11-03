@@ -1,9 +1,15 @@
 package io.growing.gateway.grpc.transcode;
 
+import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.StringValue;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 public class DynamicMessageWrapperTests {
+
 
     @Test
     public void test() throws InvalidProtocolBufferException {
@@ -40,4 +46,13 @@ public class DynamicMessageWrapperTests {
 //        Assertions.assertEquals(false, wrapper.get("isSystem"));
     }
 
+    @Test
+    void testToValue() throws InvalidProtocolBufferException {
+        final String v = "happy";
+        final StringValue value = StringValue.of(v);
+        final DynamicMessage dm = DynamicMessage.parseFrom(StringValue.getDescriptor(), value.toByteArray());
+        final Optional<Object> valueOpt = DynamicMessageWrapper.extractValue(dm);
+        Assertions.assertTrue(valueOpt.isPresent());
+        Assertions.assertEquals(v, valueOpt.get());
+    }
 }
