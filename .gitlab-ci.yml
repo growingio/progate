@@ -17,6 +17,6 @@ include:
   - template: Code-Quality.gitlab-ci.yml
 
 code_quality:
+  image: uhub.service.ucloud.cn/growing/docker:19.03.12
   variables:
     CODE_QUALITY_IMAGE: "uhub.service.ucloud.cn/growing/codequality:latest"
- 
