@@ -1,6 +1,7 @@
 plugins {
     java
     jacoco
+    id("org.barfuin.gradle.jacocolog")
 }
 
 repositories {
