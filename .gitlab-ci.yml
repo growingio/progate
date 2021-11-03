@@ -13,6 +13,10 @@ test:
     reports:
       junit: "*/build/test-results/test/**/TEST-*.xml"
 
+include:
+  - template: Code-Quality.gitlab-ci.yml
+
 code_quality:
   variables:
     CODE_QUALITY_IMAGE: "uhub.service.ucloud.cn/growing/codequality:latest"
+ 
