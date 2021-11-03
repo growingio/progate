@@ -1,3 +1,5 @@
+image: uhub.service.ucloud.cn/growing/gradle:7.2-jdk11
+
 stages:
   - test
 
@@ -5,3 +7,7 @@ test:
   stage: test
   script:
     - ./gradlew test
+  artifacts:
+    when: always
+    reports:
+      junit: "*/build/test-results/test/**/TEST-*.xml"
