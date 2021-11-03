@@ -22,3 +22,5 @@ pluginManagement {
         }
     }
 }
+
+include("code-coverage-report")
