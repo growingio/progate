@@ -19,4 +19,4 @@ include:
 code_quality:
   image: uhub.service.ucloud.cn/growing_public/docker:19.03.12
   variables:
-    CODE_QUALITY_IMAGE: "uhub.service.ucloud.cn/growing/codequality:latest"
+    CODE_QUALITY_IMAGE: "uhub.service.ucloud.cn/growing_public/codequality:latest"
