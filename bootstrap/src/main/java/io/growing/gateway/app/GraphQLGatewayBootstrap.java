@@ -52,7 +52,6 @@ public class GraphQLGatewayBootstrap {
             System.setProperty("hashids.salt", config.getHashids().getSalt());
         }
         final HealthService healthService = new GrpcHealthService(vertx);
-        final WebClient webClient = WebClient.create(vertx);
         final ConfigFactory configFactory = new YamlConfigFactoryImpl(configPath);
         final ClusterDiscoveryService discovery = new ConfigClusterDiscoveryService(configPath, healthService, configFactory);
         final List<Upstream> upstreams = discovery.discover();
