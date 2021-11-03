@@ -12,3 +12,7 @@ test:
     when: always
     reports:
       junit: "*/build/test-results/test/**/TEST-*.xml"
+
+code_quality:
+  variables:
+    CODE_QUALITY_IMAGE: "uhub.service.ucloud.cn/growing/codequality:latest"
