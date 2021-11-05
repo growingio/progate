@@ -59,12 +59,13 @@ public class GraphqlSchemaParser {
         }
         try {
             for (EndpointDefinition def : service.graphqlDefinitions()) {
+                if (def.getName().contains(".ref.")) {
+                    continue;
+                }
                 final CharSource source = ByteSource.wrap(def.getContent()).asCharSource(StandardCharsets.UTF_8);
                 final List<String> lines = source.readLines();
                 if (def.getName().contains(".schema.")) {
                     lines.forEach(line -> safelyAppendScheme(schemas, line));
-                    continue;
-                } else if (def.getName().contains(".ref.")) {
                     continue;
                 }
                 boolean matched = false;

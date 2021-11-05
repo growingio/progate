@@ -28,8 +28,15 @@ public class ProgateModule extends AbstractModule {
         return new ProgateModule(configPath);
     }
 
-    public static String getApplicationConfigFile() {
-        final String property = System.getProperty("config.file");
+    public static String getApplicationConfigFile(final String[] args) {
+        final String key = "config.file";
+        final String argSetter = key + "=";
+        for (String arg : args) {
+            if (arg.startsWith(argSetter)) {
+                return arg.replace(argSetter, "");
+            }
+        }
+        final String property = System.getProperty(key);
         if (Objects.nonNull(property)) {
             return property;
         }

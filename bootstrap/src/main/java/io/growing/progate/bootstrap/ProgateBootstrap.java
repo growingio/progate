@@ -24,6 +24,7 @@ import io.vertx.ext.web.Router;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -37,7 +38,7 @@ public class ProgateBootstrap {
     private static final Logger logger = LoggerFactory.getLogger(ProgateBootstrap.class);
 
     public static void main(final String[] args) throws Exception {
-        final String configPath = ProgateModule.getApplicationConfigFile();
+        final String configPath = ProgateModule.getApplicationConfigFile(args);
         final Injector injector = Guice.createInjector(ProgateModule.create(configPath));
         final Vertx vertx = injector.getInstance(Vertx.class);
         final HttpServer server = vertx.createHttpServer();
