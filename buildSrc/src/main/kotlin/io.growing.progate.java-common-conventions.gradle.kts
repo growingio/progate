@@ -35,6 +35,8 @@ dependencies {
         implementation("com.google.protobuf:protobuf-java-util:3.17.3")
         implementation("io.grpc:grpc-netty-shaded:${ComponentVersions.grpc}")
 
+        implementation("com.google.inject:guice:${ComponentVersions.guice}")
+
         implementation("com.jayway.jsonpath:json-path:2.6.0")
         implementation("org.yaml:snakeyaml:1.28")
 
@@ -43,9 +45,6 @@ dependencies {
 
         implementation("com.graphql-java:graphql-java:17.0")
         implementation("com.graphql-java:graphql-java-extended-scalars:17.0")
-
-        implementation("com.google.dagger:dagger:${ComponentVersions.dagger}")
-        annotationProcessor("com.google.dagger:dagger-compiler:${ComponentVersions.dagger}")
 
     }
 

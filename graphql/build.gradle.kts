@@ -8,19 +8,15 @@ plugins {
 
 dependencies {
 
-    implementation(project(":core"))
+    api(project(":core"))
+    api("com.graphql-java:graphql-java")
+    api("com.graphql-java:graphql-java-extended-scalars")
+
     implementation("io.grpc:grpc-stub")
-    implementation("com.google.code.gson:gson")
-    implementation("com.graphql-java:graphql-java")
     implementation("com.google.protobuf:protobuf-java-util")
-    implementation("com.graphql-java:graphql-java-extended-scalars")
-    api("io.growing.gateway.plugin:gateway-plugin:1.0.1-SNAPSHOT") {
-        isChanging = true
-    }
+
     // We use implementation instead of api for better compilation performance
     // https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_separation
-    implementation("com.google.dagger:dagger")
-    annotationProcessor("com.google.dagger:dagger-compiler")
 
     implementation("com.fasterxml.jackson.core:jackson-databind:2.12.5")
 

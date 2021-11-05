@@ -11,16 +11,16 @@ import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.execution.DataFetcherExceptionHandler;
 import graphql.execution.ExecutionId;
-import io.growing.gateway.config.ConfigFactory;
+import io.growing.gateway.context.RuntimeContext;
 import io.growing.gateway.graphql.config.GraphqlConfig;
 import io.growing.gateway.graphql.handler.SimpleDataFetcherExceptionHandler;
 import io.growing.gateway.graphql.idl.GraphqlBuilder;
+import io.growing.gateway.graphql.plugin.GraphqlInboundPlugin;
 import io.growing.gateway.graphql.request.GraphqlExecutionPayload;
 import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
-import io.growing.gateway.plugin.PluginArguments;
 import io.growing.gateway.utilities.CollectionUtilities;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.MultiMap;
@@ -31,8 +31,10 @@ import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.inject.Inject;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,23 +52,31 @@ public class GraphqlIncoming implements Incoming {
 
     private final String contentType = "application/json;charset=utf-8";
     private final AtomicReference<GraphQL> graphQLReference = new AtomicReference<>();
+    private final AtomicReference<List<GraphqlInboundPlugin>> pluginsReference = new AtomicReference<>();
     private final Logger logger = LoggerFactory.getLogger(GraphqlIncoming.class);
     private final Gson gson;
     private final GraphqlConfig config;
-    private final ConfigFactory configFactory;
     private final DataFetcherExceptionHandler exceptionHandler;
 
-    public GraphqlIncoming(GraphqlConfig config, ConfigFactory configFactory) {
+    @Inject
+    public GraphqlIncoming(GraphqlConfig config) {
         this.config = config;
-        this.configFactory = configFactory;
         this.gson = new GsonBuilder().serializeNulls().create();
         this.exceptionHandler = new SimpleDataFetcherExceptionHandler();
     }
 
     @Override
-    public void reload(final List<ServiceMetadata> services, final Set<Outgoing> outgoings) {
+    public void reload(List<ServiceMetadata> services, Set<Outgoing> outgoings, RuntimeContext context) {
         final GraphqlBuilder builder = GraphqlBuilder.newBuilder();
-        graphQLReference.set(builder.outgoings(outgoings).services(services).exceptionHandler(exceptionHandler).configFactory(configFactory).build());
+        final List<GraphqlInboundPlugin> plugins = Objects.isNull(config.getPlugins()) ? Collections.emptyList() : config.getPlugins().stream()
+            .map(pluginName -> {
+                final GraphqlInboundPlugin plugin = context.createPlugin(pluginName);
+                plugin.init(config, context);
+                return plugin;
+            }).collect(Collectors.toList());
+        pluginsReference.set(plugins);
+        graphQLReference.set(builder.outgoings(outgoings)
+            .services(services).plugins(plugins).exceptionHandler(exceptionHandler).build());
     }
 
     @Override
@@ -161,7 +171,10 @@ public class GraphqlIncoming implements Incoming {
             builder.operationName(payload.getOperationName());
         }
         final Map<String, Object> arguments = new HashMap<>();
-        arguments.putAll(new PluginArguments().arguments(request));
+        final List<GraphqlInboundPlugin> plugins = pluginsReference.get();
+        if (!plugins.isEmpty()) {
+            plugins.forEach(plugin -> arguments.putAll(plugin.arguments(request)));
+        }
         arguments.put("request", request);
         arguments.put("payload", payload);
         arguments.put("address", getRemoteAddress(request));

@@ -1,11 +1,11 @@
 package io.growing.gateway.graphql.fetcher;
 
-import graphql.GraphQLContext;
 import graphql.schema.DataFetchingEnvironment;
 import io.growing.gateway.context.RequestContext;
+import io.growing.gateway.graphql.plugin.GraphqlInboundPlugin;
 import io.growing.gateway.graphql.transcode.Transcoder;
-import io.growing.gateway.plugin.transcode.EnvironmentArgumentTranscoder;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,11 +14,13 @@ public class DataFetchingEnvironmentContext implements RequestContext, Transcode
     private final Map<String, Object> arguments;
     private final DataFetchingEnvironment environment;
 
-    public DataFetchingEnvironmentContext(DataFetchingEnvironment environment, List<String> values, List<String> mappings) {
+    public DataFetchingEnvironmentContext(DataFetchingEnvironment environment,
+                                          List<GraphqlInboundPlugin> plugins,
+                                          List<String> values, List<String> mappings) {
         this.environment = environment;
-        final EnvironmentArgumentTranscoder transcoder = new EnvironmentArgumentTranscoder(environment);
-        final GraphQLContext context = environment.getGraphQlContext();
-        this.arguments = transcoder.transcode(transcode(context, environment.getArguments(), values, mappings));
+        this.arguments = new HashMap<>(environment.getArguments());
+        plugins.forEach(plugin -> plugin.transcodeArguments(environment, arguments));
+        transcode(arguments, values, mappings);
     }
 
     @Override
@@ -27,6 +29,7 @@ public class DataFetchingEnvironmentContext implements RequestContext, Transcode
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T getArgument(String name) {
         return (T) arguments.get(name);
     }
