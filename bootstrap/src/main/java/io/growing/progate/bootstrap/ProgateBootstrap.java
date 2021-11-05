@@ -3,6 +3,7 @@ package io.growing.progate.bootstrap;
 import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import io.growing.gateway.context.RuntimeContext;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.discovery.ServiceDiscoveryService;
 import io.growing.gateway.grpc.GrpcOutgoing;
@@ -12,6 +13,7 @@ import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.progate.bootstrap.config.ProgateConfig;
+import io.growing.progate.bootstrap.context.GuiceRuntimeContext;
 import io.growing.progate.bootstrap.di.ProgateModule;
 import io.growing.progate.bootstrap.loader.InboundLoader;
 import io.vertx.core.Vertx;
@@ -40,6 +42,8 @@ public class ProgateBootstrap {
         final Vertx vertx = injector.getInstance(Vertx.class);
         final HttpServer server = vertx.createHttpServer();
 
+        final RuntimeContext runtimeContext = GuiceRuntimeContext.from(configPath, injector);
+
         final ProgateConfig config = injector.getInstance(ProgateConfig.class);
         setSystemEnvironments(config);
 
@@ -49,7 +53,6 @@ public class ProgateBootstrap {
 
         final Set<Incoming> inbounds = new InboundLoader().load(config.getInbound(), injector);
 
-        final List<ServiceMetadata> serviceMetadata = loadServices(upstreams);
         // Restful 接口
 //        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, webClient, config.getOauth2());
 
@@ -57,7 +60,7 @@ public class ProgateBootstrap {
         final HealthyCheck check = new HealthyCheck();
         router.get(check.path).handler(check);
         router.get("/reload").handler(ctx -> {
-            inbounds.forEach(inbound -> inbound.reload(serviceMetadata, outgoings));
+            inbounds.forEach(inbound -> inbound.reload(loadServices(upstreams), outgoings, runtimeContext));
             ctx.response().end();
         });
         inbounds.forEach(inbound ->
@@ -68,7 +71,7 @@ public class ProgateBootstrap {
 
 //        restfulIncoming.apis(serviceMetadata).forEach(api -> {
 //            api.getMethods().forEach(method -> {
-//                router.route(method, api.getPath()).handler(context -> restfulIncoming.handle(api, context.request()));
+//                router.route(method, api.getPath()).handler(runtimeContext -> restfulIncoming.handle(api, runtimeContext.request()));
 //            });
 //        });
 
@@ -96,7 +99,7 @@ public class ProgateBootstrap {
         vertx.setPeriodic(1000, id -> {
             try {
                 final List<ServiceMetadata> reloadServiceMetadata = loadServices(upstreams);
-                inbounds.forEach(inbound -> inbound.reload(reloadServiceMetadata, outgoings));
+                inbounds.forEach(inbound -> inbound.reload(reloadServiceMetadata, outgoings, runtimeContext));
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
                 logger.error(e.getLocalizedMessage(), e);

@@ -14,19 +14,6 @@ public interface Transcoder {
 
     @SuppressWarnings("unchecked")
     default Map<String, Object> transcode(final Map<String, Object> arguments, final List<String> values, final List<String> mappings) {
-//        final Map<String, Object> parameters = new HashMap<>(source);
-//        final Object dataCenterId = context.get("dataCenterId");
-//        if (Objects.nonNull(dataCenterId)) {
-//            parameters.put("dataCenterId", dataCenterId);
-//        }
-//        final Object userId = context.get("userId");
-//        if (Objects.nonNull(userId)) {
-//            parameters.put("userId", userId);
-//        }
-//        final String language = context.get("language");
-//        if (Objects.nonNull(language)) {
-//            parameters.put("language", language);
-//        }
         values.forEach(value -> {
             final int index = value.indexOf('=');
             arguments.put(value.substring(0, index), value.substring(index + 1));

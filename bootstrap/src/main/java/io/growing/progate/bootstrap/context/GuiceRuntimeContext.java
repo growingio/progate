@@ -2,7 +2,12 @@ package io.growing.progate.bootstrap.context;
 
 import com.google.inject.Injector;
 import io.growing.gateway.context.RuntimeContext;
+import io.growing.gateway.discovery.ClusterDiscoveryService;
+import io.growing.gateway.exception.PluginNotFoundException;
 import io.growing.gateway.meta.Upstream;
+
+import java.util.List;
+import java.util.Optional;
 
 public class GuiceRuntimeContext implements RuntimeContext {
     private final String configPath;
@@ -29,7 +34,20 @@ public class GuiceRuntimeContext implements RuntimeContext {
 
     @Override
     public Upstream getInternalUpstream(String name) {
-        return null;
+        final ClusterDiscoveryService discovery = injector.getInstance(ClusterDiscoveryService.class);
+        final List<Upstream> upstreams = discovery.discover();
+        final Optional<Upstream> upstreamOpt = upstreams.stream().filter(upstream -> upstream.isInternal() && upstream.name().equals(name)).findFirst();
+        assert upstreamOpt.isPresent();
+        return upstreamOpt.get();
     }
 
+    @Override
+    public <T> T createPlugin(String className) throws PluginNotFoundException {
+        try {
+            final Class clazz = Class.forName(className);
+            return (T) injector.getInstance(clazz);
+        } catch (ClassNotFoundException e) {
+            throw new PluginNotFoundException(className);
+        }
+    }
 }

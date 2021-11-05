@@ -67,6 +67,11 @@ public class GraphqlBuilder {
         return this;
     }
 
+    public GraphqlBuilder plugins(List<GraphqlInboundPlugin> plugins) {
+        this.plugins = plugins;
+        return this;
+    }
+
     public GraphQL build() {
         final RuntimeWiring.Builder runtimeWiringBuilder = RuntimeWiring.newRuntimeWiring();
         final Map<String, Outgoing> handlers = new HashMap<>(outgoings.size());
@@ -105,7 +110,7 @@ public class GraphqlBuilder {
                     final List<String> mappings = getListStringArgument(endpointDirective, "mappings");
                     final Outgoing handler = handlers.get(endpointDirective.getName());
                     final boolean isListType = isListReturnType(field);
-                    DataFetcher<CompletionStage<?>> next = new OutgoingDataFetcher(endpoint, service.upstream(), handler,null, values, mappings, isListType);
+                    DataFetcher<CompletionStage<?>> next = new OutgoingDataFetcher(endpoint, service.upstream(), handler, plugins, values, mappings, isListType);
                     for (GraphqlInboundPlugin plugin : plugins) {
                         next = plugin.fetcherChain(directives, next);
                     }

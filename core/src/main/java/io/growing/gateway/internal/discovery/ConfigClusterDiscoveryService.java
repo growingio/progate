@@ -6,6 +6,7 @@ import io.growing.gateway.ctrl.HealthService;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.meta.Upstream;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +17,7 @@ public class ConfigClusterDiscoveryService implements ClusterDiscoveryService {
     private final HealthService healthService;
     private final ConfigFactory configFactory;
 
+    @Inject
     public ConfigClusterDiscoveryService(HealthService healthService, ConfigFactory configFactory) {
         this.healthService = healthService;
         this.configFactory = configFactory;

@@ -4,6 +4,7 @@ import graphql.language.Directive;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.GraphQLScalarType;
+import io.growing.gateway.context.RuntimeContext;
 import io.growing.gateway.graphql.config.GraphqlConfig;
 import io.vertx.core.http.HttpServerRequest;
 
@@ -15,7 +16,7 @@ import java.util.concurrent.CompletionStage;
 
 public interface GraphqlInboundPlugin {
 
-    void init(GraphqlConfig config);
+    void init(GraphqlConfig config, RuntimeContext context);
 
     default Map<String, Object> arguments(HttpServerRequest request) {
         return Collections.emptyMap();

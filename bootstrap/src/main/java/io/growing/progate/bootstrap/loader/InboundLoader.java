@@ -13,6 +13,7 @@ import java.util.Set;
 public class InboundLoader {
 
     public Set<Incoming> load(final InboundConfig config, final Injector injector) throws ClassNotFoundException {
+        Objects.requireNonNull(config, "inbound cannot be empty in config");
         final Config inboundServiceConfig = ConfigFactory.load();
         final ImmutableSet.Builder<Incoming> builder = new ImmutableSet.Builder<>();
         if (Objects.nonNull(config.getGraphql())) {
