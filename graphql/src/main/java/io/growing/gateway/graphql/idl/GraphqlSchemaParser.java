@@ -83,7 +83,9 @@ public class GraphqlSchemaParser {
                                 mutations.append(line).append(StringUtils.LF);
                             }
                         } else {
-                            schemas.append(line).append(StringUtils.LF);
+                            if (schemas.indexOf(line) < 0) {
+                                schemas.append(line).append(StringUtils.LF);
+                            }
                         }
                     }
 

@@ -33,7 +33,9 @@ public class GraphqlSchemaParserTests {
                 new EndpointDefinition("test.schema.graphql", "type TestQuery {\n field: String \n }".getBytes()),
                 new EndpointDefinition("job.graphql", "type Query {\n jobs: [String] \n }".getBytes()),
                 new EndpointDefinition("empty.query.graphql", "type Query { \n }".getBytes()),
-                new EndpointDefinition("empty.mutation.graphql", "type Mutation {\n }".getBytes())
+                new EndpointDefinition("empty.mutation.graphql", "type Mutation {\n }".getBytes()),
+                new EndpointDefinition("a.graphql", "scalar Long".getBytes()),
+                new EndpointDefinition("b.graphql", "scalar Long".getBytes())
             );
         }
 
