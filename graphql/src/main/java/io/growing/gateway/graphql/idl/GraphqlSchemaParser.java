@@ -64,6 +64,8 @@ public class GraphqlSchemaParser {
                 if (def.getName().contains(".schema.")) {
                     lines.forEach(line -> safelyAppendScheme(schemas, line));
                     continue;
+                } else if (def.getName().contains(".ref.")) {
+                    continue;
                 }
                 boolean matched = false;
                 boolean isQuery = false;

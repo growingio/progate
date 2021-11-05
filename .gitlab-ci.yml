@@ -14,7 +14,7 @@ test:
       junit: "*/build/test-results/test/**/TEST-*.xml"
 
 include:
-  - template: cq.yml
+  - /cq.yml
 
 code_quality:
   image: uhub.service.ucloud.cn/growing_public/docker:19.03.12
