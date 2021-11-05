@@ -12,6 +12,7 @@ import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Incoming;
 import io.growing.gateway.pipeline.Outgoing;
+import io.growing.progate.bootstrap.config.ConfigEntry;
 import io.growing.progate.bootstrap.config.ProgateConfig;
 import io.growing.progate.bootstrap.context.GuiceRuntimeContext;
 import io.growing.progate.bootstrap.di.ProgateModule;
@@ -25,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -114,9 +114,9 @@ public class ProgateBootstrap {
     }
 
     private static void setSystemEnvironments(final ProgateConfig config) {
-        final Map<String, Object> env = config.getServer().getEnv();
+        final List<ConfigEntry> env = config.getServer().getEnv();
         if (Objects.nonNull(env)) {
-            env.forEach((key, value) -> System.setProperty(key, String.valueOf(value)));
+            env.forEach(entry -> System.setProperty(entry.getName(), String.valueOf(entry.getValue())));
         }
     }
 

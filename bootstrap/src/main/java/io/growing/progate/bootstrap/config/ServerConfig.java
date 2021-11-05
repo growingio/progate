@@ -1,11 +1,11 @@
 package io.growing.progate.bootstrap.config;
 
-import java.util.Map;
+import java.util.List;
 
 public class ServerConfig {
     private String host;
     private Integer port;
-    private Map<String, Object> env;
+    private List<ConfigEntry> env;
 
     public String getHost() {
         return host;
@@ -23,11 +23,11 @@ public class ServerConfig {
         this.port = port;
     }
 
-    public Map<String, Object> getEnv() {
+    public List<ConfigEntry> getEnv() {
         return env;
     }
 
-    public void setEnv(Map<String, Object> env) {
+    public void setEnv(List<ConfigEntry> env) {
         this.env = env;
     }
 }
