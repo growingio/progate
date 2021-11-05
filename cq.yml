@@ -41,6 +41,7 @@ code_quality:
         --volume "$PWD":/code \
         --volume /var/run/docker.sock:/var/run/docker.sock \
         --volume /var/lib/docker/overlay2:/var/lib/docker/overlay2 \
+        --volume /var/lib/docker/image:/var/lib/docker/image \
         "$CODE_QUALITY_IMAGE" /code
   artifacts:
     reports:
