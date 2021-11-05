@@ -1,5 +1,6 @@
 package io.growing.gateway.graphql.idl;
 
+import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 import com.google.common.io.CharSource;
 import graphql.schema.idl.SchemaParser;
@@ -15,11 +16,12 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 public class GraphqlSchemaParser {
 
-    private final char end = '}';
+    private static final char END = '}';
     private final Pattern queryPattern = Pattern.compile("type +\\w*Query +\\{ ?");
     private final Pattern mutationPattern = Pattern.compile("type +\\w*Mutation +\\{ ?");
     private final Logger logger = LoggerFactory.getLogger(GraphqlSchemaParser.class);
@@ -43,57 +45,65 @@ public class GraphqlSchemaParser {
     private String toGraphqlSchema(final StringBuilder schemas, final StringBuilder queries, final StringBuilder mutations) {
         final StringBuilder results = new StringBuilder(schemas);
         if (queries.length() > 0) {
-            results.append("type Query {\n").append(queries).append(StringUtils.LF).append(end).append(StringUtils.LF);
+            results.append("type Query {\n").append(queries).append(StringUtils.LF).append(END).append(StringUtils.LF);
         }
         if (mutations.length() > 0) {
-            results.append("type Mutation {\n").append(mutations).append(StringUtils.LF).append(end);
+            results.append("type Mutation {\n").append(mutations).append(StringUtils.LF).append(END);
         }
         return results.toString();
     }
 
     private void appendGraphqlDefinition(final ServiceMetadata service, final StringBuilder schemas, final StringBuilder queries, final StringBuilder mutations) {
-        if (CollectionUtilities.isNotEmpty(service.graphqlDefinitions())) {
-            try {
-                for (EndpointDefinition def : service.graphqlDefinitions()) {
-                    final CharSource source = ByteSource.wrap(def.getContent()).asCharSource(StandardCharsets.UTF_8);
-                    if (def.getName().contains(".schema.")) {
-                        schemas.append(source.read());
+        if (CollectionUtilities.isEmpty(service.graphqlDefinitions())) {
+            return;
+        }
+        try {
+            for (EndpointDefinition def : service.graphqlDefinitions()) {
+                final CharSource source = ByteSource.wrap(def.getContent()).asCharSource(StandardCharsets.UTF_8);
+                final List<String> lines = source.readLines();
+                if (def.getName().contains(".schema.")) {
+                    lines.forEach(line -> safelyAppendScheme(schemas, line));
+                    continue;
+                }
+                boolean matched = false;
+                boolean isQuery = false;
+                for (String line : lines) {
+                    if (queryPattern.matcher(line).matches()) {
+                        matched = true;
+                        isQuery = true;
+                        continue;
+                    } else if (mutationPattern.matcher(line).matches()) {
+                        matched = true;
+                        isQuery = false;
+                        continue;
+                    } else if (matched && line.lastIndexOf(END) > -1) {
+                        matched = false;
                         continue;
                     }
-                    final List<String> lines = source.readLines();
-                    boolean matched = false;
-                    boolean isQuery = false;
-                    for (String line : lines) {
-                        if (queryPattern.matcher(line).matches()) {
-                            matched = true;
-                            isQuery = true;
-                            continue;
-                        } else if (mutationPattern.matcher(line).matches()) {
-                            matched = true;
-                            isQuery = false;
-                            continue;
-                        } else if (matched && line.lastIndexOf(end) > -1) {
-                            matched = false;
-                            continue;
-                        }
-                        if (matched) {
-                            if (isQuery) {
-                                queries.append(line).append(StringUtils.LF);
-                            } else {
-                                mutations.append(line).append(StringUtils.LF);
-                            }
+                    if (matched) {
+                        if (isQuery) {
+                            queries.append(line).append(StringUtils.LF);
                         } else {
-                            if (schemas.indexOf(line) < 0) {
-                                schemas.append(line).append(StringUtils.LF);
-                            }
+                            mutations.append(line).append(StringUtils.LF);
                         }
+                    } else {
+                        safelyAppendScheme(schemas, line);
                     }
-
                 }
-            } catch (IOException e) {
-                logger.warn("Cannot load endpoint definition: " + service.upstream().name(), e);
+
             }
+        } catch (IOException e) {
+            logger.warn("Cannot load endpoint definition: " + service.upstream().name(), e);
         }
+    }
+
+    private void safelyAppendScheme(final StringBuilder builder, final String line) {
+        final Set<String> keywords = Sets.newHashSet("scalar", "directive");
+        final String fixed = line.trim();
+        if (keywords.stream().anyMatch(fixed::startsWith) && builder.indexOf(fixed) > -1) {
+            return;
+        }
+        builder.append(line).append(StringUtils.LF);
     }
 
 }
