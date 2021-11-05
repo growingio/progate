@@ -20,6 +20,6 @@ code_quality:
   image: uhub.service.ucloud.cn/growing_public/docker:19.03.12
   variables:
     DOCKER_TLS_CERTDIR: ""
-    CODECLIMATE_PREFIX: "05a643578d000fbb0f31c0162b0df300.mirror.swr.myhuaweicloud.com/"
+    CODECLIMATE_PREFIX: "docker.mirrors.ustc.edu.cn/"
     CODECLIMATE_IMAGE: "uhub.service.ucloud.cn/growing_public/codeclimate"
     CODE_QUALITY_IMAGE: "uhub.service.ucloud.cn/growing_public/codequality:0.85.24-gitlab.1"
