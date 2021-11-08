@@ -46,7 +46,7 @@ public class ServiceModuleFinderTests {
     }
 
     @Test
-    public void testLoadScheme() {
+    void testLoadScheme() {
         final ServiceModuleFinder finder = new ServiceModuleFinder();
         final SchemeDto scheme = finder.loadScheme(InProcessChannelBuilder.forName(serverName).build());
         Assertions.assertEquals(1, scheme.getGraphqlDefinitionsCount());
@@ -54,7 +54,7 @@ public class ServiceModuleFinderTests {
     }
 
     @Test
-    public void testCreateServiceResolver() {
+    void testCreateServiceResolver() {
         final ServiceModuleFinder finder = new ServiceModuleFinder();
         final ServiceResolver resolver = finder.createServiceResolver(InProcessChannelBuilder.forName(serverName).build());
         final Descriptors.MethodDescriptor methodDescriptor = resolver.getMethodDescriptor(SchemeServiceGrpc.getGetSchemeMethod().getFullMethodName());

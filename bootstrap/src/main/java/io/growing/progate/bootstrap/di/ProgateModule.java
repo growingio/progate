@@ -8,6 +8,7 @@ import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.graphql.config.GraphqlConfig;
 import io.growing.gateway.grpc.ctrl.GrpcHealthService;
 import io.growing.gateway.internal.discovery.ConfigClusterDiscoveryService;
+import io.growing.gateway.restful.config.RestfulConfig;
 import io.growing.progate.bootstrap.config.ProgateConfig;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
@@ -53,8 +54,13 @@ public class ProgateModule extends AbstractModule {
         bind(ConfigFactory.class).toInstance(configFactory);
         final ProgateConfig progateConfig = configFactory.load(ProgateConfig.class);
         bind(ProgateConfig.class).toInstance(progateConfig);
-        if (Objects.nonNull(progateConfig.getInbound()) && Objects.nonNull(progateConfig.getInbound().getGraphql())) {
-            bind(GraphqlConfig.class).toInstance(progateConfig.getInbound().getGraphql());
+        if (Objects.nonNull(progateConfig.getInbound())) {
+            if (Objects.nonNull(progateConfig.getInbound().getGraphql())) {
+                bind(GraphqlConfig.class).toInstance(progateConfig.getInbound().getGraphql());
+            }
+            if (Objects.nonNull(progateConfig.getInbound().getRestful())) {
+                bind(RestfulConfig.class).toInstance(progateConfig.getInbound().getRestful());
+            }
         }
         bind(ClusterDiscoveryService.class).to(ConfigClusterDiscoveryService.class);
         bind(HealthService.class).to(GrpcHealthService.class);

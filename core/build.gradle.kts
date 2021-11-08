@@ -13,6 +13,7 @@ dependencies {
     api("org.yaml:snakeyaml")
     api("org.slf4j:slf4j-api")
     api("com.typesafe:config")
+    api("com.google.inject:guice")
     api("com.google.code.gson:gson")
 
 }

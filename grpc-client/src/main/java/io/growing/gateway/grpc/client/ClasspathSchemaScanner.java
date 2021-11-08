@@ -1,6 +1,5 @@
 package io.growing.gateway.grpc.client;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath;
 import com.google.protobuf.ByteString;
@@ -10,32 +9,36 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystems;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-public class ClasspathGraphqlSchemaScanner {
-    private static final Logger logger = LoggerFactory.getLogger(ClasspathGraphqlSchemaScanner.class);
+public enum ClasspathSchemaScanner {
 
-    public List<FileDescriptorDto> scan(final String root) throws IOException {
-        final ImmutableSet<ClassPath.ResourceInfo> resourceInfos = ClassPath.from(this.getClass().getClassLoader()).getResources();
-        final List<FileDescriptorDto> files = new LinkedList<>();
-        for (ClassPath.ResourceInfo resourceInfo : resourceInfos) {
-            final String name = resourceInfo.getResourceName();
-            if (name.startsWith(root) && name.endsWith(".graphql")) {
-                try (final InputStream is = resourceInfo.asByteSource().openStream()) {
-                    final FileDescriptorDto descriptor = FileDescriptorDto.newBuilder().setName(name).setContent(ByteString.readFrom(is)).build();
-                    files.add(descriptor);
-                }
-            }
-        }
-        return files;
+    OPEN_API("OpenAPI", ".yaml"),
+    GRAPHQL("GraphQL", ".graphql");
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClasspathSchemaScanner.class);
+
+    private final String name;
+    private final String extension;
+
+    ClasspathSchemaScanner(String name, String extension) {
+        this.name = name;
+        this.extension = extension;
     }
 
-    public List<FileDescriptorDto> scan(ClassLoader[] classLoaders, final String root) throws IOException {
+    public List<FileDescriptorDto> scan(final String root) throws IOException {
+        return scan(root, this.getClass().getClassLoader());
+    }
+
+    public List<FileDescriptorDto> scan(final String root, ClassLoader... classLoaders) throws IOException {
         Arrays.stream(classLoaders).forEach(classLoader -> {
-            logger.info("graphql schema scan classLoader：{}", classLoader);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("{} schema scan class loader：{}", name, classLoader);
+            }
         });
         Set<ClassPath.ResourceInfo> resourceInfos = Sets.newHashSet();
         List<FileDescriptorDto> files = new LinkedList<>();
@@ -43,12 +46,14 @@ public class ClasspathGraphqlSchemaScanner {
             try {
                 resourceInfos.addAll(ClassPath.from(classLoader).getResources());
             } catch (IOException e) {
-                logger.error("graphql schema load exception", e);
+                LOGGER.error(name + " schema load exception", e);
             }
         });
+        final String fileSeparator = FileSystems.getDefault().getSeparator();
+        final String prefix = root.endsWith(fileSeparator) ? root : root + fileSeparator;
         for (ClassPath.ResourceInfo resourceInfo : resourceInfos) {
             final String name = resourceInfo.getResourceName();
-            if (name.startsWith(root) && name.endsWith(".graphql")) {
+            if (name.startsWith(prefix) && name.endsWith(extension)) {
                 try (final InputStream is = resourceInfo.asByteSource().openStream()) {
                     final FileDescriptorDto descriptor = FileDescriptorDto.newBuilder().setName(name).setContent(ByteString.readFrom(is)).build();
                     files.add(descriptor);
@@ -57,5 +62,6 @@ public class ClasspathGraphqlSchemaScanner {
         }
         return files;
     }
+
 
 }

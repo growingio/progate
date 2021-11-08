@@ -18,22 +18,19 @@ public class SchemeService extends SchemeServiceGrpc.SchemeServiceImplBase {
         return new SchemeService();
     }
 
-    private final ClasspathGraphqlSchemaScanner graphqlSchemaScanner = new ClasspathGraphqlSchemaScanner();
-    private final ClasspathOpenApiSchemaScanner openApiSchemaScanner = new ClasspathOpenApiSchemaScanner();
-
     public SchemeService() {
         this.classLoaders = new ClassLoader[]{this.getClass().getClassLoader()};
     }
 
-    public SchemeService(ClassLoader[] classLoaders) {
+    public SchemeService(ClassLoader... classLoaders) {
         this.classLoaders = classLoaders;
     }
 
     @Override
     public void getScheme(Empty request, StreamObserver<SchemeDto> responseObserver) {
         try {
-            final List<FileDescriptorDto> graphqlFiles = graphqlSchemaScanner.scan(this.classLoaders, "graphql");
-            final List<FileDescriptorDto> restfulFiles = openApiSchemaScanner.scan(this.classLoaders, "restful");
+            final List<FileDescriptorDto> graphqlFiles = ClasspathSchemaScanner.GRAPHQL.scan("graphql", classLoaders);
+            final List<FileDescriptorDto> restfulFiles = ClasspathSchemaScanner.OPEN_API.scan("restful", classLoaders);
             final SchemeDto scheme = SchemeDto.newBuilder().addAllRestfulDefinitions(restfulFiles).addAllGraphqlDefinitions(graphqlFiles).build();
             responseObserver.onNext(scheme);
         } catch (IOException e) {
@@ -49,4 +46,5 @@ public class SchemeService extends SchemeServiceGrpc.SchemeServiceImplBase {
     public void setClassLoaders(ClassLoader[] classLoaders) {
         this.classLoaders = classLoaders;
     }
+
 }

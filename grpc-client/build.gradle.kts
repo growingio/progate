@@ -12,9 +12,6 @@ dependencies {
     api("io.grpc:grpc-services")
     implementation(project(":utilities"))
     implementation("org.slf4j:slf4j-api")
-    implementation("org.apache.logging.log4j:log4j-api")
-    implementation("org.apache.logging.log4j:log4j-core")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl")
 }
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8

@@ -1,7 +1,6 @@
-package io.growing.progate.bootstrap.context;
+package io.growing.gateway.context;
 
 import com.google.inject.Injector;
-import io.growing.gateway.context.RuntimeContext;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.exception.PluginNotFoundException;
 import io.growing.gateway.meta.Upstream;
@@ -42,9 +41,10 @@ public class GuiceRuntimeContext implements RuntimeContext {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T createPlugin(String className) throws PluginNotFoundException {
         try {
-            final Class clazz = Class.forName(className);
+            final Class<?> clazz = Class.forName(className);
             return (T) injector.getInstance(clazz);
         } catch (ClassNotFoundException e) {
             throw new PluginNotFoundException(className);

@@ -11,9 +11,7 @@ import java.util.Set;
 /**
  * @author AI
  */
-public interface Incoming {
-
-    Set<HttpApi> apis();
+public interface Inbound {
 
     Set<HttpApi> apis(List<ServiceMetadata> services);
 

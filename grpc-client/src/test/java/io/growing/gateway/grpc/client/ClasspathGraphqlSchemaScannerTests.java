@@ -7,12 +7,11 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.List;
 
-public class ClasspathGraphqlSchemaScannerTests {
+class ClasspathGraphqlSchemaScannerTests {
 
     @Test
-    public void test() throws IOException {
-        final ClasspathGraphqlSchemaScanner scanner = new ClasspathGraphqlSchemaScanner();
-        final List<FileDescriptorDto> files = scanner.scan(new ClassLoader[]{this.getClass().getClassLoader()}, "graphql");
+    void test() throws IOException {
+        final List<FileDescriptorDto> files = ClasspathSchemaScanner.GRAPHQL.scan("graphql");
 
         Assertions.assertEquals(1, files.size());
         Assertions.assertEquals("graphql/empty.graphql", files.get(0).getName());

@@ -23,6 +23,4 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl")
 
-    implementation("com.google.inject:guice")
-
 }

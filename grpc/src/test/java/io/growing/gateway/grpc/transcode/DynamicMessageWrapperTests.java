@@ -8,11 +8,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 
-public class DynamicMessageWrapperTests {
+class DynamicMessageWrapperTests {
 
-
-    @Test
-    public void test() throws InvalidProtocolBufferException {
+//    @Test
+//    void test() throws InvalidProtocolBufferException {
 //        final String desc = "hello demo";
 //        final String name = "demo";
 //        final AnyValueDto value = AnyValueDto.newBuilder().setName("type").setValue("json").build();
@@ -32,10 +31,10 @@ public class DynamicMessageWrapperTests {
 //        Assertions.assertEquals("type", any.get("name"));
 //        Assertions.assertEquals("json", any.get("value"));
 //        Assertions.assertEquals("meta", ((Map<String, Object>) wrapper.get("metadata")).get("value"));
-    }
-
-    @Test
-    public void testAny() throws InvalidProtocolBufferException {
+//    }
+//
+//    @Test
+//    void testAny() throws InvalidProtocolBufferException {
 //        final Set<Descriptors.Descriptor> descriptors = Sets.newHashSet(AnyValueDto.getDescriptor());
 //        final AnyValueDto value = AnyValueDto.newBuilder().setName("type").setValue("json").build();
 //        final Any any = Any.pack(value);
@@ -44,7 +43,7 @@ public class DynamicMessageWrapperTests {
 //        Assertions.assertEquals("type", wrapper.get("name"));
 //        Assertions.assertEquals("json", wrapper.get("value"));
 //        Assertions.assertEquals(false, wrapper.get("isSystem"));
-    }
+//    }
 
     @Test
     void testToValue() throws InvalidProtocolBufferException {

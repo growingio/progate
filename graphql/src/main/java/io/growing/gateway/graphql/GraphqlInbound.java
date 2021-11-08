@@ -19,7 +19,7 @@ import io.growing.gateway.graphql.plugin.GraphqlInboundPlugin;
 import io.growing.gateway.graphql.request.GraphqlExecutionPayload;
 import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
-import io.growing.gateway.pipeline.Incoming;
+import io.growing.gateway.pipeline.Inbound;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.utilities.CollectionUtilities;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -48,18 +48,18 @@ import java.util.stream.Collectors;
 /**
  * @author AI
  */
-public class GraphqlIncoming implements Incoming {
+public class GraphqlInbound implements Inbound {
 
     private final String contentType = "application/json;charset=utf-8";
     private final AtomicReference<GraphQL> graphQLReference = new AtomicReference<>();
     private final AtomicReference<List<GraphqlInboundPlugin>> pluginsReference = new AtomicReference<>();
-    private final Logger logger = LoggerFactory.getLogger(GraphqlIncoming.class);
+    private final Logger logger = LoggerFactory.getLogger(GraphqlInbound.class);
     private final Gson gson;
     private final GraphqlConfig config;
     private final DataFetcherExceptionHandler exceptionHandler;
 
     @Inject
-    public GraphqlIncoming(GraphqlConfig config) {
+    public GraphqlInbound(GraphqlConfig config) {
         this.config = config;
         this.gson = new GsonBuilder().serializeNulls().create();
         this.exceptionHandler = new SimpleDataFetcherExceptionHandler();
@@ -80,7 +80,7 @@ public class GraphqlIncoming implements Incoming {
     }
 
     @Override
-    public Set<HttpApi> apis() {
+    public Set<HttpApi> apis(List<ServiceMetadata> services) {
         final HttpApi httpApi = new HttpApi();
         String path = "/graphql";
         if (StringUtils.isNoneBlank(config.getPath())) {
@@ -89,11 +89,6 @@ public class GraphqlIncoming implements Incoming {
         httpApi.setPath(path);
         httpApi.setMethods(Sets.newHashSet(HttpMethod.POST));
         return Sets.newHashSet(httpApi);
-    }
-
-    @Override
-    public Set<HttpApi> apis(List<ServiceMetadata> services) {
-        return null;
     }
 
     @Override

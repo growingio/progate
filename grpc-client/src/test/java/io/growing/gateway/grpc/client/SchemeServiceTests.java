@@ -12,10 +12,10 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-public class SchemeServiceTests {
+class SchemeServiceTests {
 
     @Test
-    public void test() throws IOException {
+    void test() throws IOException {
         final String serverName = SchemeServiceTests.class.getName();
         final Server server = InProcessServerBuilder.forName(serverName).addService(SchemeService.newInstance()).build();
         server.start();

@@ -10,11 +10,11 @@ import io.growing.gateway.grpc.GrpcOutgoing;
 import io.growing.gateway.grpc.discovery.GrpcReflectionServiceDiscovery;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.meta.Upstream;
-import io.growing.gateway.pipeline.Incoming;
+import io.growing.gateway.pipeline.Inbound;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.progate.bootstrap.config.ConfigEntry;
 import io.growing.progate.bootstrap.config.ProgateConfig;
-import io.growing.progate.bootstrap.context.GuiceRuntimeContext;
+import io.growing.gateway.context.GuiceRuntimeContext;
 import io.growing.progate.bootstrap.di.ProgateModule;
 import io.growing.progate.bootstrap.loader.InboundLoader;
 import io.vertx.core.Vertx;
@@ -24,7 +24,6 @@ import io.vertx.ext.web.Router;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -52,10 +51,7 @@ public class ProgateBootstrap {
         final List<Upstream> upstreams = discovery.discover();
         final Set<Outgoing> outgoings = Sets.newHashSet(new GrpcOutgoing());
 
-        final Set<Incoming> inbounds = new InboundLoader().load(config.getInbound(), injector);
-
-        // Restful 接口
-//        final RestfulIncoming restfulIncoming = new RestfulIncoming(config.getRestful(), hashIdCodec, webClient, config.getOauth2());
+        final Set<Inbound> inbounds = new InboundLoader().load(config.getInbound(), injector);
 
         final Router router = Router.router(vertx);
         final HealthyCheck check = new HealthyCheck();
@@ -64,17 +60,6 @@ public class ProgateBootstrap {
             inbounds.forEach(inbound -> inbound.reload(loadServices(upstreams), outgoings, runtimeContext));
             ctx.response().end();
         });
-        inbounds.forEach(inbound ->
-            inbound.apis().forEach(api ->
-                api.getMethods().forEach(method -> router.route(method, api.getPath()).handler(context -> inbound.handle(context.request())))
-            )
-        );
-
-//        restfulIncoming.apis(serviceMetadata).forEach(api -> {
-//            api.getMethods().forEach(method -> {
-//                router.route(method, api.getPath()).handler(runtimeContext -> restfulIncoming.handle(api, runtimeContext.request()));
-//            });
-//        });
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             final CountDownLatch counter = new CountDownLatch(1);
@@ -99,8 +84,13 @@ public class ProgateBootstrap {
 
         vertx.setPeriodic(1000, id -> {
             try {
-                final List<ServiceMetadata> reloadServiceMetadata = loadServices(upstreams);
-                inbounds.forEach(inbound -> inbound.reload(reloadServiceMetadata, outgoings, runtimeContext));
+                final List<ServiceMetadata> services = loadServices(upstreams);
+                inbounds.forEach(inbound -> inbound.reload(services, outgoings, runtimeContext));
+                inbounds.forEach(inbound ->
+                    inbound.apis(services).forEach(api ->
+                        api.getMethods().forEach(method -> router.route(method, api.getPath()).handler(context -> inbound.handle(context.request())))
+                    )
+                );
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
                 logger.error(e.getLocalizedMessage(), e);
