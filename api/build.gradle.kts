@@ -9,5 +9,6 @@ plugins {
 dependencies {
 
     api("io.vertx:vertx-core")
+    api("javax.inject:javax.inject:1")
 
 }

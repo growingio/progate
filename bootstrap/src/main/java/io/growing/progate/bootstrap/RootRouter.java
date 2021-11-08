@@ -1,4 +1,4 @@
-package io.growing.gateway.app;
+package io.growing.progate.bootstrap;
 
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;

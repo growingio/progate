@@ -33,7 +33,9 @@ public class GraphqlSchemaParserTests {
                 new EndpointDefinition("test.schema.graphql", "type TestQuery {\n field: String \n }".getBytes()),
                 new EndpointDefinition("job.graphql", "type Query {\n jobs: [String] \n }".getBytes()),
                 new EndpointDefinition("empty.query.graphql", "type Query { \n }".getBytes()),
-                new EndpointDefinition("empty.mutation.graphql", "type Mutation {\n }".getBytes())
+                new EndpointDefinition("empty.mutation.graphql", "type Mutation {\n }".getBytes()),
+                new EndpointDefinition("b.schema.graphql", "scalar Long\n".getBytes()),
+                new EndpointDefinition("a.schema.graphql", "scalar Long  \n".getBytes())
             );
         }
 
@@ -61,7 +63,9 @@ public class GraphqlSchemaParserTests {
 
             @Override
             public List<EndpointDefinition> graphqlDefinitions() {
-                return null;
+                return Lists.newArrayList(
+                    new EndpointDefinition("b.schema.graphql", "scalar Long \n ".getBytes())
+                );
             }
 
             @Override

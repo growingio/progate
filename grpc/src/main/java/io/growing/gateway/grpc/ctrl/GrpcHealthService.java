@@ -13,11 +13,13 @@ import io.grpc.health.v1.HealthCheckResponse;
 import io.grpc.health.v1.HealthGrpc;
 import io.vertx.core.Vertx;
 
+import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public class GrpcHealthService extends AbstractScheduledHealthService {
 
+    @Inject
     public GrpcHealthService(Vertx vertx) {
         super(vertx);
     }

@@ -6,6 +6,7 @@ import io.growing.gateway.ctrl.HealthService;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.meta.Upstream;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -13,12 +14,11 @@ import java.util.stream.Collectors;
  * @author AI
  */
 public class ConfigClusterDiscoveryService implements ClusterDiscoveryService {
-    private final String configPath;
     private final HealthService healthService;
     private final ConfigFactory configFactory;
 
-    public ConfigClusterDiscoveryService(String configPath, HealthService healthService, ConfigFactory configFactory) {
-        this.configPath = configPath;
+    @Inject
+    public ConfigClusterDiscoveryService(HealthService healthService, ConfigFactory configFactory) {
         this.healthService = healthService;
         this.configFactory = configFactory;
     }

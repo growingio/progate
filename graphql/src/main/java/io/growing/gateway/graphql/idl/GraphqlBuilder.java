@@ -21,14 +21,12 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
-import io.growing.gateway.config.ConfigFactory;
 import io.growing.gateway.graphql.fetcher.AccessLogFetcher;
 import io.growing.gateway.graphql.fetcher.NotFoundFetcher;
 import io.growing.gateway.graphql.fetcher.OutgoingDataFetcher;
+import io.growing.gateway.graphql.plugin.GraphqlInboundPlugin;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
-import io.growing.gateway.plugin.PluginScalars;
-import io.growing.gateway.plugin.fetcher.PluginFetcherBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,12 +41,11 @@ import java.util.function.Consumer;
 
 public class GraphqlBuilder {
 
-    private Set<Outgoing>  outgoings;
-    private PluginFetcherBuilder pfb;
+    private Set<Outgoing> outgoings;
     private List<ServiceMetadata> services;
+    private List<GraphqlInboundPlugin> plugins;
     private DataFetcherExceptionHandler exceptionHandler;
-    private final Set<GraphQLScalarType> scalars = Sets.newHashSet(PluginScalars.HashId, PluginScalars.BytesJson,
-        PluginScalars.DateTime, ExtendedScalars.Json, ExtendedScalars.Object, JavaPrimitives.GraphQLLong);
+    private final Set<GraphQLScalarType> scalars = Sets.newHashSet(ExtendedScalars.Json, ExtendedScalars.Object, JavaPrimitives.GraphQLLong);
     private final GraphqlSchemaParser parser = new GraphqlSchemaParser();
 
     public static GraphqlBuilder newBuilder() {
@@ -65,13 +62,13 @@ public class GraphqlBuilder {
         return this;
     }
 
-    public GraphqlBuilder configFactory(final ConfigFactory configFactory) {
-        this.pfb = new PluginFetcherBuilder(configFactory);
+    public GraphqlBuilder exceptionHandler(final DataFetcherExceptionHandler exceptionHandler) {
+        this.exceptionHandler = exceptionHandler;
         return this;
     }
 
-    public GraphqlBuilder exceptionHandler(final DataFetcherExceptionHandler exceptionHandler) {
-        this.exceptionHandler = exceptionHandler;
+    public GraphqlBuilder plugins(List<GraphqlInboundPlugin> plugins) {
+        this.plugins = plugins;
         return this;
     }
 
@@ -79,11 +76,10 @@ public class GraphqlBuilder {
         final RuntimeWiring.Builder runtimeWiringBuilder = RuntimeWiring.newRuntimeWiring();
         final Map<String, Outgoing> handlers = new HashMap<>(outgoings.size());
         outgoings.forEach(handler -> handlers.put(handler.protocol(), handler));
-        services.forEach(service -> {
-            bindDataFetcher(runtimeWiringBuilder, service, handlers);
-        });
+        services.forEach(service -> bindDataFetcher(runtimeWiringBuilder, service, handlers));
         runtimeWiringBuilder.directive(GlobalIdSchemaDirectiveWiring.NAME, new GlobalIdSchemaDirectiveWiring());
         scalars.forEach(runtimeWiringBuilder::scalar);
+        plugins.forEach(plugin -> plugin.scalars().forEach(runtimeWiringBuilder::scalar));
         final TypeDefinitionRegistry registry = parser.parse(services);
         final SchemaGenerator generator = new SchemaGenerator();
         final GraphQLSchema graphQLSchema = generator.makeExecutableSchema(registry, runtimeWiringBuilder.build());
@@ -103,7 +99,8 @@ public class GraphqlBuilder {
             }
             final List<FieldDefinition> fields = typeDef.getFieldDefinitions();
             fields.forEach(field -> {
-                final Optional<Directive> endpointDirectiveOpt = field.getDirectives().stream()
+                final List<Directive> directives = field.getDirectives();
+                final Optional<Directive> endpointDirectiveOpt = directives.stream()
                     .filter(directive -> protocols.contains(directive.getName())).findAny();
                 final String fetcherName = field.getName();
                 if (endpointDirectiveOpt.isPresent()) {
@@ -113,8 +110,12 @@ public class GraphqlBuilder {
                     final List<String> mappings = getListStringArgument(endpointDirective, "mappings");
                     final Outgoing handler = handlers.get(endpointDirective.getName());
                     final boolean isListType = isListReturnType(field);
-                    final DataFetcher<CompletionStage<?>> fetcher = new OutgoingDataFetcher(endpoint, service.upstream(), handler, values, mappings, isListType);
-                    register.type(type, builder -> builder.dataFetcher(fetcherName, new AccessLogFetcher(fetcherName, pfb.build(field.getDirectives(), fetcher))));
+                    DataFetcher<CompletionStage<?>> next = new OutgoingDataFetcher(endpoint, service.upstream(), handler, plugins, values, mappings, isListType);
+                    for (GraphqlInboundPlugin plugin : plugins) {
+                        next = plugin.fetcherChain(directives, next);
+                    }
+                    final DataFetcher<CompletionStage<?>> fetcher = next;
+                    register.type(type, builder -> builder.dataFetcher(fetcherName, new AccessLogFetcher(fetcherName, fetcher)));
                 } else {
                     register.type(type, builder -> builder.dataFetcher(fetcherName, new AccessLogFetcher(fetcherName, new NotFoundFetcher())));
                 }
@@ -136,7 +137,7 @@ public class GraphqlBuilder {
     }
 
     private boolean isListReturnType(final FieldDefinition field) {
-        final Type type = field.getType();
+        final Type<?> type = field.getType();
         if (type instanceof ListType) {
             return true;
         }

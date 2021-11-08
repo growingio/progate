@@ -5,6 +5,7 @@ import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.growing.gateway.config.OAuth2Config;
+import io.growing.gateway.context.RuntimeContext;
 import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Incoming;
@@ -73,8 +74,7 @@ public class RestfulIncoming implements Incoming {
     }
 
     @Override
-    public void reload(final List<ServiceMetadata> services, final Set<Outgoing> outgoings) {
-        // reload 加载接口的定义和映射
+    public void reload(List<ServiceMetadata> services, Set<Outgoing> outgoings, RuntimeContext context) {
         RestfulBuilder restfulBuilder = RestfulBuilder.newBuilder();
         restfulApiAtomicReference.set(restfulBuilder.outgoings(outgoings).services(services).exceptionHandler(restfulExceptionHandler).build());
     }

@@ -1,8 +1,11 @@
-package io.growing.gateway.app;
+package io.growing.progate.bootstrap.config;
+
+import java.util.List;
 
 public class ServerConfig {
     private String host;
     private Integer port;
+    private List<ConfigEntry> env;
 
     public String getHost() {
         return host;
@@ -18,5 +21,13 @@ public class ServerConfig {
 
     public void setPort(Integer port) {
         this.port = port;
+    }
+
+    public List<ConfigEntry> getEnv() {
+        return env;
+    }
+
+    public void setEnv(List<ConfigEntry> env) {
+        this.env = env;
     }
 }

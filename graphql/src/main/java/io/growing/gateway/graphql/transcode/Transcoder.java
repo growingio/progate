@@ -2,7 +2,6 @@ package io.growing.gateway.graphql.transcode;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
-import graphql.GraphQLContext;
 import org.apache.commons.lang3.StringUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -14,50 +13,29 @@ import java.util.Objects;
 public interface Transcoder {
 
     @SuppressWarnings("unchecked")
-    default Map<String, Object> transcode(final GraphQLContext context, final Map<String, Object> source,
-                                          final List<String> values, final List<String> mappings) {
-        final Map<String, Object> parameters = new HashMap<>(source);
-        final Object dataCenterId = context.get("dataCenterId");
-        if (Objects.nonNull(dataCenterId)) {
-            parameters.put("dataCenterId", dataCenterId);
-        }
-        final Object userId = context.get("userId");
-        if (Objects.nonNull(userId)) {
-            parameters.put("userId", userId);
-        }
-        final String language = context.get("language");
-        if (Objects.nonNull(language)) {
-            parameters.put("language", language);
-        }
+    default Map<String, Object> transcode(final Map<String, Object> arguments, final List<String> values, final List<String> mappings) {
         values.forEach(value -> {
             final int index = value.indexOf('=');
-            parameters.put(value.substring(0, index), value.substring(index + 1));
+            arguments.put(value.substring(0, index), value.substring(index + 1));
         });
         mappings.forEach(mapping -> {
             final TranscodeMapping transcode = parse(mapping);
-            final Object originValue = extract(parameters, transcode.getSource());
+            final Object originValue = extract(arguments, transcode.getSource());
             if (transcode.getTarget().endsWith(".add")) {
                 final Object value = new Object[]{originValue};
-                set(parameters, transcode.getTarget().replace(".add", ""), value);
+                set(arguments, transcode.getTarget().replace(".add", ""), value);
             } else if (transcode.getTarget().endsWith(".any")) {
-                set(parameters, transcode.getTarget().replace(".any", ""), originValue);
-                set(parameters, transcode.getTarget().replace(".any", ".@type"), transcode.getExtension());
+                set(arguments, transcode.getTarget().replace(".any", ""), originValue);
+                set(arguments, transcode.getTarget().replace(".any", ".@type"), transcode.getExtension());
             } else if (transcode.getTarget().endsWith(".bytes")) {
-                set(parameters, transcode.getTarget().replace(".bytes", ""), new Gson().toJson(originValue).getBytes(StandardCharsets.UTF_8));
+                set(arguments, transcode.getTarget().replace(".bytes", ""), new Gson().toJson(originValue).getBytes(StandardCharsets.UTF_8));
             } else if (transcode.getTarget().endsWith("...")) {
-                parameters.putAll((Map<String, Object>) originValue);
+                arguments.putAll((Map<String, Object>) originValue);
             } else {
-                set(parameters, transcode.getTarget(), originValue);
+                set(arguments, transcode.getTarget(), originValue);
             }
         });
-//        final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
-//        parameters.forEach((key, value) -> {
-//            if (Objects.nonNull(value)) {
-//                builder.put(key, value);
-//            }
-//        });
-//        return builder.build();
-        return parameters;
+        return arguments;
     }
 
 
