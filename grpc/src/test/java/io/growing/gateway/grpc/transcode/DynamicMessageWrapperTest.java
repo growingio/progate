@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 
-class DynamicMessageWrapperTests {
+class DynamicMessageWrapperTest {
 
 //    @Test
 //    void test() throws InvalidProtocolBufferException {
