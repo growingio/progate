@@ -57,20 +57,4 @@ public class OutgoingDataFetcher implements DataFetcher<CompletionStage<?>> {
         });
     }
 
-//    @SuppressWarnings("unchecked")
-//    private Object wrap(final Object value) {
-//        if (value instanceof Collection) {
-//            return ((Collection) value).stream().map(v -> {
-//                if (v instanceof Map) {
-//                    return new ResultWrapper((Map<String, Object>) v);
-//                }
-//                return v;
-//            }).collect(Collectors.toList());
-//        }
-//        if (value instanceof Map) {
-//            return new ResultWrapper((Map<String, Object>) value);
-//        }
-//        return value;
-//    }
-
 }
