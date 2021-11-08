@@ -30,3 +30,8 @@ graphql:
       dbname: "audit"
       username: "audit"
       password: "none"
+oauth2:
+  authServer: qa-cdp.growingio.cn
+  tokenCheckUrl: /accounts/oauth/check_token
+restful:
+  path: "/api/v1/projects"

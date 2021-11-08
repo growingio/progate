@@ -10,8 +10,7 @@ paths:
     get:
       summary: 获取所有Jobs.
       description: 获取所有Jobs.
-      extensions:
-        x-grpc-endpoint: growing.graphql.example.JobService/GetJob
+      x-grpc-endpoint: growing.graphql.example.JobService/GetJob
       parameters:
         - name: Authorization
           in: path

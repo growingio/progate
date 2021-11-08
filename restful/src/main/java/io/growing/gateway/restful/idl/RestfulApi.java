@@ -5,14 +5,17 @@ import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.gateway.plugin.fetcher.PluginFetcherBuilder;
+import io.growing.gateway.plugin.lang.HashIdCodec;
 import io.growing.gateway.restful.api.RestfulRequestContext;
+import io.growing.gateway.restful.enums.DataTypeFormat;
 import io.growing.gateway.restful.handler.RestfulExceptionHandler;
 import io.growing.gateway.restful.utils.RestfulConstants;
 import io.growing.gateway.restful.utils.RestfulResult;
+import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,9 +31,8 @@ import java.util.concurrent.CompletableFuture;
  * @Date 2021/9/22 1:58 下午
  **/
 public class RestfulApi {
-    private final Logger logger = LoggerFactory.getLogger(RestfulApi.class);
     private ServiceMetadata serviceMetadata;
-    private String grpcDefination;
+    private String grpcDefinition;
     private Outgoing outgoing;
     private RestfulExceptionHandler exceptionHandler;
     private PluginFetcherBuilder pfb;
@@ -38,9 +40,9 @@ public class RestfulApi {
     public RestfulApi() {
     }
 
-    public RestfulApi(ServiceMetadata serviceMetadata, String grpcDefination, Outgoing outgoing, RestfulExceptionHandler exceptionHandler, PluginFetcherBuilder pfb) {
+    public RestfulApi(ServiceMetadata serviceMetadata, String grpcDefinition, Outgoing outgoing, RestfulExceptionHandler exceptionHandler, PluginFetcherBuilder pfb) {
         this.serviceMetadata = serviceMetadata;
-        this.grpcDefination = grpcDefination;
+        this.grpcDefinition = grpcDefinition;
         this.outgoing = outgoing;
         this.exceptionHandler = exceptionHandler;
         this.pfb = pfb;
@@ -55,12 +57,12 @@ public class RestfulApi {
         this.serviceMetadata = serviceMetadata;
     }
 
-    public String getGrpcDefination() {
-        return grpcDefination;
+    public String getGrpcDefinition() {
+        return grpcDefinition;
     }
 
-    public void setGrpcDefination(String grpcDefination) {
-        this.grpcDefination = grpcDefination;
+    public void setGrpcDefinition(String grpcDefinition) {
+        this.grpcDefinition = grpcDefinition;
     }
 
     public RestfulExceptionHandler getExceptionHandler() {
@@ -87,12 +89,12 @@ public class RestfulApi {
         this.outgoing = outgoing;
     }
 
-    public CompletableFuture<Object> execute(final String path, final RestfulHttpApi httpApi, final Map<String, Object> params) {
+    public CompletableFuture<Object> execute(final String path, final RestfulHttpApi httpApi, final Map<String, Object> params, HashIdCodec hashIdCodec) {
         RequestContext requestContext = new RestfulRequestContext(params);
         final long start = System.currentTimeMillis();
-        final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefination, requestContext);
+        final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefinition, requestContext);
         return completionStage.thenApply(result -> {
-            final RestfulResult restfulResult = wrap(result, httpApi.getApiResponses().getDefault());
+            final RestfulResult restfulResult = wrap(result, httpApi.getApiResponses().getDefault(), hashIdCodec);
             final long end = System.currentTimeMillis();
             restfulResult.setElasped(end - start);
             return restfulResult;
@@ -105,18 +107,18 @@ public class RestfulApi {
      * @description: 结果包装
      * @author: zhuhongbin
      **/
-    private RestfulResult wrap(final Object result, final ApiResponse apiResponse) {
+    private RestfulResult wrap(final Object result, final ApiResponse apiResponse, HashIdCodec hashIdCodec) {
         if (Objects.isNull(result)) {
-            return RestfulResult.success(null);
+            return RestfulResult.success("");
         }
         final Collection results = (Collection) result;
         final Schema schema = (Schema) apiResponse.getContent().get(RestfulConstants.OPENAPI_MEDIA_TYPE).getSchema().getProperties().get(RestfulConstants.RESULT_DATA);
-        final Map<String, Object> properties = schema.getProperties();
+        final Map<String, Schema> properties = schema.getProperties();
         if (results.size() == 1) {
             Object res = results.iterator().next();
             if (res instanceof DynamicMessageWrapper) {
                 final DynamicMessageWrapper messageWrapper = ((DynamicMessageWrapper) res);
-                final Map<String, Object> resultWrap = resultWrap(messageWrapper, properties);
+                final Map<String, Object> resultWrap = resultWrap(messageWrapper, properties, hashIdCodec);
                 return RestfulResult.success(resultWrap);
             }
             return RestfulResult.success(res);
@@ -124,7 +126,7 @@ public class RestfulApi {
             final List<DynamicMessageWrapper> messageWrappers = (List<DynamicMessageWrapper>) result;
             List<Map<String, Object>> res = new ArrayList<>();
             messageWrappers.forEach(dynamicMessageWrapper -> {
-                res.add(resultWrap(dynamicMessageWrapper, properties));
+                res.add(resultWrap(dynamicMessageWrapper, properties, hashIdCodec));
             });
             return RestfulResult.success(res);
         }
@@ -135,10 +137,37 @@ public class RestfulApi {
      * @description: 结果包装
      * @author: zhuhongbin
      **/
-    private Map<String, Object> resultWrap(DynamicMessageWrapper messageWrapper, Map<String, Object> properties) {
-        Map<String, Object> resultData = new HashMap<>();
+    private Map<String, Object> resultWrap(DynamicMessageWrapper messageWrapper, Map<String, Schema> properties, HashIdCodec hashIdCodec) {
+        Map<String, Object> resultData = new HashMap<>(messageWrapper.values().size());
         properties.keySet().forEach(key -> {
-            resultData.put(key, messageWrapper.get(key));
+            final Schema schema = properties.get(key);
+            if (schema instanceof StringSchema) {
+                StringSchema stringSchema = (StringSchema) schema;
+                final String format = StringUtils.isBlank(stringSchema.getFormat()) ? "" : stringSchema.getFormat();
+                if (Objects.nonNull(messageWrapper.get(key)) && StringUtils.isNotBlank(format)) {
+                    if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(format)) {
+                        resultData.put(key, hashIdCodec.encode(Long.valueOf(messageWrapper.get(key).toString())));
+                    } else {
+                        resultData.put(key, messageWrapper.get(key));
+                    }
+                }
+            } else if (schema instanceof ArraySchema) {
+                ArraySchema arraySchema = (ArraySchema) schema;
+                final String format = StringUtils.isBlank(arraySchema.getItems().getFormat()) ? "" : arraySchema.getItems().getFormat();
+                if (DataTypeFormat.HASHID.getName().equalsIgnoreCase(format)) {
+                    // 对结果集做处理
+                    String[] encodes = new String[]{};
+                    final String[] results = messageWrapper.get(key).toString().split(",");
+                    for (int i = 0; i < results.length; i++) {
+                        encodes[i] = hashIdCodec.encode(Long.parseLong(results[i]));
+                    }
+                    resultData.put(key, encodes);
+                } else {
+                    resultData.put(key, messageWrapper.get(key));
+                }
+            } else {
+                resultData.put(key, messageWrapper.get(key));
+            }
         });
         return resultData;
     }
