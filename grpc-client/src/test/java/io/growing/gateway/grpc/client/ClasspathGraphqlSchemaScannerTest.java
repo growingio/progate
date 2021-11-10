@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.List;
 
-class ClasspathGraphqlSchemaScannerTests {
+class ClasspathGraphqlSchemaScannerTest {
 
     @Test
     void test() throws IOException {

@@ -12,11 +12,11 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-class SchemeServiceTests {
+class SchemeServiceTest {
 
     @Test
     void test() throws IOException {
-        final String serverName = SchemeServiceTests.class.getName();
+        final String serverName = SchemeServiceTest.class.getName();
         final Server server = InProcessServerBuilder.forName(serverName).addService(SchemeService.newInstance()).build();
         server.start();
         final ManagedChannel channel = InProcessChannelBuilder.forName(serverName).usePlaintext().build();
