@@ -64,7 +64,7 @@ public class ProgateBootstrap {
         final HealthyCheck check = new HealthyCheck();
         router.get(check.path).handler(check);
         router.get("/reload").handler(ctx -> {
-            inbounds.forEach(inbound -> inbound.reload(loadServices(upstreams), outgoings, runtimeContext));
+            reload(runtimeContext, router, upstreams, outgoings, inbounds);
             ctx.response().end();
         });
 
@@ -91,13 +91,7 @@ public class ProgateBootstrap {
 
         vertx.setPeriodic(1000, id -> {
             try {
-                final List<ServiceMetadata> services = loadServices(upstreams);
-                inbounds.forEach(inbound -> inbound.reload(services, outgoings, runtimeContext));
-                inbounds.forEach(inbound ->
-                    inbound.apis(services).forEach(api ->
-                        api.getMethods().forEach(method -> router.route(method, api.getPath()).handler(context -> inbound.handle(context.request())))
-                    )
-                );
+                reload(runtimeContext, router, upstreams, outgoings, inbounds);
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
                 LOGGER.error(e.getLocalizedMessage(), e);
@@ -109,6 +103,17 @@ public class ProgateBootstrap {
             vertx.cancelTimer(id);
         });
 
+    }
+
+    private static void reload(RuntimeContext runtimeContext, Router router, List<Upstream> upstreams, Set<Outgoing> outgoings, Set<Inbound> inbounds) {
+        final List<ServiceMetadata> services = loadServices(upstreams);
+        inbounds.forEach(inbound ->
+            inbound.endpoints(services, outgoings, runtimeContext).forEach(endpoint ->
+                endpoint.getMethods().forEach(method -> router.route(method, endpoint.getPath()).handler(context ->
+                    endpoint.getHandler().handle(context.request()))
+                )
+            )
+        );
     }
 
     private static void setSystemEnvironments(final ProgateConfig config) {
