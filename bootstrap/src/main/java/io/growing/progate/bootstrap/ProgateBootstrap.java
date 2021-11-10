@@ -109,9 +109,12 @@ public class ProgateBootstrap {
         final List<ServiceMetadata> services = loadServices(upstreams);
         inbounds.forEach(inbound ->
             inbound.endpoints(services, outgoings, runtimeContext).forEach(endpoint ->
-                endpoint.getMethods().forEach(method -> router.route(method, endpoint.getPath()).handler(context ->
-                    endpoint.getHandler().handle(context.request()))
-                )
+                endpoint.getMethods().forEach(method -> {
+                    if (LOGGER.isInfoEnabled()) {
+                        LOGGER.info("Register http endpoint, [{}] - {}; {}", method, endpoint.getPath(), endpoint.getHandler().getClass().getName());
+                    }
+                    router.route(method, endpoint.getPath()).handler(context -> endpoint.getHandler().handle(context.request()));
+                })
             )
         );
     }
