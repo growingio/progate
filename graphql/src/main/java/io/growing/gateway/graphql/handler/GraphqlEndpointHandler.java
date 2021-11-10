@@ -18,7 +18,7 @@ import io.growing.gateway.graphql.idl.GraphqlBuilder;
 import io.growing.gateway.graphql.plugin.GraphqlInboundPlugin;
 import io.growing.gateway.graphql.request.GraphqlExecutionPayload;
 import io.growing.gateway.meta.ServiceMetadata;
-import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.pipeline.Outbound;
 import io.growing.gateway.utilities.CollectionUtilities;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
@@ -51,7 +51,7 @@ public class GraphqlEndpointHandler implements Handler<HttpServerRequest> {
 
     public GraphqlEndpointHandler(GraphqlConfig config,
                                   List<ServiceMetadata> services,
-                                  Set<Outgoing> outgoings, RuntimeContext context) {
+                                  Set<Outbound> outbounds, RuntimeContext context) {
         this.gson = new GsonBuilder().serializeNulls().create();
         this.plugins = Objects.isNull(config.getPlugins()) ? Collections.emptyList() : config.getPlugins().stream()
             .map(pluginName -> {
@@ -61,7 +61,7 @@ public class GraphqlEndpointHandler implements Handler<HttpServerRequest> {
             }).collect(Collectors.toList());
         final GraphqlBuilder builder = GraphqlBuilder.newBuilder();
         final DataFetcherExceptionHandler exceptionHandler = new SimpleDataFetcherExceptionHandler();
-        this.graphql = builder.outgoings(outgoings)
+        this.graphql = builder.outgoings(outbounds)
             .services(services).plugins(plugins).exceptionHandler(exceptionHandler).build();
     }
 

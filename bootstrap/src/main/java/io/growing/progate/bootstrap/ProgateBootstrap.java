@@ -7,12 +7,12 @@ import io.growing.gateway.context.GuiceRuntimeContext;
 import io.growing.gateway.context.RuntimeContext;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.discovery.ServiceDiscoveryService;
-import io.growing.gateway.grpc.GrpcOutgoing;
+import io.growing.gateway.grpc.GrpcOutbound;
 import io.growing.gateway.grpc.discovery.GrpcReflectionServiceDiscovery;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Inbound;
-import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.pipeline.Outbound;
 import io.growing.progate.bootstrap.config.ConfigEntry;
 import io.growing.progate.bootstrap.config.ProgateConfig;
 import io.growing.progate.bootstrap.di.ProgateModule;
@@ -49,7 +49,7 @@ public class ProgateBootstrap {
 
         final ClusterDiscoveryService discovery = injector.getInstance(ClusterDiscoveryService.class);
         final List<Upstream> upstreams = discovery.discover();
-        final Set<Outgoing> outgoings = Sets.newHashSet(new GrpcOutgoing());
+        final Set<Outbound> outbounds = Sets.newHashSet(new GrpcOutbound());
 
         final Set<Inbound> inbounds;
         try {
@@ -64,7 +64,7 @@ public class ProgateBootstrap {
         final HealthyCheck check = new HealthyCheck();
         router.get(check.path).handler(check);
         router.get("/reload").handler(ctx -> {
-            reload(runtimeContext, router, upstreams, outgoings, inbounds);
+            reload(runtimeContext, router, upstreams, outbounds, inbounds);
             ctx.response().end();
         });
 
@@ -91,7 +91,7 @@ public class ProgateBootstrap {
 
         vertx.setPeriodic(1000, id -> {
             try {
-                reload(runtimeContext, router, upstreams, outgoings, inbounds);
+                reload(runtimeContext, router, upstreams, outbounds, inbounds);
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
                 LOGGER.error(e.getLocalizedMessage(), e);
@@ -105,10 +105,10 @@ public class ProgateBootstrap {
 
     }
 
-    private static void reload(RuntimeContext runtimeContext, Router router, List<Upstream> upstreams, Set<Outgoing> outgoings, Set<Inbound> inbounds) {
+    private static void reload(RuntimeContext runtimeContext, Router router, List<Upstream> upstreams, Set<Outbound> outbounds, Set<Inbound> inbounds) {
         final List<ServiceMetadata> services = loadServices(upstreams);
         inbounds.forEach(inbound ->
-            inbound.endpoints(services, outgoings, runtimeContext).forEach(endpoint ->
+            inbound.endpoints(services, outbounds, runtimeContext).forEach(endpoint ->
                 endpoint.getMethods().forEach(method -> {
                     if (LOGGER.isInfoEnabled()) {
                         LOGGER.info("Register http endpoint, [{}] - {}; {}", method, endpoint.getPath(), endpoint.getHandler().getClass().getName());

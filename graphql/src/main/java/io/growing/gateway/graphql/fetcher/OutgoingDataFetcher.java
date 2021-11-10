@@ -5,7 +5,7 @@ import graphql.schema.DataFetchingEnvironment;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.graphql.plugin.GraphqlInboundPlugin;
 import io.growing.gateway.meta.Upstream;
-import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.pipeline.Outbound;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -18,18 +18,18 @@ import java.util.concurrent.CompletionStage;
 public class OutgoingDataFetcher implements DataFetcher<CompletionStage<?>> {
     private final String endpoint;
     private final Upstream upstream;
-    private final Outgoing outgoing;
+    private final Outbound outbound;
     private final List<String> values;
     private final List<String> mappings;
     private final boolean isListReturnType;
     private final List<GraphqlInboundPlugin> plugins;
 
-    public OutgoingDataFetcher(String endpoint, Upstream upstream, Outgoing outgoing,
+    public OutgoingDataFetcher(String endpoint, Upstream upstream, Outbound outbound,
                                List<GraphqlInboundPlugin> plugins,
                                List<String> values, List<String> mappings, boolean isListReturnType) {
         this.endpoint = endpoint;
         this.upstream = upstream;
-        this.outgoing = outgoing;
+        this.outbound = outbound;
         this.values = values;
         this.mappings = mappings;
         this.plugins = plugins;
@@ -40,7 +40,7 @@ public class OutgoingDataFetcher implements DataFetcher<CompletionStage<?>> {
     public CompletionStage<?> get(DataFetchingEnvironment environment) throws Exception {
         //
         final RequestContext context = new DataFetchingEnvironmentContext(environment, plugins, values, mappings);
-        final CompletionStage<?> stage = outgoing.handle(upstream, endpoint, context);
+        final CompletionStage<?> stage = outbound.handle(upstream, endpoint, context);
         return stage.thenApply(result -> {
             Object value = result;
             for (GraphqlInboundPlugin plugin : plugins) {

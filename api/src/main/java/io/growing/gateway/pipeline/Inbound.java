@@ -1,9 +1,7 @@
 package io.growing.gateway.pipeline;
 
 import io.growing.gateway.context.RuntimeContext;
-import io.growing.gateway.http.HttpApi;
 import io.growing.gateway.meta.ServiceMetadata;
-import io.vertx.core.http.HttpServerRequest;
 
 import java.util.List;
 import java.util.Set;
@@ -21,6 +19,6 @@ public interface Inbound {
 //
 //    void reload(List<ServiceMetadata> services, Set<Outgoing> outgoings, RuntimeContext context);
 
-    Set<HttpEndpoint> endpoints(List<ServiceMetadata> services, Set<Outgoing> outgoings, RuntimeContext context);
+    Set<HttpEndpoint> endpoints(List<ServiceMetadata> services, Set<Outbound> outbounds, RuntimeContext context);
 
 }

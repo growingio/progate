@@ -8,7 +8,7 @@ import java.util.concurrent.CompletionStage;
 /**
  * @author AI
  */
-public interface Outgoing {
+public interface Outbound {
 
     String protocol();
 

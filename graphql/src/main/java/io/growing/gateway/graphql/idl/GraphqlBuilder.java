@@ -27,7 +27,7 @@ import io.growing.gateway.graphql.fetcher.NotFoundFetcher;
 import io.growing.gateway.graphql.fetcher.OutgoingDataFetcher;
 import io.growing.gateway.graphql.plugin.GraphqlInboundPlugin;
 import io.growing.gateway.meta.ServiceMetadata;
-import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.pipeline.Outbound;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,7 +42,7 @@ import java.util.function.Consumer;
 
 public class GraphqlBuilder {
 
-    private Set<Outgoing> outgoings;
+    private Set<Outbound> outbounds;
     private List<ServiceMetadata> services;
     private List<GraphqlInboundPlugin> plugins;
     private DataFetcherExceptionHandler exceptionHandler;
@@ -58,8 +58,8 @@ public class GraphqlBuilder {
         return this;
     }
 
-    public GraphqlBuilder outgoings(final Set<Outgoing> outgoings) {
-        this.outgoings = outgoings;
+    public GraphqlBuilder outgoings(final Set<Outbound> outbounds) {
+        this.outbounds = outbounds;
         return this;
     }
 
@@ -75,8 +75,8 @@ public class GraphqlBuilder {
 
     public GraphQL build() {
         final RuntimeWiring.Builder runtimeWiringBuilder = RuntimeWiring.newRuntimeWiring();
-        final Map<String, Outgoing> handlers = new HashMap<>(outgoings.size());
-        outgoings.forEach(handler -> handlers.put(handler.protocol(), handler));
+        final Map<String, Outbound> handlers = new HashMap<>(outbounds.size());
+        outbounds.forEach(handler -> handlers.put(handler.protocol(), handler));
         services.forEach(service -> bindDataFetcher(runtimeWiringBuilder, service, handlers));
         runtimeWiringBuilder.directive(GlobalIdSchemaDirectiveWiring.NAME, new GlobalIdSchemaDirectiveWiring());
         scalars.forEach(runtimeWiringBuilder::scalar);
@@ -96,7 +96,7 @@ public class GraphqlBuilder {
             .mutationExecutionStrategy(new AsyncExecutionStrategy(exceptionHandler)).build();
     }
 
-    private void bindDataFetcher(final RuntimeWiring.Builder register, final ServiceMetadata service, final Map<String, Outgoing> handlers) {
+    private void bindDataFetcher(final RuntimeWiring.Builder register, final ServiceMetadata service, final Map<String, Outbound> handlers) {
         final TypeDefinitionRegistry registry = parser.parse(service);
         final Set<String> protocols = handlers.keySet();
         final Consumer<String> bind = (final String type) -> {
@@ -115,7 +115,7 @@ public class GraphqlBuilder {
                     final String endpoint = ((StringValue) endpointDirective.getArgument("endpoint").getValue()).getValue();
                     final List<String> values = getListStringArgument(endpointDirective, "values");
                     final List<String> mappings = getListStringArgument(endpointDirective, "mappings");
-                    final Outgoing handler = handlers.get(endpointDirective.getName());
+                    final Outbound handler = handlers.get(endpointDirective.getName());
                     final boolean isListType = isListReturnType(field);
                     DataFetcher<CompletionStage<?>> next = new OutgoingDataFetcher(endpoint, service.upstream(), handler, plugins, values, mappings, isListType);
                     for (GraphqlInboundPlugin plugin : plugins) {

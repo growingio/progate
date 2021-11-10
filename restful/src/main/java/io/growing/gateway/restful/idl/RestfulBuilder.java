@@ -2,7 +2,7 @@ package io.growing.gateway.restful.idl;
 
 import com.google.common.collect.Sets;
 import io.growing.gateway.meta.ServiceMetadata;
-import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.pipeline.Outbound;
 import io.growing.gateway.restful.utils.RestfulConstants;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public class RestfulBuilder {
-    private Set<Outgoing> outgoings;
+    private Set<Outbound> outbounds;
     private List<ServiceMetadata> services;
 
     public static RestfulBuilder newBuilder() {
@@ -30,8 +30,8 @@ public class RestfulBuilder {
         return this;
     }
 
-    public RestfulBuilder outgoings(final Set<Outgoing> outgoings) {
-        this.outgoings = outgoings;
+    public RestfulBuilder outgoings(final Set<Outbound> outbounds) {
+        this.outbounds = outbounds;
         return this;
     }
 
@@ -49,7 +49,7 @@ public class RestfulBuilder {
                         PathItem pathItem = path.getValue();
                         final Map<PathItem.HttpMethod, Operation> operationMap = pathItem.readOperationsMap();
                         operationMap.forEach((httpMethod, operation) -> {
-                            restfulApis.addAll(bind(operation, outgoings, serviceMetadata));
+                            restfulApis.addAll(bind(operation, outbounds, serviceMetadata));
 
                         });
                     }
@@ -59,11 +59,11 @@ public class RestfulBuilder {
         return restfulApis;
     }
 
-    private Set<RestfulApi> bind(Operation operation, Set<Outgoing> outgoings, ServiceMetadata serviceMetadata) {
+    private Set<RestfulApi> bind(Operation operation, Set<Outbound> outbounds, ServiceMetadata serviceMetadata) {
         Set<RestfulApi> restfulApis = Sets.newHashSet();
         final Object endpoint = operation.getExtensions().get(RestfulConstants.X_GRPC_ENDPOINT);
         if (Objects.nonNull(endpoint)) {
-            outgoings.forEach(outgoing -> {
+            outbounds.forEach(outgoing -> {
                 restfulApis.add(new RestfulApi(serviceMetadata, endpoint.toString(), outgoing));
             });
             return restfulApis;

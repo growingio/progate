@@ -17,7 +17,7 @@ import io.growing.gateway.grpc.observer.CollectionObserver;
 import io.growing.gateway.grpc.observer.UnaryObserver;
 import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
 import io.growing.gateway.meta.Upstream;
-import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.pipeline.Outbound;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -36,7 +36,7 @@ import java.util.concurrent.CompletionStage;
 /**
  * @author AI
  */
-public class GrpcOutgoing implements Outgoing {
+public class GrpcOutbound implements Outbound {
 
     private final ServiceModuleFinder finder = new ServiceModuleFinder();
     private final LoadingCache<Upstream, ServiceResolver> resolvers = Caffeine.newBuilder().build(this::createServiceResolver);

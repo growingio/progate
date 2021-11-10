@@ -3,7 +3,7 @@ package io.growing.gateway.restful.idl;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
 import io.growing.gateway.meta.ServiceMetadata;
-import io.growing.gateway.pipeline.Outgoing;
+import io.growing.gateway.pipeline.Outbound;
 import io.growing.gateway.restful.api.RestfulRequestContext;
 import io.growing.gateway.restful.enums.DataTypeFormat;
 import io.growing.gateway.restful.utils.RestfulConstants;
@@ -25,15 +25,15 @@ import java.util.concurrent.CompletableFuture;
 public class RestfulApi {
     private ServiceMetadata serviceMetadata;
     private String grpcDefinition;
-    private Outgoing outgoing;
+    private Outbound outbound;
 
     public RestfulApi() {
     }
 
-    public RestfulApi(ServiceMetadata serviceMetadata, String grpcDefinition, Outgoing outgoing) {
+    public RestfulApi(ServiceMetadata serviceMetadata, String grpcDefinition, Outbound outbound) {
         this.serviceMetadata = serviceMetadata;
         this.grpcDefinition = grpcDefinition;
-        this.outgoing = outgoing;
+        this.outbound = outbound;
     }
 
 
@@ -53,18 +53,18 @@ public class RestfulApi {
         this.grpcDefinition = grpcDefinition;
     }
 
-    public Outgoing getOutgoing() {
-        return outgoing;
+    public Outbound getOutgoing() {
+        return outbound;
     }
 
-    public void setOutgoing(Outgoing outgoing) {
-        this.outgoing = outgoing;
+    public void setOutgoing(Outbound outbound) {
+        this.outbound = outbound;
     }
 
     public CompletableFuture<Object> execute(final String path, final RestfulHttpApi httpApi, final Map<String, Object> params) {
         RequestContext requestContext = new RestfulRequestContext(params);
         final long start = System.currentTimeMillis();
-        final CompletableFuture<?> completionStage = (CompletableFuture<?>) outgoing.handle(serviceMetadata.upstream(), grpcDefinition, requestContext);
+        final CompletableFuture<?> completionStage = (CompletableFuture<?>) outbound.handle(serviceMetadata.upstream(), grpcDefinition, requestContext);
         return completionStage.thenApply(result -> {
             final RestfulResult restfulResult = wrap(result, httpApi.getApiResponses().getDefault());
             final long end = System.currentTimeMillis();
