@@ -18,6 +18,10 @@ public interface GraphqlInboundPlugin {
 
     void init(GraphqlConfig config, RuntimeContext context);
 
+    default Set<SchemaObjectResolver> resolvers() {
+        return Collections.emptySet();
+    }
+
     default Map<String, Object> arguments(HttpServerRequest request) {
         return Collections.emptyMap();
     }
@@ -36,6 +40,5 @@ public interface GraphqlInboundPlugin {
     default Set<GraphQLScalarType> scalars() {
         return Collections.emptySet();
     }
-
 
 }

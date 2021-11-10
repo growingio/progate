@@ -21,6 +21,7 @@ import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import graphql.schema.idl.TypeRuntimeWiring;
 import io.growing.gateway.graphql.fetcher.AccessLogFetcher;
 import io.growing.gateway.graphql.fetcher.NotFoundFetcher;
 import io.growing.gateway.graphql.fetcher.OutgoingDataFetcher;
@@ -79,7 +80,13 @@ public class GraphqlBuilder {
         services.forEach(service -> bindDataFetcher(runtimeWiringBuilder, service, handlers));
         runtimeWiringBuilder.directive(GlobalIdSchemaDirectiveWiring.NAME, new GlobalIdSchemaDirectiveWiring());
         scalars.forEach(runtimeWiringBuilder::scalar);
-        plugins.forEach(plugin -> plugin.scalars().forEach(runtimeWiringBuilder::scalar));
+        plugins.forEach(plugin -> {
+            plugin.resolvers().forEach(resolver -> {
+                final TypeRuntimeWiring.Builder type = TypeRuntimeWiring.newTypeWiring(resolver.name()).typeResolver(resolver);
+                runtimeWiringBuilder.type(type);
+            });
+            plugin.scalars().forEach(runtimeWiringBuilder::scalar);
+        });
         final TypeDefinitionRegistry registry = parser.parse(services);
         final SchemaGenerator generator = new SchemaGenerator();
         final GraphQLSchema graphQLSchema = generator.makeExecutableSchema(registry, runtimeWiringBuilder.build());
