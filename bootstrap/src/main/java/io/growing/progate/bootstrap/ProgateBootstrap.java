@@ -3,6 +3,7 @@ package io.growing.progate.bootstrap;
 import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import io.growing.gateway.context.GuiceRuntimeContext;
 import io.growing.gateway.context.RuntimeContext;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.discovery.ServiceDiscoveryService;
@@ -14,7 +15,6 @@ import io.growing.gateway.pipeline.Inbound;
 import io.growing.gateway.pipeline.Outgoing;
 import io.growing.progate.bootstrap.config.ConfigEntry;
 import io.growing.progate.bootstrap.config.ProgateConfig;
-import io.growing.gateway.context.GuiceRuntimeContext;
 import io.growing.progate.bootstrap.di.ProgateModule;
 import io.growing.progate.bootstrap.loader.InboundLoader;
 import io.vertx.core.Vertx;
@@ -34,9 +34,9 @@ import java.util.concurrent.CountDownLatch;
  * @author AI
  */
 public class ProgateBootstrap {
-    private static final Logger logger = LoggerFactory.getLogger(ProgateBootstrap.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProgateBootstrap.class);
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) {
         final String configPath = ProgateModule.getApplicationConfigFile(args);
         final Injector injector = Guice.createInjector(ProgateModule.create(configPath));
         final Vertx vertx = injector.getInstance(Vertx.class);
@@ -51,7 +51,14 @@ public class ProgateBootstrap {
         final List<Upstream> upstreams = discovery.discover();
         final Set<Outgoing> outgoings = Sets.newHashSet(new GrpcOutgoing());
 
-        final Set<Inbound> inbounds = new InboundLoader().load(config.getInbound(), injector);
+        final Set<Inbound> inbounds;
+        try {
+            inbounds = new InboundLoader().load(config.getInbound(), injector);
+        } catch (ClassNotFoundException e) {
+            LOGGER.error(e.getLocalizedMessage(), e);
+            System.exit(1);
+            return;
+        }
 
         final Router router = Router.router(vertx);
         final HealthyCheck check = new HealthyCheck();
@@ -63,22 +70,22 @@ public class ProgateBootstrap {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             final CountDownLatch counter = new CountDownLatch(1);
-            logger.info("Server on shutdown...");
+            LOGGER.info("Server on shutdown...");
             server.close(ar ->
                 vertx.close().onSuccess(handler -> {
-                    logger.info("Server shutdown success");
+                    LOGGER.info("Server shutdown success");
                     counter.countDown();
                 }));
             try {
                 counter.await();
             } catch (InterruptedException e) {
-                logger.error(e.getLocalizedMessage(), e);
+                LOGGER.error(e.getLocalizedMessage(), e);
                 Thread.currentThread().interrupt();
             }
         }));
 
         final int port = getServerPort(config);
-        server.requestHandler(router).listen(port).onSuccess(handler -> logger.info("Server listening on {}", port));
+        server.requestHandler(router).listen(port).onSuccess(handler -> LOGGER.info("Server listening on {}", port));
 
         final EventBus eventBus = vertx.eventBus();
 
@@ -93,7 +100,7 @@ public class ProgateBootstrap {
                 );
                 eventBus.publish("timers.cancel", id);
             } catch (Exception e) {
-                logger.error(e.getLocalizedMessage(), e);
+                LOGGER.error(e.getLocalizedMessage(), e);
             }
         });
 

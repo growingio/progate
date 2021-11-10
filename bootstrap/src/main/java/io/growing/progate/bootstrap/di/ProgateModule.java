@@ -13,11 +13,15 @@ import io.growing.progate.bootstrap.config.ProgateConfig;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import org.apache.commons.lang3.SystemUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Paths;
 import java.util.Objects;
 
 public class ProgateModule extends AbstractModule {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProgateModule.class);
 
     private final String configPath;
 
@@ -30,18 +34,29 @@ public class ProgateModule extends AbstractModule {
     }
 
     public static String getApplicationConfigFile(final String[] args) {
-        final String key = "config.file";
+        final String key = "config.path";
         final String argSetter = key + "=";
         for (String arg : args) {
             if (arg.startsWith(argSetter)) {
-                return arg.replace(argSetter, "");
+                final String path = arg.replace(argSetter, "");
+                if (LOGGER.isInfoEnabled()) {
+                    LOGGER.info("Read config file from jvm args, {}", path);
+                }
+                return path;
             }
         }
         final String property = System.getProperty(key);
         if (Objects.nonNull(property)) {
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Read config file from jvm environment, {}", property);
+            }
             return property;
         }
-        return Paths.get(SystemUtils.getUserDir().getAbsolutePath(), "conf", "gateway.yaml").toAbsolutePath().toString();
+        final String path = Paths.get(SystemUtils.getUserDir().getAbsolutePath(), "conf", "gateway.yaml").toAbsolutePath().toString();
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Read config file from user.dir, {}", path);
+        }
+        return path;
     }
 
     @Override

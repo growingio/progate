@@ -10,7 +10,7 @@ units:
         protocol: http
     command: "{{ app_deploy_dir}}/bin/bootstrap"
     envs:
-      JAVA_OPTS: "-Dconfig.file={{ app_deploy_dir}}/conf/gateway.yaml -Dlog4j2.configurationFile={{ app_deploy_dir}}/conf/log4j2.xml"
+      JAVA_OPTS: "-Dconfig.path={{ app_deploy_dir}}/conf/gateway.yaml -Dlog4j2.configurationFile={{ app_deploy_dir}}/conf/log4j2.xml"
 
 resources:
   - resource: redis
