@@ -1,24 +1,4 @@
-image: uhub.service.ucloud.cn/growing/gradle:7.2-jdk11
-
-stages:
-  - test
-
-test:
-  stage: test
-  script:
-    - ./gradlew test
-  coverage: '/    - Instruction Coverage: ([0-9.]+)%/'
-  artifacts:
-    when: always
-    reports:
-      junit: "*/build/test-results/test/**/TEST-*.xml"
-
 include:
-  - "/cq.yml"
-
-code_quality:
-  image: uhub.service.ucloud.cn/growing_public/docker:19.03.12
-  variables:
-    CODECLIMATE_PREFIX: "uhub.service.ucloud.cn/"
-    CODECLIMATE_IMAGE: "uhub.service.ucloud.cn/growing_public/codeclimate"
-    CODE_QUALITY_IMAGE: "uhub.service.ucloud.cn/growing_public/codequality:0.85.24-gitlab.1"
+  template:
+    - Gradle.gitlab-ci.yml
+    - Code-Quality.gitlab-ci.yml
