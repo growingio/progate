@@ -4,3 +4,4 @@ include:
     file:
       - '/Gradle.gitlab-ci.yml'
       - '/Code-Quality.gitlab-ci.yml'
+      - '/Jobs/Gradle-Publish.gitlab-ci.yml'
