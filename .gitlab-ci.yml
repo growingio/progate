@@ -1,4 +1,6 @@
 include:
-  template:
-    - Gradle.gitlab-ci.yml
-    - Code-Quality.gitlab-ci.yml
+  - project: 'open-source/gitlab-templates'
+    ref: main
+    file:
+      - '/Gradle.gitlab-ci.yml'
+      - '/Code-Quality.gitlab-ci.yml'
