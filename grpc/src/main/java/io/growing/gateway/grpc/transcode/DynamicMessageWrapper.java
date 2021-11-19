@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DynamicMessageWrapper extends MapWrapper<String, Object> {
-    public static final Set<String> WELL_KNOWN_TYPES = Sets.newHashSet(
+    private static final Set<String> WELL_KNOWN_TYPES = Sets.newHashSet(
         BoolValue.getDescriptor().getFullName(),
         Int32Value.getDescriptor().getFullName(),
         UInt32Value.getDescriptor().getFullName(),
@@ -41,6 +41,18 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
         BytesValue.getDescriptor().getFullName(),
         FloatValue.getDescriptor().getFullName(),
         DoubleValue.getDescriptor().getFullName()
+    );
+
+    private static final Map<String, Object> WELL_KNOWN_DEFAULT_VALUES = Map.of(
+        BoolValue.getDescriptor().getFullName(), false,
+        Int32Value.getDescriptor().getFullName(), 0,
+        UInt32Value.getDescriptor().getFullName(), 0,
+        Int64Value.getDescriptor().getFullName(), 0,
+        UInt64Value.getDescriptor().getFullName(), 0,
+        StringValue.getDescriptor().getFullName(), "",
+        BytesValue.getDescriptor().getFullName(), new byte[]{},
+        FloatValue.getDescriptor().getFullName(), 0f,
+        DoubleValue.getDescriptor().getFullName(), 0d
     );
     private static final Set<String> WELL_KNOWN_VALUE_FIELDS = WELL_KNOWN_TYPES
         .stream().map(DynamicMessageWrapper::createFieldName).collect(Collectors.toSet());
@@ -53,14 +65,19 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
     private final Set<Descriptors.Descriptor> descriptors;
 
     public static Optional<Object> extractValue(final DynamicMessage dm) {
-        if (dm.getAllFields().size() == 1) {
-            for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : dm.getAllFields().entrySet()) {
-                if (WELL_KNOWN_VALUE_FIELDS.contains(entry.getKey().getFullName())) {
-                    return Optional.of(entry.getValue());
-                }
-            }
+        final String fullName = dm.getDescriptorForType().getFullName();
+        if (WELL_KNOWN_TYPES.contains(fullName)) {
+            return Optional.of(extractWellKnownValue(dm));
         }
         return Optional.empty();
+    }
+
+    public static Object extractWellKnownValue(final DynamicMessage dm) {
+        final byte[] bytes = dm.toByteArray();
+        if (bytes.length == 0) {
+            return WELL_KNOWN_DEFAULT_VALUES.get(dm.getDescriptorForType().getFullName());
+        }
+        return dm.getAllFields().entrySet().iterator().next().getValue();
     }
 
     public DynamicMessageWrapper(final DynamicMessage origin, final Set<Descriptors.Descriptor> descriptors) {
@@ -111,12 +128,8 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
     private Object wrapObject(final Object value) {
         if (value instanceof DynamicMessage) {
             final DynamicMessage field = (DynamicMessage) value;
-            if (field.getAllFields().size() == 1) {
-                for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : field.getAllFields().entrySet()) {
-                    if (WELL_KNOWN_VALUE_FIELDS.contains(entry.getKey().getFullName())) {
-                        return entry.getValue();
-                    }
-                }
+            if (WELL_KNOWN_VALUE_FIELDS.contains(field.getDescriptorForType().getFullName())) {
+                return extractWellKnownValue(field);
             } else {
                 final Optional<DynamicMessage> anyOpt = extractAny(field, descriptors);
                 if (anyOpt.isPresent()) {
@@ -156,5 +169,6 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
         }
         return Optional.empty();
     }
+
 
 }

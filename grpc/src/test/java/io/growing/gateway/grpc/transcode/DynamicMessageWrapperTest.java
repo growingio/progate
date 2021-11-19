@@ -1,5 +1,7 @@
 package io.growing.gateway.grpc.transcode;
 
+import com.google.protobuf.BoolValue;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
@@ -54,4 +56,14 @@ class DynamicMessageWrapperTest {
         Assertions.assertTrue(valueOpt.isPresent());
         Assertions.assertEquals(v, valueOpt.get());
     }
+
+    @Test
+    void testDefaultValue() throws InvalidProtocolBufferException {
+        Descriptors.Descriptor descriptor = BoolValue.getDescriptor();
+        final DynamicMessage dm = DynamicMessage.parseFrom(descriptor, BoolValue.of(false).toByteArray());
+        final Optional<Object> valueOpt = DynamicMessageWrapper.extractValue(dm);
+        Assertions.assertTrue(valueOpt.isPresent());
+        Assertions.assertEquals(false, valueOpt.get());
+    }
+
 }
