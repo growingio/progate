@@ -21,6 +21,9 @@ public interface Transcoder {
         mappings.forEach(mapping -> {
             final TranscodeMapping transcode = parse(mapping);
             final Object originValue = extract(arguments, transcode.getSource());
+            if (Objects.isNull(originValue)) {
+                return;
+            }
             if (transcode.getTarget().endsWith(".add")) {
                 final Object value = new Object[]{originValue};
                 set(arguments, transcode.getTarget().replace(".add", ""), value);

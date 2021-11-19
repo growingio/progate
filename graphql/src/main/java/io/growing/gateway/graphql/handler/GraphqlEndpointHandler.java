@@ -140,7 +140,7 @@ public class GraphqlEndpointHandler implements Handler<HttpServerRequest> {
         }
         arguments.put("request", request);
         arguments.put("payload", payload);
-        arguments.put("address", getRemoteAddress(request));
+        arguments.put("remoteAddress", getRemoteAddress(request));
         builder.graphQLContext(arguments);
         return builder.build();
     }
