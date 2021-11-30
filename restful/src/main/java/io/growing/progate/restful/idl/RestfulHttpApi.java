@@ -1,4 +1,4 @@
-package io.growing.gateway.restful.idl;
+package io.growing.progate.restful.idl;
 
 import io.growing.gateway.http.HttpApi;
 import io.swagger.v3.oas.models.responses.ApiResponses;

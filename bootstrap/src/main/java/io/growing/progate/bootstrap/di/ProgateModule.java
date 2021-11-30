@@ -8,7 +8,7 @@ import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.graphql.config.GraphqlConfig;
 import io.growing.gateway.grpc.ctrl.GrpcHealthService;
 import io.growing.gateway.internal.discovery.ConfigClusterDiscoveryService;
-import io.growing.gateway.restful.config.RestfulConfig;
+import io.growing.progate.restful.config.RestfulConfig;
 import io.growing.progate.bootstrap.config.ProgateConfig;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;

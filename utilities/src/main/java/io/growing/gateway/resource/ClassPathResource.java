@@ -1,5 +1,6 @@
 package io.growing.gateway.resource;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 
 import java.io.IOException;
@@ -21,6 +22,10 @@ public class ClassPathResource {
             }
             return ByteStreams.toByteArray(is);
         }
+    }
+
+    public String utf8String() throws IOException {
+        return new String(bytes(), Charsets.UTF_8);
     }
 
 }

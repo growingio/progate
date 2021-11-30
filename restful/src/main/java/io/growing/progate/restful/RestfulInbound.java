@@ -1,57 +1,55 @@
-//package io.growing.gateway.restful;
-//
-//import com.google.common.collect.Sets;
-//import com.google.common.net.HttpHeaders;
-//import com.google.gson.Gson;
-//import com.google.gson.GsonBuilder;
-//import io.growing.gateway.config.OAuth2Config;
-//import io.growing.gateway.context.RuntimeContext;
-//import io.growing.gateway.http.HttpApi;
-//import io.growing.gateway.meta.ServiceMetadata;
-//import io.growing.gateway.pipeline.Inbound;
-//import io.growing.gateway.pipeline.Outgoing;
-//import io.growing.gateway.restful.config.RestfulConfig;
-//import io.growing.gateway.restful.enums.DataTypeFormat;
-//import io.growing.gateway.restful.handler.RestfulException;
-//import io.growing.gateway.restful.idl.RestfulApi;
-//import io.growing.gateway.restful.idl.RestfulBuilder;
-//import io.growing.gateway.restful.idl.RestfulHttpApi;
-//import io.growing.gateway.restful.idl.RestfulRequest;
-//import io.growing.gateway.restful.utils.RestfulConstants;
-//import io.growing.gateway.restful.utils.RestfulResult;
-//import io.swagger.v3.oas.models.OpenAPI;
-//import io.swagger.v3.oas.models.Operation;
-//import io.swagger.v3.oas.models.PathItem;
-//import io.swagger.v3.oas.models.Paths;
-//import io.swagger.v3.oas.models.media.ArraySchema;
-//import io.swagger.v3.oas.models.media.Schema;
-//import io.swagger.v3.oas.models.media.StringSchema;
-//import io.swagger.v3.oas.models.parameters.Parameter;
-//import io.swagger.v3.parser.OpenAPIV3Parser;
-//import io.swagger.v3.parser.core.models.SwaggerParseResult;
-//import io.vertx.core.http.HttpMethod;
-//import io.vertx.core.http.HttpServerRequest;
-//import io.vertx.core.http.HttpServerResponse;
-//import io.vertx.core.json.Json;
-//import io.vertx.core.json.JsonObject;
-//import io.vertx.ext.web.client.WebClient;
-//import org.apache.commons.lang3.StringUtils;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
-//
-//import java.nio.charset.StandardCharsets;
-//import java.util.HashMap;
-//import java.util.List;
-//import java.util.Map;
-//import java.util.Objects;
-//import java.util.Optional;
-//import java.util.Set;
-//import java.util.concurrent.CompletableFuture;
-//import java.util.concurrent.atomic.AtomicReference;
-//import java.util.stream.Collectors;
-//
-//public class RestfulInbound implements Inbound {
-//
+package io.growing.progate.restful;
+
+import io.growing.gateway.context.RuntimeContext;
+import io.growing.gateway.meta.ServiceMetadata;
+import io.growing.gateway.pipeline.HttpEndpoint;
+import io.growing.gateway.pipeline.Inbound;
+import io.growing.gateway.pipeline.Outbound;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.parser.OpenAPIV3Parser;
+import io.swagger.v3.parser.core.models.SwaggerParseResult;
+import io.vertx.core.http.HttpMethod;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+public class RestfulInbound implements Inbound {
+
+    private final Pattern PATH_PATTERN = Pattern.compile("\\{(\\w+)\\}");
+
+    @Override
+    public Set<HttpEndpoint> endpoints(List<ServiceMetadata> services, Set<Outbound> outbounds, RuntimeContext context) {
+        return services.stream().flatMap(service -> buildEndpoints(service, outbounds).stream()).collect(Collectors.toSet());
+    }
+
+    private Set<HttpEndpoint> buildEndpoints(final ServiceMetadata service, final Set<Outbound> outbounds) {
+        final String definitions = service.restfulDefinitions().stream()
+            .map(definition -> new String(definition.getContent(), StandardCharsets.UTF_8)).collect(Collectors.joining("\n"));
+        final SwaggerParseResult result = new OpenAPIV3Parser().readContents(definitions);
+        final OpenAPI openapi = result.getOpenAPI();
+        return openapi.getPaths().entrySet().stream()
+            .flatMap(entry -> {
+                final String key = entry.getKey();
+                final String path = "/" + openapi.getInfo().getVersion() + PATH_PATTERN.matcher(key).replaceAll(":$1");
+                return toEndpoints(service, path, entry.getValue(), outbounds).stream();
+            }).collect(Collectors.toSet());
+    }
+
+    private Set<HttpEndpoint> toEndpoints(final ServiceMetadata service, final String path, final PathItem item, final Set<Outbound> outbounds) {
+        return item.readOperationsMap().entrySet().stream().map(entry -> {
+            final HttpEndpoint endpoint = new HttpEndpoint();
+            endpoint.setMethods(Set.of(HttpMethod.valueOf(entry.getKey().name())));
+            endpoint.setPath(path);
+            endpoint.setHandler(Restlet.of(entry.getValue(), outbounds, service.upstream()));
+            return endpoint;
+        }).collect(Collectors.toSet());
+    }
+
+    //
 //    private final Logger logger = LoggerFactory.getLogger(RestfulInbound.class);
 //    private final AtomicReference<Set<RestfulApi>> restfulApiAtomicReference = new AtomicReference<>();
 //
@@ -242,4 +240,4 @@
 //        }
 //    }
 //
-//}
+}

@@ -1,9 +1,9 @@
-package io.growing.gateway.restful.idl;
+package io.growing.progate.restful.idl;
 
 import com.google.common.collect.Sets;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outbound;
-import io.growing.gateway.restful.utils.RestfulConstants;
+import io.growing.progate.restful.utils.RestfulConstants;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;

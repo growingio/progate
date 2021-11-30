@@ -1,4 +1,4 @@
-package io.growing.gateway.restful.enums;
+package io.growing.progate.restful.enums;
 
 /**
  * @Description: 仅用于扩展自定义或者自己指定的类型

@@ -1,12 +1,10 @@
 package io.growing.progate.bootstrap.config;
 
 import io.growing.gateway.config.OAuth2Config;
-import io.growing.gateway.restful.config.RestfulConfig;
 
 public class ProgateConfig {
     private ServerConfig server;
     private InboundConfig inbound;
-    private RestfulConfig restful;
     private OAuth2Config oauth2;
 
     public ServerConfig getServer() {
@@ -23,14 +21,6 @@ public class ProgateConfig {
 
     public void setInbound(InboundConfig inbound) {
         this.inbound = inbound;
-    }
-
-    public RestfulConfig getRestful() {
-        return restful;
-    }
-
-    public void setRestful(RestfulConfig restful) {
-        this.restful = restful;
     }
 
     public OAuth2Config getOauth2() {

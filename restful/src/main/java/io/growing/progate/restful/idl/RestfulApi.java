@@ -1,13 +1,13 @@
-package io.growing.gateway.restful.idl;
+package io.growing.progate.restful.idl;
 
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outbound;
-import io.growing.gateway.restful.api.RestfulRequestContext;
-import io.growing.gateway.restful.enums.DataTypeFormat;
-import io.growing.gateway.restful.utils.RestfulConstants;
-import io.growing.gateway.restful.utils.RestfulResult;
+import io.growing.progate.restful.api.RestfulRequestContext;
+import io.growing.progate.restful.enums.DataTypeFormat;
+import io.growing.progate.restful.utils.RestfulConstants;
+import io.growing.progate.restful.utils.RestfulResult;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;

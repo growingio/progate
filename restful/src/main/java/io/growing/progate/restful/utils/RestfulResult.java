@@ -1,6 +1,6 @@
-package io.growing.gateway.restful.utils;
+package io.growing.progate.restful.utils;
 
-import io.growing.gateway.restful.enums.ResultCode;
+import io.growing.progate.restful.enums.ResultCode;
 
 import java.io.Serializable;
 

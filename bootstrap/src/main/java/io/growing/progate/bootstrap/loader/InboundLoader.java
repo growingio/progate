@@ -20,9 +20,10 @@ public class InboundLoader {
             final Inbound inbound = createInstance(inboundServiceConfig.getString("inbound.graphql"), injector);
             builder.add(inbound);
         }
-//        if (Objects.nonNull(config.getRestful())) {
-//
-//        }
+        if (Objects.nonNull(config.getRestful())) {
+            final Inbound inbound = createInstance(inboundServiceConfig.getString("inbound.restful"), injector);
+            builder.add(inbound);
+        }
         return builder.build();
     }
 
