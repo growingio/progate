@@ -1,4 +1,4 @@
-package io.growing.gateway.restful.idl;
+package io.growing.progate.restful.idl;
 
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;

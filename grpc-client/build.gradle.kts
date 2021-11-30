@@ -13,10 +13,6 @@ dependencies {
     implementation(project(":utilities"))
     implementation("org.slf4j:slf4j-api")
 }
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8

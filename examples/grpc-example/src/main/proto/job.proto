@@ -12,34 +12,20 @@ message JobDto {
   string name = 1;
   google.protobuf.StringValue description = 2;
   repeated string tags = 3;
-  google.protobuf.Int32Value index = 4;
 }
 
 service JobService {
 
-  rpc GetJob(GetJobRequest) returns (stream JobDto){
-  }
+  rpc Get(GetJobRequest) returns(JobDto){}
 
-  rpc CreateJob(CreateJobRequest) returns (JobDto){
-  }
+  rpc List(ListJobRequest) returns(stream JobDto){}
 
-  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse){
-  }
+}
+
+message ListJobRequest {
 
 }
 
 message GetJobRequest {
   int64 id = 1;
-}
-
-message CreateJobRequest {
-  JobDto job = 1;
-  string type = 2;
-}
-message ListJobsRequest {
-  JobDto job = 1;
-}
-
-message ListJobsResponse {
-  repeated JobDto books = 1;
 }

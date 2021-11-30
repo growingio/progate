@@ -1,7 +1,7 @@
-package io.growing.gateway.restful.api;
+package io.growing.progate.restful.api;
 
 import io.growing.gateway.context.RequestContext;
-import io.growing.gateway.restful.utils.RestfulConstants;
+import io.growing.progate.restful.utils.RestfulConstants;
 
 import java.util.Map;
 

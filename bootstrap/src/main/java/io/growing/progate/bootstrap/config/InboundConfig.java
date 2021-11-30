@@ -1,7 +1,7 @@
 package io.growing.progate.bootstrap.config;
 
 import io.growing.gateway.graphql.config.GraphqlConfig;
-import io.growing.gateway.restful.config.RestfulConfig;
+import io.growing.progate.restful.config.RestfulConfig;
 
 public class InboundConfig {
     private GraphqlConfig graphql;

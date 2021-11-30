@@ -1,23 +1,32 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
-  title: 测试项目
-  description: 测试项目
+  title: DEMO
+  description: OpenAPI Demo
   version: v1
 paths:
   /jobs:
-    summary: JobService
-    description: JobService
+    summary: Jobs
     get:
-      summary: 获取所有Jobs.
-      description: 获取所有Jobs.
-      x-grpc-endpoint: growing.graphql.example.JobService/GetJob
-      parameters:
-        - name: Authorization
-          in: path
-          allowEmptyValue: false
-          required: true
-          schema:
-            type: string
+      summary: List all jobs
+      x-grpc-endpoint: growing.graphql.example.JobService/List
+      responses:
+        default:
+          description: "success"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  properties:
+                    name:
+                      type: string
+                    description:
+                      type: string
+  /jobs/{jobId}:
+    summary: Get Job
+    get:
+      summary: Get job by id
+      x-grpc-endpoint: growing.graphql.example.JobService/Get
       responses:
         default:
           description: "success"
@@ -26,28 +35,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  code:
+                  name:
                     type: string
-                    description: "响应码"
-                  error:
+                  description:
                     type: string
-                    description: "错误信息"
-                  data:
-                    title: object
-                    description: "响应数据"
-                    properties:
-                      name:
-                        type: string
-                        description: "jobname"
-                      description:
-                        type: string
-                        description: "描述"
-                      tags:
-                        type: array
-                        description: "标签"
-                      index:
-                        type: integer
-                        description: "序号"
-                  elasped:
-                    type: integer
-                    description: "执行耗时（单位毫秒）"

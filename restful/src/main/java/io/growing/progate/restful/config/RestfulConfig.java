@@ -1,4 +1,4 @@
-package io.growing.gateway.restful.config;
+package io.growing.progate.restful.config;
 
 
 public class RestfulConfig {

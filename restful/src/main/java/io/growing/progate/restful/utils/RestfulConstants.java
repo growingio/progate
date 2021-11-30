@@ -1,4 +1,4 @@
-package io.growing.gateway.restful.utils;
+package io.growing.progate.restful.utils;
 
 /**
  * @Description: restful 常量的定义
