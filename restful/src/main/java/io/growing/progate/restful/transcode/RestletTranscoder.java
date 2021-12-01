@@ -9,9 +9,6 @@ import io.vertx.core.json.JsonObject;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -29,20 +26,20 @@ public class RestletTranscoder {
     public Object serialize(final Object result, final MediaType mediaType) {
         final Schema schema = mediaType.getSchema();
         if (schema instanceof ArraySchema) {
-            final List<Object> elements = new LinkedList<>();
+            final JsonArray elements = new JsonArray();
             if (result instanceof Object[]) {
                 final Object[] entries = (Object[]) result;
                 for (Object value : entries) {
-                    elements.add(toObject(value, ((ArraySchema) schema).getItems()));
+                    elements.add(toJsonObject(value, ((ArraySchema) schema).getItems()));
                 }
             } else {
                 for (Object value : (Collection) result) {
-                    elements.add(toObject(value, ((ArraySchema) schema).getItems()));
+                    elements.add(toJsonObject(value, ((ArraySchema) schema).getItems()));
                 }
             }
             return elements;
         }
-        return toObject(result, schema);
+        return toJsonObject(result, schema);
     }
 
 
@@ -61,9 +58,9 @@ public class RestletTranscoder {
         });
     }
 
-    private Object toObject(final Object result, final Schema schema) {
+    private JsonObject toJsonObject(final Object result, final Schema schema) {
+        final JsonObject json = new JsonObject();
         final Map<String, Object> values = (Map<String, Object>) result;
-        final Map<String, Object> body = new LinkedHashMap<>();
         final Map<String, Schema> properties = schema.getProperties();
         properties.forEach((name, s) -> {
             final Object value = values.get(name);
@@ -72,30 +69,33 @@ public class RestletTranscoder {
                 if (value instanceof Object[]) {
                     final Object[] entries = (Object[]) value;
                     for (Object entry : entries) {
-                        if (entry instanceof Map) {
-                            final Object subObject = toObject(entry, ((ArraySchema) s).getItems());
-                            array.add(subObject);
-                        } else {
-                            array.add(entry);
-                        }
+                        processArraySchema(entry, array, s);
                     }
                 } else {
                     for (Object entry : (Collection) value) {
-                        final Object subObject = toObject(entry, ((ArraySchema) s).getItems());
-                        array.add(subObject);
+                        processArraySchema(entry, array, s);
                     }
                 }
-                body.put(name, array);
+                json.put(name, array);
             } else {
                 final Map<String, Schema> subProperties = s.getProperties();
                 if (Objects.isNull(subProperties) || subProperties.isEmpty()) {
-                    body.put(name, value);
+                    json.put(name, value);
                 } else {
-                    body.put(name, toObject(value, s));
+                    json.put(name, toJsonObject(value, s));
                 }
             }
         });
-        return body;
+        return json;
+    }
+
+    private void processArraySchema(final Object entry, final JsonArray elements, final Schema elementSchema) {
+        if (entry instanceof Map) {
+            final Object subObject = toJsonObject(entry, ((ArraySchema) elementSchema).getItems());
+            elements.add(subObject);
+        } else {
+            elements.add(entry);
+        }
     }
 
 }
