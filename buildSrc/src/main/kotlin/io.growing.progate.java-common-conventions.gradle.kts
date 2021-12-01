@@ -47,6 +47,10 @@ dependencies {
         implementation("com.graphql-java:graphql-java:17.0")
         implementation("com.graphql-java:graphql-java-extended-scalars:17.0")
 
+        implementation("io.swagger.parser.v3:swagger-parser:2.0.28")
+
+
+
     }
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")

@@ -9,18 +9,6 @@ plugins {
 dependencies {
     implementation(project(":core"))
     implementation(project(":grpc"))
-    implementation("com.google.code.gson:gson")
-    implementation("com.jayway.jsonpath:json-path")
-    implementation("io.swagger.parser.v3:swagger-parser:2.0.28")
-    implementation("io.grpc:grpc-stub")
-    implementation("io.vertx:vertx-web-client")
-    implementation("com.google.protobuf:protobuf-java-util")
-    implementation("com.google.guava:guava:30.1.1-jre")
-    implementation("com.google.protobuf:protobuf-java-util:3.18.0")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.5")
-
-    testImplementation("io.vertx:vertx-web-openapi")
-    testImplementation("io.vertx:vertx-web")
-    testImplementation("io.vertx:vertx-web-client")
+    implementation("io.swagger.parser.v3:swagger-parser")
 
 }
