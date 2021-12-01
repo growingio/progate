@@ -64,6 +64,9 @@ public class RestletTranscoder {
         final Map<String, Schema> properties = schema.getProperties();
         properties.forEach((name, s) -> {
             final Object value = values.get(name);
+            if (Objects.isNull(value)) {
+                return;
+            }
             if (s instanceof ArraySchema) {
                 final JsonArray array = new JsonArray();
                 if (value instanceof Object[]) {

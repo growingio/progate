@@ -20,10 +20,12 @@ class RestletTranscoderTest {
     @Test
     void testSerialize() {
         final List<Map<String, Object>> result = new ArrayList<>();
-        result.add(Map.of("id", 1, "name", "Cat", "tags", new String[]{"yang"},
-            "properties", List.of(Map.of("key", "city", "value", "Shanghai"))));
-        result.add(Map.of("id", 2, "name", "Tiger", "tags", Set.of("yellow"),
-            "properties", List.of(Map.of("key", "city", "value", "Beijing"))));
+        final Map<String, Object> cat = Map.of("id", 1, "name", "Cat", "tags", new String[]{"yang"},
+            "properties", List.of(Map.of("key", "city", "value", "Shanghai")), "device", Map.of("id", "12345"));
+        result.add(cat);
+        final Map<String, Object> tiger = Map.of("id", 2, "name", "Tiger", "tags", Set.of("yellow"),
+            "properties", List.of(Map.of("key", "city", "value", "Beijing")));
+        result.add(tiger);
 
         final MediaType mediaType = new MediaType();
         final ArraySchema schema = new ArraySchema();
@@ -35,14 +37,20 @@ class RestletTranscoderTest {
         properties.addProperties("key", new StringSchema());
         properties.addProperties("value", new StringSchema());
         items.addProperties("properties", new ArraySchema().items(properties));
+        final ObjectSchema device = new ObjectSchema();
+        device.addProperties("id", new StringSchema());
+        items.addProperties("device", device);
         schema.setItems(items);
         mediaType.schema(schema);
 
         final RestletTranscoder transcoder = new RestletTranscoder();
         final Object obj = transcoder.serialize(result, mediaType);
         Assertions.assertTrue(obj instanceof JsonArray);
+        Assertions.assertTrue(transcoder.serialize(new Object[]{cat, tiger}, mediaType) instanceof JsonArray);
         System.out.println(Json.encode(obj));
-//        Assertions.assertEquals("[{\"id\":1,\"name\":\"Cat\",\"tags\":[\"yang\"]},{\"id\":2,\"name\":\"Tiger\",\"tags\":[\"yellow\"]}]", Json.encode(obj));
+        Assertions.assertEquals("[{\"id\":1,\"name\":\"Cat\",\"tags\":[\"yang\"]," +
+            "\"properties\":[{\"key\":\"city\",\"value\":\"Shanghai\"}],\"device\":{\"id\":\"12345\"}}," +
+            "{\"id\":2,\"name\":\"Tiger\",\"tags\":[\"yellow\"],\"properties\":[{\"key\":\"city\",\"value\":\"Beijing\"}]}]", Json.encode(obj));
     }
 
 }
