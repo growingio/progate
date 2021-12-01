@@ -6,6 +6,7 @@ import io.growing.gateway.pipeline.Outbound;
 import io.growing.progate.restful.transcode.Coercing;
 import io.growing.progate.restful.transcode.RestletTranscoder;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.vertx.core.Handler;
@@ -38,7 +39,7 @@ public class Restlet implements Handler<HttpServerRequest> {
         this.transcoder = transcoder;
     }
 
-    public static Restlet of(Operation operation, Set<Outbound> outbounds, Upstream upstream, Map<String, Coercing> coercingSet) {
+    public static Restlet of(final OpenAPI openapi, Operation operation, Set<Outbound> outbounds, Upstream upstream, Map<String, Coercing> coercingSet) {
         Outbound outbound = null;
         for (Outbound ob : outbounds) {
             if ("grpc".equals(ob.protocol())) {
@@ -47,7 +48,7 @@ public class Restlet implements Handler<HttpServerRequest> {
         }
         assert Objects.nonNull(outbound);
         final String endpoint = (String) operation.getExtensions().get("x-grpc-endpoint");
-        final RestletTranscoder transcoder = new RestletTranscoder(coercingSet);
+        final RestletTranscoder transcoder = new RestletTranscoder(openapi.getComponents(), coercingSet);
         return new Restlet(operation, outbound, upstream, endpoint, transcoder);
     }
 
@@ -68,7 +69,6 @@ public class Restlet implements Handler<HttpServerRequest> {
     }
 
     private void sendRequest(final HttpServerRequest request, final JsonObject body) {
-        final RestletTranscoder transcoder = new RestletTranscoder();
         final String id = request.getHeader("X-Request-Id");
         final Map<String, Object> arguments = new HashMap<>(transcoder.parseParameters(request, operation.getParameters()));
         if (Objects.nonNull(body)) {
@@ -92,7 +92,6 @@ public class Restlet implements Handler<HttpServerRequest> {
 
     private Map<String, Object> readRequestBody(final JsonObject body) {
         final MediaType mediaType = operation.getRequestBody().getContent().get("application/json");
-        final RestletTranscoder transcoder = new RestletTranscoder();
         return transcoder.parseBody(body, mediaType);
     }
 

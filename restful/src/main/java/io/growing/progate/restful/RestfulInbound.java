@@ -55,18 +55,18 @@ public class RestfulInbound implements Inbound {
                 .flatMap(entry -> {
                     final String key = entry.getKey();
                     final String path = "/" + openapi.getInfo().getVersion() + PATH_PATTERN.matcher(key).replaceAll(":$1");
-                    return toEndpoints(service, outbounds, path, entry.getValue()).stream();
+                    return toEndpoints(service, outbounds, openapi, path, entry.getValue()).stream();
                 });
         }).collect(Collectors.toSet());
     }
 
     private Set<HttpEndpoint> toEndpoints(final ServiceMetadata service, final Set<Outbound> outbounds,
-                                          final String path, final PathItem item) {
+                                          final OpenAPI openapi, final String path, final PathItem item) {
         return item.readOperationsMap().entrySet().stream().map(entry -> {
             final HttpEndpoint endpoint = new HttpEndpoint();
             endpoint.setMethods(Set.of(HttpMethod.valueOf(entry.getKey().name())));
             endpoint.setPath(path);
-            endpoint.setHandler(Restlet.of(entry.getValue(), outbounds, service.upstream(), coercingSet));
+            endpoint.setHandler(Restlet.of(openapi, entry.getValue(), outbounds, service.upstream(), coercingSet));
             return endpoint;
         }).collect(Collectors.toSet());
     }

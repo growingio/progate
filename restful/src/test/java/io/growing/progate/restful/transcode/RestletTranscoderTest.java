@@ -43,7 +43,7 @@ class RestletTranscoderTest {
         schema.setItems(items);
         mediaType.schema(schema);
 
-        final RestletTranscoder transcoder = new RestletTranscoder();
+        final RestletTranscoder transcoder = new RestletTranscoder(null);
         final Object obj = transcoder.serialize(result, mediaType);
         Assertions.assertTrue(obj instanceof JsonArray);
         Assertions.assertTrue(transcoder.serialize(new Object[]{cat, tiger}, mediaType) instanceof JsonArray);

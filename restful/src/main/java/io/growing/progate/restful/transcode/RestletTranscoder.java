@@ -1,5 +1,6 @@
 package io.growing.progate.restful.transcode;
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
@@ -7,6 +8,7 @@ import io.swagger.v3.oas.models.parameters.Parameter;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -19,13 +21,15 @@ import java.util.Optional;
 
 public class RestletTranscoder {
 
+    private final Components components;
     private final Map<String, Coercing> coercingSet;
 
-    public RestletTranscoder() {
-        this(Collections.emptyMap());
+    public RestletTranscoder(Components components) {
+        this(components, Collections.emptyMap());
     }
 
-    public RestletTranscoder(Map<String, Coercing> coercingSet) {
+    public RestletTranscoder(Components components, Map<String, Coercing> coercingSet) {
+        this.components = components;
         this.coercingSet = coercingSet;
     }
 
@@ -82,9 +86,9 @@ public class RestletTranscoder {
 
 
     private void extractBody(final JsonObject body, final Map<String, Object> arguments, final Schema schema) {
-        final Map<String, Schema> properties = schema.getProperties();
+        final Map<String, Schema> properties = getSchemaProperties(schema);
         properties.forEach((name, s) -> {
-            final Map<String, Schema> subProperties = s.getProperties();
+            final Map<String, Schema> subProperties = getSchemaProperties(s);
             if (Objects.isNull(subProperties) || subProperties.isEmpty()) {
                 getCoercing(s).ifPresentOrElse(
                     coercing -> arguments.put(name, coercing.parseValue(body.getValue(name))),
@@ -101,7 +105,7 @@ public class RestletTranscoder {
     private JsonObject toJsonObject(final Object result, final Schema schema) {
         final JsonObject json = new JsonObject();
         final Map<String, Object> values = (Map<String, Object>) result;
-        final Map<String, Schema> properties = schema.getProperties();
+        final Map<String, Schema> properties = getSchemaProperties(schema);
         properties.forEach((name, s) -> {
             final Object value = values.get(name);
             if (Objects.isNull(value)) {
@@ -121,7 +125,7 @@ public class RestletTranscoder {
                 }
                 json.put(name, array);
             } else {
-                final Map<String, Schema> subProperties = s.getProperties();
+                final Map<String, Schema> subProperties = getSchemaProperties(s);
                 if (Objects.isNull(subProperties) || subProperties.isEmpty()) {
                     json.put(name, value);
                 } else {
@@ -139,6 +143,20 @@ public class RestletTranscoder {
         } else {
             elements.add(entry);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Schema> getSchemaProperties(final Schema schema) {
+        final String ref = schema.get$ref();
+        if (StringUtils.isNotBlank(ref) && Objects.nonNull(components)) {
+            final char flag = '/';
+            final int index = ref.lastIndexOf(flag);
+            final String refName = index > -1 ? ref.substring(index + 1) : ref;
+            if (components.getSchemas().containsKey(refName)) {
+                return components.getSchemas().get(refName).getProperties();
+            }
+        }
+        return schema.getProperties();
     }
 
     private Optional<Coercing> getCoercing(final Schema schema) {
