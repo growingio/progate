@@ -11,14 +11,6 @@ import java.util.Set;
  */
 public interface Inbound {
 
-//    Set<HttpApi> apis(List<ServiceMetadata> services);
-//
-//    void handle(HttpServerRequest request);
-//
-//    void handle(HttpApi httpApi, HttpServerRequest request);
-//
-//    void reload(List<ServiceMetadata> services, Set<Outgoing> outgoings, RuntimeContext context);
-
     Set<HttpEndpoint> endpoints(List<ServiceMetadata> services, Set<Outbound> outbounds, RuntimeContext context);
 
 }

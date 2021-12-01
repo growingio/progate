@@ -22,8 +22,11 @@ paths:
                       type: string
                     description:
                       type: string
-  /jobs/{jobId}:
+  /jobs/{id}:
     summary: Get Job
+    parameters:
+      - name: id
+        in: path
     get:
       summary: Get job by id
       x-grpc-endpoint: growing.graphql.example.JobService/Get

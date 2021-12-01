@@ -3,16 +3,54 @@ package io.growing.progate.restful.transcode;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+
 
 public class RestletTranscoder {
+
+    private final Map<String, Coercing> coercingSet;
+
+    public RestletTranscoder() {
+        this(Collections.emptyMap());
+    }
+
+    public RestletTranscoder(Map<String, Coercing> coercingSet) {
+        this.coercingSet = coercingSet;
+    }
+
+    public Map<String, Object> parseParameters(final HttpServerRequest request, final List<Parameter> parameters) {
+        if (Objects.isNull(parameters) || parameters.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        final Map<String, Object> args = new HashMap<>(parameters.size());
+        for (Parameter parameter : parameters) {
+            String name = parameter.getName();
+            String value = null;
+            if ("path".equalsIgnoreCase(parameter.getIn())) {
+                value = request.getParam(name);
+            } else if ("header".equalsIgnoreCase(parameter.getIn())) {
+                value = request.getHeader(name);
+            }
+            if (Objects.isNull(value)) {
+                continue;
+            }
+            final String parameterValue = value;
+            final Map<String, Object> extensions = parameter.getExtensions();
+            getCoercing(extensions).ifPresentOrElse(coercing -> args.put(name, coercing.parseValue(parameterValue)), () -> args.put(name, parameterValue));
+        }
+        return args;
+    }
 
     public Map<String, Object> parseBody(final JsonObject body, final MediaType mediaType) {
         if (Objects.isNull(mediaType)) {
@@ -48,7 +86,9 @@ public class RestletTranscoder {
         properties.forEach((name, s) -> {
             final Map<String, Schema> subProperties = s.getProperties();
             if (Objects.isNull(subProperties) || subProperties.isEmpty()) {
-                arguments.put(name, body.getValue(name));
+                getCoercing(s).ifPresentOrElse(
+                    coercing -> arguments.put(name, coercing.parseValue(body.getValue(name))),
+                    () -> arguments.put(name, body.getValue(name)));
             } else {
                 final JsonObject subObject = body.getJsonObject(name);
                 if (Objects.nonNull(subObject)) {
@@ -99,6 +139,26 @@ public class RestletTranscoder {
         } else {
             elements.add(entry);
         }
+    }
+
+    private Optional<Coercing> getCoercing(final Schema schema) {
+        final Map<String, Object> extensions = schema.getExtensions();
+        return getCoercing(extensions);
+    }
+
+    private Optional<Coercing> getCoercing(final Map<String, Object> extensions) {
+        if (coercingSet.isEmpty()) {
+            return Optional.empty();
+        }
+
+        if (Objects.isNull(extensions) || extensions.isEmpty()) {
+            return Optional.empty();
+        }
+        final String scalar = (String) extensions.get("x-scalar");
+        if (Objects.isNull(scalar) || scalar.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(coercingSet.get(scalar));
     }
 
 }

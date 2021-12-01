@@ -1,6 +1,6 @@
 package io.growing.progate.restful.transcode;
 
-public interface DataTranscoder<I, O> {
+public interface Coercing<I, O> {
 
     O serialize(Object result);
 

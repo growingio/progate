@@ -3,11 +3,11 @@ package io.growing.progate.restful;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Outbound;
+import io.growing.progate.restful.transcode.Coercing;
 import io.growing.progate.restful.transcode.RestletTranscoder;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.MediaType;
-import io.swagger.v3.oas.models.parameters.Parameter;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
@@ -15,9 +15,7 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -30,15 +28,17 @@ public class Restlet implements Handler<HttpServerRequest> {
     private final Outbound outbound;
     private final Upstream upstream;
     private final String endpoint;
+    private final RestletTranscoder transcoder;
 
-    private Restlet(Operation operation, Outbound outbound, Upstream upstream, String endpoint) {
+    private Restlet(Operation operation, Outbound outbound, Upstream upstream, String endpoint, RestletTranscoder transcoder) {
         this.outbound = outbound;
         this.upstream = upstream;
         this.endpoint = endpoint;
         this.operation = operation;
+        this.transcoder = transcoder;
     }
 
-    public static Restlet of(Operation operation, Set<Outbound> outbounds, Upstream upstream) {
+    public static Restlet of(Operation operation, Set<Outbound> outbounds, Upstream upstream, Map<String, Coercing> coercingSet) {
         Outbound outbound = null;
         for (Outbound ob : outbounds) {
             if ("grpc".equals(ob.protocol())) {
@@ -47,7 +47,8 @@ public class Restlet implements Handler<HttpServerRequest> {
         }
         assert Objects.nonNull(outbound);
         final String endpoint = (String) operation.getExtensions().get("x-grpc-endpoint");
-        return new Restlet(operation, outbound, upstream, endpoint);
+        final RestletTranscoder transcoder = new RestletTranscoder(coercingSet);
+        return new Restlet(operation, outbound, upstream, endpoint, transcoder);
     }
 
     @Override
@@ -67,15 +68,15 @@ public class Restlet implements Handler<HttpServerRequest> {
     }
 
     private void sendRequest(final HttpServerRequest request, final JsonObject body) {
+        final RestletTranscoder transcoder = new RestletTranscoder();
         final String id = request.getHeader("X-Request-Id");
-        final Map<String, Object> arguments = new HashMap<>(extreactParameters(request));
+        final Map<String, Object> arguments = new HashMap<>(transcoder.parseParameters(request, operation.getParameters()));
         if (Objects.nonNull(body)) {
             arguments.putAll(readRequestBody(body));
         }
         final RequestContext context = new RestletRequestContext(id, arguments);
         outbound.handle(upstream, endpoint, context).thenApply(result -> {
             final MediaType mediaType = operation.getResponses().getDefault().getContent().get("application/json");
-            final RestletTranscoder transcoder = new RestletTranscoder();
             return transcoder.serialize(result, mediaType);
         }).whenComplete((result, t) -> {
             if (Objects.nonNull(t)) {
@@ -87,23 +88,6 @@ public class Restlet implements Handler<HttpServerRequest> {
                 request.response().end(Json.encode(result));
             }
         });
-    }
-
-    private Map<String, Object> extreactParameters(HttpServerRequest request) {
-        final List<Parameter> parameters = operation.getParameters();
-        if (Objects.isNull(parameters) || parameters.isEmpty()) {
-            return Collections.emptyMap();
-        }
-        final Map<String, Object> args = new HashMap<>(parameters.size());
-        for (Parameter parameter : parameters) {
-            String name = parameter.getName();
-            if ("path".equalsIgnoreCase(parameter.getIn())) {
-                args.put(name, request.getParam(name));
-            } else if ("header".equalsIgnoreCase(parameter.getIn())) {
-                args.put(name, request.getHeader(name));
-            }
-        }
-        return args;
     }
 
     private Map<String, Object> readRequestBody(final JsonObject body) {
