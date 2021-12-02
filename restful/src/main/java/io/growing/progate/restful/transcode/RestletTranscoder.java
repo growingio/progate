@@ -121,7 +121,7 @@ public class RestletTranscoder {
             } else {
                 final Map<String, Schema> subProperties = getSchemaProperties(s);
                 if (Objects.isNull(subProperties) || subProperties.isEmpty()) {
-                    json.put(name, value);
+                    getCoercing(s).ifPresentOrElse(coercing -> json.put(name, coercing.serialize(value)), () -> json.put(name, value));
                 } else {
                     json.put(name, toJsonObject(value, s));
                 }
