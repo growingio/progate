@@ -8,7 +8,7 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 import io.growing.gateway.graphql.function.TriConsumer;
 import io.growing.gateway.meta.EndpointDefinition;
 import io.growing.gateway.meta.ServiceMetadata;
-import io.growing.gateway.utilities.CollectionUtilities;
+import io.growing.progate.utilities.CollectionUtilities;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

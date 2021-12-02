@@ -2,7 +2,7 @@ package io.growing.progate.cluster;
 
 import io.growing.gateway.cluster.LoadBalance;
 import io.growing.gateway.meta.ServerNode;
-import io.growing.gateway.utilities.CollectionUtilities;
+import io.growing.progate.utilities.CollectionUtilities;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;

@@ -1,4 +1,4 @@
-package io.growing.gateway.utilities;
+package io.growing.progate.utilities;
 
 import com.google.common.collect.Sets;
 import org.junit.jupiter.api.Assertions;
@@ -9,10 +9,10 @@ import java.util.HashSet;
 /**
  * @author AI
  */
-public class CollectionUtilsTests {
+class CollectionUtilsTest {
 
     @Test
-    public void test() {
+    void test() {
         Assertions.assertTrue(CollectionUtilities.isEmpty(null));
         Assertions.assertTrue(CollectionUtilities.isEmpty(new HashSet<>()));
         Assertions.assertFalse(CollectionUtilities.isNotEmpty(null));

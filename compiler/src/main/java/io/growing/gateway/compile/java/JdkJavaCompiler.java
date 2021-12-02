@@ -2,8 +2,8 @@ package io.growing.gateway.compile.java;
 
 import io.growing.gateway.compile.CompilationFailedException;
 import io.growing.gateway.compile.Compiler;
-import io.growing.gateway.utilities.CollectionUtilities;
-import io.growing.gateway.utilities.FileUtilities;
+import io.growing.progate.utilities.CollectionUtilities;
+import io.growing.progate.utilities.FileUtilities;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.tools.JavaCompiler;

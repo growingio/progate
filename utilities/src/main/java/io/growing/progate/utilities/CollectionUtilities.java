@@ -1,4 +1,4 @@
-package io.growing.gateway.utilities;
+package io.growing.progate.utilities;
 
 import java.util.Collection;
 import java.util.Objects;

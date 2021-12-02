@@ -17,7 +17,7 @@ import io.growing.gateway.graphql.plugin.GraphqlInboundPlugin;
 import io.growing.gateway.graphql.request.GraphqlExecutionPayload;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outbound;
-import io.growing.gateway.utilities.CollectionUtilities;
+import io.growing.progate.utilities.CollectionUtilities;
 import io.growing.progate.http.Directive;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;

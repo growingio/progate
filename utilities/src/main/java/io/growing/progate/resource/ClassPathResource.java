@@ -1,4 +1,4 @@
-package io.growing.gateway.resource;
+package io.growing.progate.resource;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;

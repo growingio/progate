@@ -19,7 +19,7 @@ import com.google.protobuf.UInt32Value;
 import com.google.protobuf.UInt64Value;
 import com.google.protobuf.util.JsonFormat;
 import io.growing.gateway.grpc.helper.MapWrapper;
-import io.growing.gateway.utilities.CollectionUtilities;
+import io.growing.progate.utilities.CollectionUtilities;
 
 import java.util.Collection;
 import java.util.HashMap;
