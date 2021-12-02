@@ -1,6 +1,6 @@
 package io.growing.gateway.grpc.ctrl;
 
-import io.growing.gateway.ctrl.AbstractScheduledHealthService;
+import io.growing.progate.ctrl.AbstractScheduledHealthService;
 import io.growing.gateway.ctrl.HealthStatus;
 import io.growing.gateway.grpc.ChannelFactory;
 import io.growing.gateway.meta.ServerNode;

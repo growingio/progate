@@ -1,5 +1,6 @@
-package io.growing.gateway.cluster;
+package io.growing.progate.cluster;
 
+import io.growing.gateway.cluster.LoadBalance;
 import io.growing.gateway.meta.ServerNode;
 import io.growing.gateway.utilities.CollectionUtilities;
 

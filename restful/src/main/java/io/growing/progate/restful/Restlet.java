@@ -3,6 +3,7 @@ package io.growing.progate.restful;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.meta.Upstream;
 import io.growing.gateway.pipeline.Outbound;
+import io.growing.progate.http.Directive;
 import io.growing.progate.restful.transcode.Coercing;
 import io.growing.progate.restful.transcode.RestletTranscoder;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -21,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class Restlet implements Handler<HttpServerRequest> {
+public class Restlet implements Handler<HttpServerRequest>, Directive {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Restlet.class);
 
@@ -69,12 +70,13 @@ public class Restlet implements Handler<HttpServerRequest> {
     }
 
     private void sendRequest(final HttpServerRequest request, final JsonObject body) {
-        final String id = request.getHeader("X-Request-Id");
-        final Map<String, Object> arguments = new HashMap<>(transcoder.parseParameters(request, operation.getParameters()));
+        final Map<String, Object> arguments = new HashMap<>();
+        arguments.put("remoteAddress", getRemoteAddress(request));
+        arguments.putAll(transcoder.parseParameters(request, operation.getParameters()));
         if (Objects.nonNull(body)) {
             arguments.putAll(readRequestBody(body));
         }
-        final RequestContext context = new RestletRequestContext(id, arguments);
+        final RequestContext context = new RestletRequestContext(getRequestId(request), arguments);
         outbound.handle(upstream, endpoint, context).thenApply(result -> {
             final MediaType mediaType = operation.getResponses().getDefault().getContent().get("application/json");
             return transcoder.serialize(result, mediaType);

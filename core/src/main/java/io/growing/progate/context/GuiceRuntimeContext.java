@@ -1,6 +1,7 @@
-package io.growing.gateway.context;
+package io.growing.progate.context;
 
 import com.google.inject.Injector;
+import io.growing.gateway.context.RuntimeContext;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.exception.PluginNotFoundException;
 import io.growing.gateway.meta.Upstream;

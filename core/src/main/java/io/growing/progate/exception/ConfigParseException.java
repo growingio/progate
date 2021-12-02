@@ -1,4 +1,4 @@
-package io.growing.gateway.exception;
+package io.growing.progate.exception;
 
 public class ConfigParseException extends RuntimeException{
 

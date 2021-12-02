@@ -1,7 +1,7 @@
-package io.growing.gateway.internal.discovery;
+package io.growing.progate.internal.discovery;
 
 import io.growing.gateway.config.ConfigFactory;
-import io.growing.gateway.config.UpstreamConfig;
+import io.growing.progate.config.UpstreamConfig;
 import io.growing.gateway.ctrl.HealthService;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.meta.Upstream;

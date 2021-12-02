@@ -3,7 +3,7 @@ package io.growing.progate.bootstrap;
 import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import io.growing.gateway.context.GuiceRuntimeContext;
+import io.growing.progate.context.GuiceRuntimeContext;
 import io.growing.gateway.context.RuntimeContext;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.discovery.ServiceDiscoveryService;

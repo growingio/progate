@@ -1,8 +1,7 @@
-package io.growing.gateway.config;
+package io.growing.progate.config;
 
 import io.growing.gateway.cluster.LoadBalance;
-import io.growing.gateway.cluster.RoundRobin;
-import io.growing.gateway.ctrl.HealthCheck;
+import io.growing.progate.cluster.RoundRobin;
 import io.growing.gateway.ctrl.HealthService;
 import io.growing.gateway.ctrl.HealthStatus;
 import io.growing.gateway.meta.ServerNode;

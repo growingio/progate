@@ -2,8 +2,6 @@ package io.growing.gateway.graphql.handler;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import com.google.common.net.HttpHeaders;
-import com.google.common.net.MediaType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -20,9 +18,9 @@ import io.growing.gateway.graphql.request.GraphqlExecutionPayload;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outbound;
 import io.growing.gateway.utilities.CollectionUtilities;
+import io.growing.progate.http.Directive;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import org.apache.commons.lang3.StringUtils;
@@ -37,13 +35,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-public class GraphqlEndpointHandler implements Handler<HttpServerRequest> {
+public class GraphqlEndpointHandler implements Handler<HttpServerRequest>, Directive {
 
-    private static final String JSON_UTF_8 = MediaType.JSON_UTF_8.toString();
     private static final Logger LOGGER = LoggerFactory.getLogger(GraphqlEndpointHandler.class);
     private final Gson gson;
     private final GraphQL graphql;
@@ -88,7 +84,7 @@ public class GraphqlEndpointHandler implements Handler<HttpServerRequest> {
                                 .map(ExecutionResult::toSpecification).collect(Collectors.toList());
                         }).whenComplete((results, t) -> {
                             HttpServerResponse response = request.response();
-                            response.headers().set(HttpHeaders.CONTENT_TYPE, JSON_UTF_8);
+                            asJsonContentType(response);
                             String chunk = gson.toJson(results);
                             response.end(chunk);
                         });
@@ -101,7 +97,7 @@ public class GraphqlEndpointHandler implements Handler<HttpServerRequest> {
                                 endError(request.response(), HttpResponseStatus.INTERNAL_SERVER_ERROR, t, gson);
                             } else {
                                 HttpServerResponse response = request.response();
-                                response.headers().set(HttpHeaders.CONTENT_TYPE, JSON_UTF_8);
+                                asJsonContentType(response);
                                 String chunk = gson.toJson(r.toSpecification());
                                 response.end(chunk);
                                 if (CollectionUtilities.isNotEmpty(r.getErrors())) {
@@ -148,7 +144,7 @@ public class GraphqlEndpointHandler implements Handler<HttpServerRequest> {
     @SuppressWarnings("unchecked")
     private void endError(final HttpServerResponse response, final HttpResponseStatus status, final Throwable cause, final Gson gson) {
         LOGGER.error(cause.getLocalizedMessage(), cause);
-        response.headers().set(HttpHeaders.CONTENT_TYPE, JSON_UTF_8);
+        asJsonContentType(response);
         response.setStatusCode(status.code());
         final ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
         String message = cause.getLocalizedMessage();
@@ -157,26 +153,6 @@ public class GraphqlEndpointHandler implements Handler<HttpServerRequest> {
         }
         builder.put("errors", Sets.newHashSet(Map.of("message", message)));
         response.end(gson.toJson(builder.build()));
-    }
-
-    private String getRemoteAddress(final HttpServerRequest request) {
-        final MultiMap headers = request.headers();
-        String headerValue = headers.get(HttpHeaders.X_FORWARDED_FOR);
-        if (Objects.isNull(headerValue)) {
-            headerValue = headers.get("X-Real-IP");
-        }
-        if (StringUtils.isBlank(headerValue)) {
-            return request.remoteAddress().hostAddress();
-        }
-        return StringUtils.split(headerValue, ',')[0];
-    }
-
-    private String getRequestId(final HttpServerRequest request) {
-        final String headerValue = request.headers().get(HttpHeaders.X_REQUEST_ID);
-        if (Objects.isNull(headerValue)) {
-            return UUID.randomUUID().toString();
-        }
-        return headerValue;
     }
 
 }
