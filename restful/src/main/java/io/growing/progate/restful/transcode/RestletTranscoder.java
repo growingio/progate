@@ -40,18 +40,12 @@ public class RestletTranscoder {
         final Map<String, Object> args = new HashMap<>(parameters.size());
         for (Parameter parameter : parameters) {
             String name = parameter.getName();
-            String value = null;
-            if ("path".equalsIgnoreCase(parameter.getIn())) {
-                value = request.getParam(name);
-            } else if ("header".equalsIgnoreCase(parameter.getIn())) {
-                value = request.getHeader(name);
-            }
+            final String value = "header".equalsIgnoreCase(parameter.getIn()) ? request.getHeader(name) : request.getParam(name);
             if (Objects.isNull(value)) {
                 continue;
             }
-            final String parameterValue = value;
             final Map<String, Object> extensions = parameter.getExtensions();
-            getCoercing(extensions).ifPresentOrElse(coercing -> args.put(name, coercing.parseValue(parameterValue)), () -> args.put(name, parameterValue));
+            getCoercing(extensions).ifPresentOrElse(coercing -> args.put(name, coercing.parseValue(value)), () -> args.put(name, value));
         }
         return args;
     }
