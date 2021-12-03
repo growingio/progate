@@ -1,5 +1,6 @@
 package io.growing.progate.restful.transcode;
 
+import io.growing.progate.resource.ClassPathResource;
 import io.swagger.v3.oas.models.media.ArraySchema;
 import io.swagger.v3.oas.models.media.IntegerSchema;
 import io.swagger.v3.oas.models.media.MediaType;
@@ -7,9 +8,11 @@ import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +54,41 @@ class RestletTranscoderTest {
         Assertions.assertEquals("[{\"id\":1,\"name\":\"Cat\",\"tags\":[\"yang\"]," +
             "\"properties\":[{\"key\":\"city\",\"value\":\"Shanghai\"}],\"device\":{\"id\":\"12345\"}}," +
             "{\"id\":2,\"name\":\"Tiger\",\"tags\":[\"yellow\"],\"properties\":[{\"key\":\"city\",\"value\":\"Beijing\"}]}]", Json.encode(obj));
+    }
+
+    @Test
+    void testParseBody() throws IOException {
+        final RestletTranscoder transcoder = new RestletTranscoder(null);
+        final MediaType mediaType = buildMediaType();
+        final ClassPathResource resource = new ClassPathResource("/body.json");
+        final JsonObject json = new JsonObject(resource.utf8String());
+        final Map<String, Object> body = transcoder.parseBody(json, mediaType);
+        Assertions.assertNotNull(body);
+        Assertions.assertEquals(5, body.size());
+        Set.of("name", "id", "device", "properties", "tags").forEach(key -> Assertions.assertTrue(body.containsKey(key)));
+        final Object properties = body.get("properties");
+        Assertions.assertTrue(properties instanceof List);
+        for (Object element : (List) properties) {
+            Assertions.assertTrue(element instanceof Map);
+        }
+    }
+
+
+    private MediaType buildMediaType() {
+        final MediaType mediaType = new MediaType();
+        final ObjectSchema schema = new ObjectSchema();
+        schema.addProperties("id", new IntegerSchema());
+        schema.addProperties("name", new StringSchema());
+        schema.addProperties("tags", new ArraySchema().type("string"));
+        final ObjectSchema properties = new ObjectSchema();
+        properties.addProperties("key", new StringSchema());
+        properties.addProperties("value", new StringSchema());
+        schema.addProperties("properties", new ArraySchema().items(properties));
+        final ObjectSchema device = new ObjectSchema();
+        device.addProperties("id", new StringSchema());
+        schema.addProperties("device", device);
+        mediaType.schema(schema);
+        return mediaType;
     }
 
 }

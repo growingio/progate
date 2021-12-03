@@ -1,0 +1,16 @@
+{
+  "id": 1,
+  "name": "cat",
+  "tags": [
+    "yang"
+  ],
+  "properties": [
+    {
+      "key": "city",
+      "value": "Shanghai"
+    }
+  ],
+  "device": {
+    "id": "12345"
+  }
+}

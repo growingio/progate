@@ -10,9 +10,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -54,7 +56,7 @@ public class RestletTranscoder {
         if (Objects.isNull(mediaType)) {
             return Collections.emptyMap();
         }
-        final Map<String, Object> arguments = new HashMap<>();
+        final Map<String, Object> arguments = new LinkedHashMap<>();
         extractBody(body, arguments, mediaType.getSchema());
         return arguments;
     }
@@ -79,18 +81,40 @@ public class RestletTranscoder {
     }
 
 
+    @SuppressWarnings("unchecked")
     private void extractBody(final JsonObject body, final Map<String, Object> arguments, final Schema schema) {
         final Map<String, Schema> properties = getSchemaProperties(schema);
         properties.forEach((name, s) -> {
-            final Map<String, Schema> subProperties = getSchemaProperties(s);
-            if (Objects.isNull(subProperties) || subProperties.isEmpty()) {
-                getCoercing(s).ifPresentOrElse(
-                    coercing -> arguments.put(name, coercing.parseValue(body.getValue(name))),
-                    () -> arguments.put(name, body.getValue(name)));
+            final Object value = body.getValue(name);
+            if (Objects.isNull(value)) {
+                return;
+            }
+            if (s instanceof ArraySchema) {
+                final JsonArray array = body.getJsonArray(name);
+                final List<Object> entries = new ArrayList<>(array.size());
+                for (Object element : array) {
+                    if (element instanceof JsonObject) {
+                        final Map<String, Object> elementObject = new LinkedHashMap<>();
+                        extractBody((JsonObject) element, elementObject, ((ArraySchema) s).getItems());
+                        entries.add(elementObject);
+                    } else {
+                        entries.add(element);
+                    }
+                }
+                arguments.put(name, entries);
             } else {
-                final JsonObject subObject = body.getJsonObject(name);
-                if (Objects.nonNull(subObject)) {
-                    extractBody(subObject, arguments, s);
+                final Map<String, Schema> subProperties = getSchemaProperties(s);
+                if (Objects.isNull(subProperties) || subProperties.isEmpty()) {
+                    getCoercing(s).ifPresentOrElse(
+                        coercing -> arguments.put(name, coercing.parseValue(body.getValue(name))),
+                        () -> arguments.put(name, body.getValue(name)));
+                } else {
+                    final JsonObject subObject = body.getJsonObject(name);
+                    if (Objects.nonNull(subObject)) {
+                        final Map<String, Object> elementObject = new LinkedHashMap<>();
+                        extractBody(subObject, elementObject, s);
+                        arguments.put(name, elementObject);
+                    }
                 }
             }
         });
