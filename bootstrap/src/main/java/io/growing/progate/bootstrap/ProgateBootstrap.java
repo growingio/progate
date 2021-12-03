@@ -3,7 +3,6 @@ package io.growing.progate.bootstrap;
 import com.google.common.collect.Sets;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import io.growing.progate.context.GuiceRuntimeContext;
 import io.growing.gateway.context.RuntimeContext;
 import io.growing.gateway.discovery.ClusterDiscoveryService;
 import io.growing.gateway.discovery.ServiceDiscoveryService;
@@ -17,6 +16,7 @@ import io.growing.progate.bootstrap.config.ConfigEntry;
 import io.growing.progate.bootstrap.config.ProgateConfig;
 import io.growing.progate.bootstrap.di.ProgateModule;
 import io.growing.progate.bootstrap.loader.InboundLoader;
+import io.growing.progate.context.GuiceRuntimeContext;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServer;
@@ -117,6 +117,11 @@ public class ProgateBootstrap {
                 })
             )
         );
+        upstreams.forEach(upstream -> outbounds.forEach(outbound -> {
+            if (upstream.protocol().equals(outbound.protocol())) {
+                outbound.indexing(upstream);
+            }
+        }));
     }
 
     private static void setSystemEnvironments(final ProgateConfig config) {

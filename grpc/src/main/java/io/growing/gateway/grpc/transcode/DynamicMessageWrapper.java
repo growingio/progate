@@ -23,6 +23,7 @@ import io.growing.progate.utilities.CollectionUtilities;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -54,15 +55,13 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
         FloatValue.getDescriptor().getFullName(), 0f,
         DoubleValue.getDescriptor().getFullName(), 0d
     );
-    private static final Set<String> WELL_KNOWN_VALUE_FIELDS = WELL_KNOWN_TYPES
-        .stream().map(DynamicMessageWrapper::createFieldName).collect(Collectors.toSet());
     private static final String WELL_KNOWN_ANY = createFieldName(Any.getDescriptor().getFullName());
 
     private static String createFieldName(final String fullTypeName) {
         return fullTypeName + ".value";
     }
 
-    private final Set<Descriptors.Descriptor> descriptors;
+    private final List<Descriptors.Descriptor> descriptors;
 
     public static Optional<Object> extractValue(final DynamicMessage dm) {
         final String fullName = dm.getDescriptorForType().getFullName();
@@ -80,7 +79,7 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
         return dm.getAllFields().entrySet().iterator().next().getValue();
     }
 
-    public DynamicMessageWrapper(final DynamicMessage origin, final Set<Descriptors.Descriptor> descriptors) {
+    public DynamicMessageWrapper(final DynamicMessage origin, final List<Descriptors.Descriptor> descriptors) {
         super(new HashMap<String, Object>());
         Map<String, Object> underlying = super.getUnderlying();
         try {
@@ -89,17 +88,36 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
             final String json = JsonFormat.printer().includingDefaultValueFields().usingTypeRegistry(builder.build()).print(origin);
             Map map = new Gson().fromJson(json, Map.class);
             underlying.putAll(map);
+            underlying.put("@type", origin.getDescriptorForType().getFullName());
         } catch (InvalidProtocolBufferException e) {
             // ignore
         }
         origin.getDescriptorForType().getFields().forEach(field -> {
             if (field.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE) {
-                final Object defaultValue = field.getDefaultValue();
-                if (!underlying.containsKey(field.getName())) {
-                    underlying.put(field.getName(), defaultValue);
+                final Object value = origin.getField(field);
+                if (Objects.nonNull(value)) {
+                    underlying.put(field.getName(), value);
+                    underlying.put(field.getJsonName(), value);
+                } else {
+                    final Object defaultValue = field.getDefaultValue();
+                    if (!underlying.containsKey(field.getName())) {
+                        underlying.put(field.getName(), defaultValue);
+                    }
+                    if (!underlying.containsKey(field.getJsonName())) {
+                        underlying.put(field.getJsonName(), defaultValue);
+                    }
                 }
-                if (!underlying.containsKey(field.getJsonName())) {
-                    underlying.put(field.getJsonName(), defaultValue);
+            } else if (field.isRepeated()) {
+                final Object value = origin.getField(field);
+                if (Objects.nonNull(value) && !((Collection) value).isEmpty()) {
+                    underlying.put(field.getName(), value);
+                    underlying.put(field.getJsonName(), value);
+                }
+            } else {
+                final Object value = origin.getField(field);
+                if (Objects.nonNull(value)) {
+                    underlying.put(field.getName(), value);
+                    underlying.put(field.getJsonName(), value);
                 }
             }
         });
@@ -128,7 +146,7 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
     private Object wrapObject(final Object value) {
         if (value instanceof DynamicMessage) {
             final DynamicMessage field = (DynamicMessage) value;
-            if (WELL_KNOWN_VALUE_FIELDS.contains(field.getDescriptorForType().getFullName())) {
+            if (WELL_KNOWN_TYPES.contains(field.getDescriptorForType().getFullName())) {
                 return extractWellKnownValue(field);
             } else {
                 final Optional<DynamicMessage> anyOpt = extractAny(field, descriptors);
@@ -141,11 +159,11 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
         return value;
     }
 
-    private Optional<DynamicMessage> extractAny(final DynamicMessage field, final Set<Descriptors.Descriptor> descriptors) {
+    private Optional<DynamicMessage> extractAny(final DynamicMessage field, final List<Descriptors.Descriptor> descriptors) {
         if (field.getAllFields().size() == 2) {
             for (Map.Entry<Descriptors.FieldDescriptor, Object> entry : field.getAllFields().entrySet()) {
                 if (WELL_KNOWN_ANY.equals(entry.getKey().getFullName()) && CollectionUtilities.isNotEmpty(descriptors)) {
-                    final DynamicMessageWrapper any = new DynamicMessageWrapper(field, null);
+                    final DynamicMessageWrapper any = new DynamicMessageWrapper(field, descriptors);
                     final String typeUrl = (String) any.get("type_url");
                     final int index = typeUrl.lastIndexOf('/');
                     final String fullName = typeUrl.substring(index + 1);

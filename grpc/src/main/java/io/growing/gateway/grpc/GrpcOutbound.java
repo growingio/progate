@@ -47,6 +47,11 @@ public class GrpcOutbound implements Outbound {
     }
 
     @Override
+    public void indexing(Upstream upstream) {
+        resolvers.get(upstream);
+    }
+
+    @Override
     public CompletionStage<?> handle(Upstream upstream, String endpoint, RequestContext request) {
         final ServiceResolver resolver = resolvers.get(upstream);
         final Descriptors.MethodDescriptor methodDescriptor = resolver.getMethodDescriptor(endpoint);
@@ -64,8 +69,9 @@ public class GrpcOutbound implements Outbound {
             ClientCalls.asyncServerStreamingCall(call, message, observer);
             return observer.toCompletionStage().thenApply(collection -> {
                 final List<Object> values = new LinkedList<>();
+                final List<Descriptors.Descriptor> descriptors = collectTypeDescriptors(resolver);
                 for (DynamicMessage dm : collection) {
-                    values.add(transcodeResponse(dm, resolver.getTypeDescriptors()));
+                    values.add(transcodeResponse(dm, descriptors));
                 }
                 return values;
             });
@@ -76,7 +82,8 @@ public class GrpcOutbound implements Outbound {
                 if (methodDescriptor.getOutputType().getFullName().equals(Empty.getDescriptor().getFullName())) {
                     return true;
                 } else {
-                    return transcodeResponse(dm, resolver.getTypeDescriptors());
+                    final List<Descriptors.Descriptor> descriptors = collectTypeDescriptors(resolver);
+                    return transcodeResponse(dm, descriptors);
                 }
             });
         }
@@ -103,9 +110,21 @@ public class GrpcOutbound implements Outbound {
         return ClientInterceptors.intercept(origin, interceptor);
     }
 
-    private Object transcodeResponse(final DynamicMessage dm, final Set<Descriptors.Descriptor> descriptors) {
+    private Object transcodeResponse(final DynamicMessage dm, final List<Descriptors.Descriptor> descriptors) {
         final Optional<Object> valueOpt = DynamicMessageWrapper.extractValue(dm);
         return valueOpt.orElseGet(() -> new DynamicMessageWrapper(dm, descriptors));
+    }
+
+    private List<Descriptors.Descriptor> collectTypeDescriptors(final ServiceResolver resolver) {
+        final List<Descriptors.Descriptor> descriptors = new LinkedList<>();
+        descriptors.addAll(resolver.getTypeDescriptors());
+        for (ServiceResolver entry : resolvers.asMap().values()) {
+            if (entry.equals(resolver)) {
+                continue;
+            }
+            descriptors.addAll(entry.getTypeDescriptors());
+        }
+        return descriptors;
     }
 
 }

@@ -12,6 +12,8 @@ public interface Outbound {
 
     String protocol();
 
+    void indexing(Upstream upstream);
+
     CompletionStage<?> handle(Upstream upstream, String endpoint, RequestContext request);
 
 }
