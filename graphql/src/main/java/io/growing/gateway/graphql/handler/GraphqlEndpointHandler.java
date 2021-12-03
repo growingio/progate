@@ -58,15 +58,18 @@ public class GraphqlEndpointHandler implements Handler<HttpServerRequest>, Direc
                 return plugin;
             }).collect(Collectors.toList());
         final GraphqlBuilder builder = GraphqlBuilder.newBuilder();
-        final Set<String> schemes = config.getSchemas().stream().map(url -> {
-            try {
-                return Resources.from(url).utf8String();
-            } catch (IOException e) {
-                throw new IllegalArgumentException("Cannot load common schema: " + url, e);
-            }
-        }).collect(Collectors.toSet());
+        if (CollectionUtilities.isNotEmpty(config.getSchemas())) {
+            final Set<String> schemes = config.getSchemas().stream().map(url -> {
+                try {
+                    return Resources.from(url).utf8String();
+                } catch (IOException e) {
+                    throw new IllegalArgumentException("Cannot load common schema: " + url, e);
+                }
+            }).collect(Collectors.toSet());
+            builder.schemas(schemes);
+        }
         final DataFetcherExceptionHandler exceptionHandler = new SimpleDataFetcherExceptionHandler();
-        this.graphql = builder.outgoings(outbounds).schemas(schemes)
+        this.graphql = builder.outgoings(outbounds)
             .services(services).plugins(plugins).exceptionHandler(exceptionHandler).build();
     }
 

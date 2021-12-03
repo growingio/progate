@@ -1,5 +1,6 @@
 package io.growing.gateway.example;
 
+import com.google.protobuf.Empty;
 import com.google.protobuf.StringValue;
 import io.grpc.stub.StreamObserver;
 
@@ -24,4 +25,9 @@ public class JobServiceImpl extends JobServiceGrpc.JobServiceImplBase {
         responseObserver.onCompleted();
     }
 
+    @Override
+    public void delete(DeleteJobRequest request, StreamObserver<Empty> responseObserver) {
+        responseObserver.onNext(Empty.newBuilder().build());
+        responseObserver.onCompleted();
+    }
 }

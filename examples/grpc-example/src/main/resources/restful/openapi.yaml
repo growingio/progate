@@ -42,3 +42,12 @@ paths:
                     type: string
                   description:
                     type: string
+    delete:
+      summary: Delete job by id
+      x-grpc-endpoint: growing.graphql.example.JobService/Delete
+      parameters:
+        - name: id
+          in: path
+      responses:
+        204:
+          description: No content

@@ -36,7 +36,7 @@ public class RestfulInbound implements Inbound {
                 final Object instance = Class.forName(entry.getValue()).getConstructor(new Class[]{}).newInstance();
                 coercingSet.put(entry.getKey(), (Coercing) instance);
             }
-        } catch (Throwable t) {
+        } catch (Exception t) {
             throw new NewScalarInstanceException(t.getMessage(), t);
         }
     }

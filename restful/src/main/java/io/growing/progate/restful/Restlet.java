@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.Json;
@@ -48,6 +49,9 @@ public class Restlet implements Handler<HttpServerRequest>, Directive {
             }
         }
         assert Objects.nonNull(outbound);
+        if (!operation.getExtensions().containsKey("x-grpc-endpoint")) {
+            throw new IllegalArgumentException("Endpoint can not be empty.");
+        }
         final String endpoint = (String) operation.getExtensions().get("x-grpc-endpoint");
         final RestletTranscoder transcoder = new RestletTranscoder(openapi.getComponents(), coercingSet);
         return new Restlet(operation, outbound, upstream, endpoint, transcoder);
@@ -55,17 +59,23 @@ public class Restlet implements Handler<HttpServerRequest>, Directive {
 
     @Override
     public void handle(HttpServerRequest request) {
-        if (Objects.nonNull(operation.getRequestBody())) {
-            request.body(ar -> {
-                if (ar.succeeded()) {
-                    final JsonObject body = ar.result().toJsonObject();
-                    sendRequest(request, body);
-                } else {
-                    //
-                }
-            });
-        } else {
-            sendRequest(request, null);
+        try {
+            if (Objects.nonNull(operation.getRequestBody())) {
+                request.body(ar -> {
+                    if (ar.succeeded()) {
+                        final JsonObject body = ar.result().toJsonObject();
+                        sendRequest(request, body);
+                    } else {
+                        //
+                    }
+                });
+            } else {
+                sendRequest(request, null);
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getLocalizedMessage(), e);
+            request.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
+            request.response().end(HttpResponseStatus.INTERNAL_SERVER_ERROR.reasonPhrase());
         }
     }
 
@@ -77,19 +87,31 @@ public class Restlet implements Handler<HttpServerRequest>, Directive {
             arguments.putAll(readRequestBody(body));
         }
         final RequestContext context = new RestletRequestContext(getRequestId(request), arguments);
-        outbound.handle(upstream, endpoint, context).thenApply(result -> {
-            final MediaType mediaType = operation.getResponses().getDefault().getContent().get("application/json");
-            return transcoder.serialize(result, mediaType);
-        }).whenComplete((result, t) -> {
+        outbound.handle(upstream, endpoint, context).whenComplete((result, t) -> {
             if (Objects.nonNull(t)) {
                 LOGGER.error(t.getLocalizedMessage(), t);
                 request.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
                 request.response().end(HttpResponseStatus.INTERNAL_SERVER_ERROR.reasonPhrase());
             } else {
-                request.response().headers().add("Content-Type", "application/json;charset=utf-8");
-                request.response().end(Json.encode(result));
+                sendResponse(request, result);
             }
         });
+    }
+
+    private void sendResponse(final HttpServerRequest request, final Object result) {
+        for (Map.Entry<String, ApiResponse> entry : operation.getResponses().entrySet()) {
+            final int statusCode = "default".equals(entry.getKey()) ? HttpResponseStatus.OK.code() : Integer.parseInt(entry.getKey());
+            request.response().setStatusCode(statusCode);
+            if (Objects.nonNull(entry.getValue().getContent())) {
+                final MediaType mediaType = entry.getValue().getContent().get("application/json");
+                if (Objects.nonNull(mediaType)) {
+                    asJsonContentType(request.response());
+                    final Object responseBody = transcoder.serialize(result, mediaType);
+                    request.response().send(Json.encode(responseBody));
+                }
+            }
+            request.response().end();
+        }
     }
 
     private Map<String, Object> readRequestBody(final JsonObject body) {

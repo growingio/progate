@@ -20,7 +20,7 @@ public class ClassPathResource implements Resources.Resource {
     public byte[] bytes() throws IOException {
         try (final InputStream is = this.getClass().getResourceAsStream(path)) {
             if (Objects.isNull(is)) {
-                return null;
+                return new byte[]{};
             }
             return ByteStreams.toByteArray(is);
         }
