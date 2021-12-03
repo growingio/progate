@@ -12,6 +12,7 @@ import io.growing.gateway.meta.Upstream;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -47,14 +48,14 @@ public class GraphqlSchemaParserTests {
 
     @Test
     public void test() {
-        final GraphqlSchemaParser parser = new GraphqlSchemaParser();
+        final GraphqlSchemaParser parser = new GraphqlSchemaParser(Collections.emptySet());
         final TypeDefinitionRegistry registry = parser.parse(service);
         assertResult(registry);
     }
 
     @Test
     public void testParseSchemes() {
-        final GraphqlSchemaParser parser = new GraphqlSchemaParser();
+        final GraphqlSchemaParser parser = new GraphqlSchemaParser(Collections.emptySet());
         final List<ServiceMetadata> services = Lists.newArrayList(service, new ServiceMetadata() {
             @Override
             public Upstream upstream() {

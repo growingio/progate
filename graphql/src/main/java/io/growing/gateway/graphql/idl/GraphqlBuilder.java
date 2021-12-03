@@ -32,6 +32,7 @@ import io.growing.gateway.pipeline.Outbound;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -42,15 +43,21 @@ import java.util.function.Consumer;
 
 public class GraphqlBuilder {
 
+    private Set<String> schemas;
     private Set<Outbound> outbounds;
     private List<ServiceMetadata> services;
     private List<GraphqlInboundPlugin> plugins;
     private DataFetcherExceptionHandler exceptionHandler;
     private final Set<GraphQLScalarType> scalars = Sets.newHashSet(ExtendedScalars.Json, ExtendedScalars.Object, JavaPrimitives.GraphQLLong);
-    private final GraphqlSchemaParser parser = new GraphqlSchemaParser();
 
     public static GraphqlBuilder newBuilder() {
         return new GraphqlBuilder();
+    }
+
+    public GraphqlBuilder schemas(final Set<String> schemas) {
+        this.schemas = new HashSet<>();
+        this.schemas.addAll(schemas);
+        return this;
     }
 
     public GraphqlBuilder services(final List<ServiceMetadata> services) {
@@ -74,10 +81,11 @@ public class GraphqlBuilder {
     }
 
     public GraphQL build() {
+        final GraphqlSchemaParser parser = new GraphqlSchemaParser(schemas);
         final RuntimeWiring.Builder runtimeWiringBuilder = RuntimeWiring.newRuntimeWiring();
         final Map<String, Outbound> handlers = new HashMap<>(outbounds.size());
         outbounds.forEach(handler -> handlers.put(handler.protocol(), handler));
-        services.forEach(service -> bindDataFetcher(runtimeWiringBuilder, service, handlers));
+        services.forEach(service -> bindDataFetcher(parser, runtimeWiringBuilder, service, handlers));
         runtimeWiringBuilder.directive(GlobalIdSchemaDirectiveWiring.NAME, new GlobalIdSchemaDirectiveWiring());
         scalars.forEach(runtimeWiringBuilder::scalar);
         plugins.forEach(plugin -> {
@@ -96,7 +104,8 @@ public class GraphqlBuilder {
             .mutationExecutionStrategy(new AsyncExecutionStrategy(exceptionHandler)).build();
     }
 
-    private void bindDataFetcher(final RuntimeWiring.Builder register, final ServiceMetadata service, final Map<String, Outbound> handlers) {
+    private void bindDataFetcher(final GraphqlSchemaParser parser, final RuntimeWiring.Builder register,
+                                 final ServiceMetadata service, final Map<String, Outbound> handlers) {
         final TypeDefinitionRegistry registry = parser.parse(service);
         final Set<String> protocols = handlers.keySet();
         final Consumer<String> bind = (final String type) -> {

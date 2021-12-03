@@ -17,8 +17,9 @@ import io.growing.gateway.graphql.plugin.GraphqlInboundPlugin;
 import io.growing.gateway.graphql.request.GraphqlExecutionPayload;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.pipeline.Outbound;
-import io.growing.progate.utilities.CollectionUtilities;
+import io.growing.progate.Resources;
 import io.growing.progate.http.Directive;
+import io.growing.progate.utilities.CollectionUtilities;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
@@ -27,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,8 +58,15 @@ public class GraphqlEndpointHandler implements Handler<HttpServerRequest>, Direc
                 return plugin;
             }).collect(Collectors.toList());
         final GraphqlBuilder builder = GraphqlBuilder.newBuilder();
+        final Set<String> schemes = config.getSchemas().stream().map(url -> {
+            try {
+                return Resources.from(url).utf8String();
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Cannot load common schema: " + url, e);
+            }
+        }).collect(Collectors.toSet());
         final DataFetcherExceptionHandler exceptionHandler = new SimpleDataFetcherExceptionHandler();
-        this.graphql = builder.outgoings(outbounds)
+        this.graphql = builder.outgoings(outbounds).schemas(schemes)
             .services(services).plugins(plugins).exceptionHandler(exceptionHandler).build();
     }
 

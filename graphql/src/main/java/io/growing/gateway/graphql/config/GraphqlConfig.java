@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class GraphqlConfig {
     private String path;
+    private List<String> schemas;
     private List<String> plugins;
     private Map<String, Map<String, Object>> settings;
 
@@ -14,6 +15,14 @@ public class GraphqlConfig {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public List<String> getSchemas() {
+        return schemas;
+    }
+
+    public void setSchemas(List<String> schemas) {
+        this.schemas = schemas;
     }
 
     public List<String> getPlugins() {

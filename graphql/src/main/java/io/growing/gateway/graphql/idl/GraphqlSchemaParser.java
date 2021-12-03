@@ -15,16 +15,26 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 public class GraphqlSchemaParser {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(GraphqlSchemaParser.class);
     private static final char END = '}';
     private final Pattern queryPattern = Pattern.compile("type +\\w*Query +\\{ ?");
     private final Pattern mutationPattern = Pattern.compile("type +\\w*Mutation +\\{ ?");
-    private final Logger logger = LoggerFactory.getLogger(GraphqlSchemaParser.class);
+    private final Set<String> commonSchemas;
+
+    public GraphqlSchemaParser(Set<String> commonSchemas) {
+        this.commonSchemas = new HashSet<>();
+        if (Objects.nonNull(commonSchemas)) {
+            this.commonSchemas.addAll(commonSchemas);
+        }
+    }
 
     public TypeDefinitionRegistry parse(final List<ServiceMetadata> services) {
         return parse((schemas, queries, mutations) -> services.forEach(service -> appendGraphqlDefinition(service, schemas, queries, mutations)));
@@ -38,6 +48,7 @@ public class GraphqlSchemaParser {
         final StringBuilder queries = new StringBuilder();
         final StringBuilder mutations = new StringBuilder();
         final StringBuilder schemas = new StringBuilder();
+        commonSchemas.forEach(schemaContent -> schemas.append(schemas).append(StringUtils.LF));
         function.apply(schemas, queries, mutations);
         return new SchemaParser().parse(toGraphqlSchema(schemas, queries, mutations));
     }
@@ -96,7 +107,7 @@ public class GraphqlSchemaParser {
 
             }
         } catch (IOException e) {
-            logger.warn("Cannot load endpoint definition: " + service.upstream().name(), e);
+            LOGGER.warn("Cannot load endpoint definition: " + service.upstream().name(), e);
         }
     }
 
