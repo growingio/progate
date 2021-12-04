@@ -62,11 +62,17 @@ public class Restlet implements Handler<HttpServerRequest>, Directive {
         try {
             if (Objects.nonNull(operation.getRequestBody())) {
                 request.body(ar -> {
-                    if (ar.succeeded()) {
-                        final JsonObject body = ar.result().toJsonObject();
-                        sendRequest(request, body);
-                    } else {
-                        //
+                    try {
+                        if (ar.succeeded()) {
+                            final JsonObject body = ar.result().toJsonObject();
+                            sendRequest(request, body);
+                        } else {
+                            //
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error(e.getLocalizedMessage(), e);
+                        request.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
+                        request.response().end(HttpResponseStatus.INTERNAL_SERVER_ERROR.reasonPhrase());
                     }
                 });
             } else {

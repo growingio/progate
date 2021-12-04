@@ -42,25 +42,25 @@ public class RestletTranscoder {
         }
         final Map<String, Object> args = new HashMap<>(parameters.size());
         for (Parameter parameter : parameters) {
-            final Map<String, Object> extensions = parameter.getExtensions();
             final String name = parameter.getName();
-            final Optional<Coercing> coercingOpt = getCoercing(extensions);
             if (parameter.getSchema() instanceof ArraySchema) {
                 //only support pass to query string
                 final List<Object> values = new LinkedList<>();
                 request.params().entries().forEach(entry -> {
                     if ((name + "[]").equals(entry.getKey())) {
-                        coercingOpt.ifPresentOrElse(coercing -> values.add(coercing.parseValue(entry.getValue())), () -> values.add(entry.getValue()));
+                        getCoercing(((ArraySchema) parameter.getSchema()).getItems())
+                            .ifPresentOrElse(coercing -> values.add(coercing.parseValue(entry.getValue())), () -> values.add(entry.getValue()));
                     }
                 });
                 args.put(name, values);
             } else {
+                final Map<String, Object> extensions = parameter.getExtensions();
                 final String from = getParameterFrom(extensions).orElse(name);
                 final String value = "header".equalsIgnoreCase(parameter.getIn()) ? request.getHeader(from) : request.getParam(from);
                 if (Objects.isNull(value)) {
                     continue;
                 }
-                coercingOpt.ifPresentOrElse(coercing -> args.put(name, coercing.parseValue(value)), () -> args.put(name, value));
+                getCoercing(extensions).ifPresentOrElse(coercing -> args.put(name, coercing.parseValue(value)), () -> args.put(name, value));
             }
         }
         return args;
@@ -103,7 +103,6 @@ public class RestletTranscoder {
             if (Objects.isNull(value)) {
                 return;
             }
-            final Optional<Coercing> coercingOpt = getCoercing(s);
             if (s instanceof ArraySchema) {
                 final JsonArray array = body.getJsonArray(name);
                 final List<Object> entries = new ArrayList<>(array.size());
@@ -113,7 +112,7 @@ public class RestletTranscoder {
                         extractBody((JsonObject) element, elementObject, ((ArraySchema) s).getItems());
                         entries.add(elementObject);
                     } else {
-                        coercingOpt.ifPresentOrElse(
+                        getCoercing(((ArraySchema) s).getItems()).ifPresentOrElse(
                             coercing -> entries.add(coercing.parseValue(element)),
                             () -> entries.add(element));
                     }
@@ -122,7 +121,7 @@ public class RestletTranscoder {
             } else {
                 final Map<String, Schema> subProperties = getSchemaProperties(s);
                 if (Objects.isNull(subProperties) || subProperties.isEmpty()) {
-                    coercingOpt.ifPresentOrElse(
+                    getCoercing(s).ifPresentOrElse(
                         coercing -> arguments.put(name, coercing.parseValue(body.getValue(name))),
                         () -> arguments.put(name, body.getValue(name)));
                 } else {
@@ -212,7 +211,7 @@ public class RestletTranscoder {
         if (Objects.isNull(scalar) || scalar.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(coercingSet.get(scalar));
+        return Optional.ofNullable(coercingSet.get(scalar));
     }
 
     private Optional<String> getParameterFrom(final Map<String, Object> extensions) {
@@ -223,7 +222,7 @@ public class RestletTranscoder {
         if (Objects.isNull(from) || from.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(from);
+        return Optional.ofNullable(from);
     }
 
 
