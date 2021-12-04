@@ -103,6 +103,7 @@ public class RestletTranscoder {
             if (Objects.isNull(value)) {
                 return;
             }
+            final Optional<Coercing> coercingOpt = getCoercing(s);
             if (s instanceof ArraySchema) {
                 final JsonArray array = body.getJsonArray(name);
                 final List<Object> entries = new ArrayList<>(array.size());
@@ -112,7 +113,7 @@ public class RestletTranscoder {
                         extractBody((JsonObject) element, elementObject, ((ArraySchema) s).getItems());
                         entries.add(elementObject);
                     } else {
-                        getCoercing(s).ifPresentOrElse(
+                        coercingOpt.ifPresentOrElse(
                             coercing -> entries.add(coercing.parseValue(element)),
                             () -> entries.add(element));
                     }
@@ -121,7 +122,7 @@ public class RestletTranscoder {
             } else {
                 final Map<String, Schema> subProperties = getSchemaProperties(s);
                 if (Objects.isNull(subProperties) || subProperties.isEmpty()) {
-                    getCoercing(s).ifPresentOrElse(
+                    coercingOpt.ifPresentOrElse(
                         coercing -> arguments.put(name, coercing.parseValue(body.getValue(name))),
                         () -> arguments.put(name, body.getValue(name)));
                 } else {
