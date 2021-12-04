@@ -14,12 +14,15 @@ import com.google.protobuf.Int32Value;
 import com.google.protobuf.Int64Value;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
+import com.google.protobuf.Timestamp;
 import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.UInt32Value;
 import com.google.protobuf.UInt64Value;
 import com.google.protobuf.util.JsonFormat;
 import io.growing.gateway.grpc.helper.MapWrapper;
 import io.growing.progate.utilities.CollectionUtilities;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,6 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DynamicMessageWrapper extends MapWrapper<String, Object> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DynamicMessageWrapper.class);
     private static final Set<String> WELL_KNOWN_TYPES = Sets.newHashSet(
         BoolValue.getDescriptor().getFullName(),
         Int32Value.getDescriptor().getFullName(),
@@ -90,7 +94,7 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
             underlying.putAll(map);
             underlying.put("@type", origin.getDescriptorForType().getFullName());
         } catch (InvalidProtocolBufferException e) {
-            // ignore
+            LOGGER.warn(e.getLocalizedMessage());
         }
         origin.getDescriptorForType().getFields().forEach(field -> {
             if (field.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE) {
@@ -148,6 +152,13 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
             final DynamicMessage field = (DynamicMessage) value;
             if (WELL_KNOWN_TYPES.contains(field.getDescriptorForType().getFullName())) {
                 return extractWellKnownValue(field);
+            } else if (Timestamp.getDescriptor().getFullName().equals(field.getDescriptorForType().getFullName())) {
+                try {
+                    return Timestamp.parseFrom(field.toByteArray());
+                } catch (InvalidProtocolBufferException e) {
+                    LOGGER.warn("Cannot parse timestamp: " + value, e);
+                    return null;
+                }
             } else {
                 final Optional<DynamicMessage> anyOpt = extractAny(field, descriptors);
                 if (anyOpt.isPresent()) {
@@ -179,7 +190,7 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
                             final DynamicMessage message = DynamicMessage.parseFrom(typeDescriptor, ((ByteString) entry.getValue()));
                             return Optional.of(message);
                         } catch (InvalidProtocolBufferException e) {
-                            // ignore
+                            LOGGER.warn(e.getLocalizedMessage());
                         }
                     }
                 }
