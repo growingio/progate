@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,13 +42,30 @@ public class RestletTranscoder {
         }
         final Map<String, Object> args = new HashMap<>(parameters.size());
         for (Parameter parameter : parameters) {
-            String name = parameter.getName();
-            final String value = "header".equalsIgnoreCase(parameter.getIn()) ? request.getHeader(name) : request.getParam(name);
-            if (Objects.isNull(value)) {
-                continue;
-            }
             final Map<String, Object> extensions = parameter.getExtensions();
-            getCoercing(extensions).ifPresentOrElse(coercing -> args.put(name, coercing.parseValue(value)), () -> args.put(name, value));
+            final String name = parameter.getName();
+            final Optional<Coercing> coercingOpt = getCoercing(extensions);
+            if (parameter.getSchema() instanceof ArraySchema) {
+                //only support pass to query string
+                final List<Object> values = new LinkedList<>();
+                request.params().entries().forEach(entry -> {
+                    if ((name + "[]").equals(entry.getKey())) {
+                        if (coercingOpt.isPresent()) {
+                            values.add(coercingOpt.get().parseValue(entry.getValue()));
+                        } else {
+                            values.add(entry.getValue());
+                        }
+                    }
+                });
+                args.put(name, values);
+            } else {
+                final String from = getParameterFrom(extensions).orElse(name);
+                final String value = "header".equalsIgnoreCase(parameter.getIn()) ? request.getHeader(from) : request.getParam(from);
+                if (Objects.isNull(value)) {
+                    continue;
+                }
+                coercingOpt.ifPresentOrElse(coercing -> args.put(name, coercing.parseValue(value)), () -> args.put(name, value));
+            }
         }
         return args;
     }
@@ -182,6 +200,7 @@ public class RestletTranscoder {
         return getCoercing(extensions);
     }
 
+
     private Optional<Coercing> getCoercing(final Map<String, Object> extensions) {
         if (coercingSet.isEmpty()) {
             return Optional.empty();
@@ -196,5 +215,17 @@ public class RestletTranscoder {
         }
         return Optional.of(coercingSet.get(scalar));
     }
+
+    private Optional<String> getParameterFrom(final Map<String, Object> extensions) {
+        if (Objects.isNull(extensions) || extensions.isEmpty()) {
+            return Optional.empty();
+        }
+        final String from = (String) extensions.get("x-from");
+        if (Objects.isNull(from) || from.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(from);
+    }
+
 
 }
