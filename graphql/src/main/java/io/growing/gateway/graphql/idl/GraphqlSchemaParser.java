@@ -3,6 +3,7 @@ package io.growing.gateway.graphql.idl;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteSource;
 import com.google.common.io.CharSource;
+import com.google.common.io.Files;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import io.growing.gateway.graphql.function.TriConsumer;
@@ -10,11 +11,13 @@ import io.growing.gateway.meta.EndpointDefinition;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.progate.utilities.CollectionUtilities;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -50,7 +53,13 @@ public class GraphqlSchemaParser {
         final StringBuilder schemas = new StringBuilder();
         commonSchemas.forEach(schemaContent -> schemas.append(schemas).append(StringUtils.LF));
         function.apply(schemas, queries, mutations);
-        return new SchemaParser().parse(toGraphqlSchema(schemas, queries, mutations));
+        final String content = toGraphqlSchema(schemas, queries, mutations);
+        try {
+            Files.write(content.getBytes(StandardCharsets.UTF_8), Paths.get(SystemUtils.getUserDir().getAbsolutePath(), "logs", "server.graphql").toFile());
+        } catch (IOException e) {
+            LOGGER.warn("Write graphql content to local file: " + e.getLocalizedMessage(), e);
+        }
+        return new SchemaParser().parse(content);
     }
 
     private String toGraphqlSchema(final StringBuilder schemas, final StringBuilder queries, final StringBuilder mutations) {

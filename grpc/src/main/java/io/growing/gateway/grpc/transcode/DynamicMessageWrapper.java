@@ -84,7 +84,7 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
     }
 
     public DynamicMessageWrapper(final DynamicMessage origin, final List<Descriptors.Descriptor> descriptors) {
-        super(new HashMap<String, Object>());
+        super(new HashMap<>());
         Map<String, Object> underlying = super.getUnderlying();
         try {
             final TypeRegistry.Builder builder = TypeRegistry.newBuilder();
@@ -93,39 +93,47 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
             Map map = new Gson().fromJson(json, Map.class);
             underlying.putAll(map);
             underlying.put("@type", origin.getDescriptorForType().getFullName());
-        } catch (InvalidProtocolBufferException e) {
+        } catch (Exception e) {
             LOGGER.warn(e.getLocalizedMessage());
+            extracted(origin, underlying);
         }
+        // set default value
         origin.getDescriptorForType().getFields().forEach(field -> {
             if (field.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE) {
-                final Object value = origin.getField(field);
-                if (Objects.nonNull(value)) {
-                    underlying.put(field.getName(), value);
-                    underlying.put(field.getJsonName(), value);
-                } else {
-                    final Object defaultValue = field.getDefaultValue();
-                    if (!underlying.containsKey(field.getName())) {
-                        underlying.put(field.getName(), defaultValue);
-                    }
-                    if (!underlying.containsKey(field.getJsonName())) {
-                        underlying.put(field.getJsonName(), defaultValue);
-                    }
+                final Object defaultValue = field.getDefaultValue();
+                if (!underlying.containsKey(field.getName())) {
+                    underlying.put(field.getName(), defaultValue);
                 }
-            } else if (field.isRepeated()) {
-                final Object value = origin.getField(field);
-                if (Objects.nonNull(value) && !((Collection) value).isEmpty()) {
-                    underlying.put(field.getName(), value);
-                    underlying.put(field.getJsonName(), value);
-                }
-            } else {
-                final Object value = origin.getField(field);
-                if (Objects.nonNull(value)) {
-                    underlying.put(field.getName(), value);
-                    underlying.put(field.getJsonName(), value);
+                if (!underlying.containsKey(field.getJsonName())) {
+                    underlying.put(field.getJsonName(), defaultValue);
                 }
             }
         });
         this.descriptors = descriptors;
+    }
+
+    private void extracted(DynamicMessage origin, Map<String, Object> underlying) {
+        origin.getDescriptorForType().getFields().forEach(field -> {
+            final Object value = origin.getField(field);
+            if (field.getJavaType() != Descriptors.FieldDescriptor.JavaType.MESSAGE) {
+                if (Objects.nonNull(value)) {
+                    underlying.put(field.getName(), value);
+                    underlying.put(field.getJsonName(), value);
+                }
+            } else {
+                if (field.isRepeated()) {
+                    if (Objects.nonNull(value) && !((Collection) value).isEmpty()) {
+                        underlying.put(field.getName(), value);
+                        underlying.put(field.getJsonName(), value);
+                    }
+                } else {
+                    if (Objects.nonNull(value)) {
+                        underlying.put(field.getName(), value);
+                        underlying.put(field.getJsonName(), value);
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -153,6 +161,7 @@ public class DynamicMessageWrapper extends MapWrapper<String, Object> {
             if (WELL_KNOWN_TYPES.contains(field.getDescriptorForType().getFullName())) {
                 return extractWellKnownValue(field);
             } else if (Timestamp.getDescriptor().getFullName().equals(field.getDescriptorForType().getFullName())) {
+                // maybe delete it this branch
                 try {
                     return Timestamp.parseFrom(field.toByteArray());
                 } catch (InvalidProtocolBufferException e) {
