@@ -50,11 +50,7 @@ public class RestletTranscoder {
                 final List<Object> values = new LinkedList<>();
                 request.params().entries().forEach(entry -> {
                     if ((name + "[]").equals(entry.getKey())) {
-                        if (coercingOpt.isPresent()) {
-                            values.add(coercingOpt.get().parseValue(entry.getValue()));
-                        } else {
-                            values.add(entry.getValue());
-                        }
+                        coercingOpt.ifPresentOrElse(coercing -> values.add(coercing.parseValue(entry.getValue())), () -> values.add(entry.getValue()));
                     }
                 });
                 args.put(name, values);
@@ -116,7 +112,9 @@ public class RestletTranscoder {
                         extractBody((JsonObject) element, elementObject, ((ArraySchema) s).getItems());
                         entries.add(elementObject);
                     } else {
-                        entries.add(element);
+                        getCoercing(s).ifPresentOrElse(
+                            coercing -> entries.add(coercing.parseValue(element)),
+                            () -> entries.add(element));
                     }
                 }
                 arguments.put(name, entries);
