@@ -7,5 +7,5 @@ include:
       - '/Jobs/Gradle-Publish.gitlab-ci.yml'
 
 variables:
-  GIT_FETCH_EXTRA_FLAGS: -o StrictHostKeyChecking=no --verbose
+  GIT_FETCH_EXTRA_FLAGS: -o StrictHostKeyChecking=no --verbose --progress
   CI_DEBUG_TRACE: "true"
