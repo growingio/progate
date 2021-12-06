@@ -8,3 +8,4 @@ include:
 
 variables:
   GIT_FETCH_EXTRA_FLAGS: -o StrictHostKeyChecking=no --verbose
+  CI_DEBUG_TRACE: true
