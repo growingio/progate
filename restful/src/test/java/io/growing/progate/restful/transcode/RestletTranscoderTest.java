@@ -79,7 +79,7 @@ class RestletTranscoderTest {
         final ObjectSchema schema = new ObjectSchema();
         schema.addProperties("id", new IntegerSchema());
         schema.addProperties("name", new StringSchema());
-        schema.addProperties("tags", new ArraySchema().type("string"));
+        schema.addProperties("tags", new ArraySchema().items(new StringSchema()));
         final ObjectSchema properties = new ObjectSchema();
         properties.addProperties("key", new StringSchema());
         properties.addProperties("value", new StringSchema());
