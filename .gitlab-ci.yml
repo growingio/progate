@@ -5,3 +5,6 @@ include:
       - '/Gradle.gitlab-ci.yml'
       - '/Code-Quality.gitlab-ci.yml'
       - '/Jobs/Gradle-Publish.gitlab-ci.yml'
+
+variables:
+  GIT_FETCH_EXTRA_FLAGS: -o StrictHostKeyChecking=no
