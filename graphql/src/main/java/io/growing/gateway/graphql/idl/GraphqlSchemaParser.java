@@ -137,6 +137,9 @@ public class GraphqlSchemaParser {
                 Files.createParentDirs(file);
             }
             Files.write(content.getBytes(StandardCharsets.UTF_8), file);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("GraphQL definitions saved to local: {}", path.toAbsolutePath());
+            }
         } catch (IOException e) {
             LOGGER.warn("Write graphql content to local file: " + e.getLocalizedMessage(), e);
         }
