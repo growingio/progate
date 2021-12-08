@@ -43,19 +43,23 @@ public class RestletTranscoder {
         final Map<String, Object> args = new HashMap<>(parameters.size());
         for (Parameter parameter : parameters) {
             final String name = parameter.getName();
+            final Map<String, Object> extensions = parameter.getExtensions();
+            final String from = getParameterFrom(extensions).orElse(name);
             if (parameter.getSchema() instanceof ArraySchema) {
-                //only support pass to query string
                 final List<Object> values = new LinkedList<>();
-                request.params().entries().forEach(entry -> {
-                    if ((name + "[]").equals(entry.getKey())) {
-                        getCoercing(((ArraySchema) parameter.getSchema()).getItems())
-                            .ifPresentOrElse(coercing -> values.add(coercing.parseValue(entry.getValue())), () -> values.add(entry.getValue()));
-                    }
-                });
+                final Optional<Coercing> coercingOpt = getCoercing(((ArraySchema) parameter.getSchema()).getItems());
+                if ("path".equals(parameter.getIn())) {
+                    final String param = request.getParam(from);
+                    coercingOpt.ifPresentOrElse(coercing -> values.add(coercing.parseValue(param)), () -> values.add(param));
+                } else {
+                    request.params().entries().forEach(entry -> {
+                        if (from.equals(entry.getKey()) || (from + "[]").equals(entry.getKey())) {
+                            coercingOpt.ifPresentOrElse(coercing -> values.add(coercing.parseValue(entry.getValue())), () -> values.add(entry.getValue()));
+                        }
+                    });
+                }
                 args.put(name, values);
             } else {
-                final Map<String, Object> extensions = parameter.getExtensions();
-                final String from = getParameterFrom(extensions).orElse(name);
                 final String value = "header".equalsIgnoreCase(parameter.getIn()) ? request.getHeader(from) : request.getParam(from);
                 if (Objects.isNull(value)) {
                     continue;

@@ -6,7 +6,9 @@ import graphql.language.FieldDefinition;
 import graphql.language.ObjectTypeDefinition;
 import graphql.language.TypeDefinition;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import io.growing.gateway.cluster.LoadBalance;
 import io.growing.gateway.meta.EndpointDefinition;
+import io.growing.gateway.meta.ServerNode;
 import io.growing.gateway.meta.ServiceMetadata;
 import io.growing.gateway.meta.Upstream;
 import org.junit.jupiter.api.Assertions;
@@ -17,12 +19,39 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class GraphqlSchemaParserTests {
+class GraphqlSchemaParserTest {
+
+    private final Upstream upstream = new Upstream() {
+        @Override
+        public String name() {
+            return "demo";
+        }
+
+        @Override
+        public String protocol() {
+            return null;
+        }
+
+        @Override
+        public boolean isInternal() {
+            return false;
+        }
+
+        @Override
+        public LoadBalance balancer() {
+            return null;
+        }
+
+        @Override
+        public List<ServerNode> nodes() {
+            return null;
+        }
+    };
 
     private final ServiceMetadata service = new ServiceMetadata() {
         @Override
         public Upstream upstream() {
-            return null;
+            return upstream;
         }
 
         @Override
@@ -47,19 +76,19 @@ public class GraphqlSchemaParserTests {
     };
 
     @Test
-    public void test() {
+    void test() {
         final GraphqlSchemaParser parser = new GraphqlSchemaParser(Collections.emptySet());
         final TypeDefinitionRegistry registry = parser.parse(service);
         assertResult(registry);
     }
 
     @Test
-    public void testParseSchemes() {
+    void testParseSchemes() {
         final GraphqlSchemaParser parser = new GraphqlSchemaParser(Collections.emptySet());
         final List<ServiceMetadata> services = Lists.newArrayList(service, new ServiceMetadata() {
             @Override
             public Upstream upstream() {
-                return null;
+                return upstream;
             }
 
             @Override

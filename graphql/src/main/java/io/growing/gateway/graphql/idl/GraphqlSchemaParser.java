@@ -15,8 +15,10 @@ import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
@@ -54,11 +56,7 @@ public class GraphqlSchemaParser {
         commonSchemas.forEach(schemaContent -> schemas.append(schemas).append(StringUtils.LF));
         function.apply(schemas, queries, mutations);
         final String content = toGraphqlSchema(schemas, queries, mutations);
-        try {
-            Files.write(content.getBytes(StandardCharsets.UTF_8), Paths.get(SystemUtils.getUserDir().getAbsolutePath(), "logs", "server.graphql").toFile());
-        } catch (IOException e) {
-            LOGGER.warn("Write graphql content to local file: " + e.getLocalizedMessage(), e);
-        }
+        writeGraphqlContentToLocal("server.graphql", content);
         return new SchemaParser().parse(content);
     }
 
@@ -77,6 +75,8 @@ public class GraphqlSchemaParser {
         if (CollectionUtilities.isEmpty(service.graphqlDefinitions())) {
             return;
         }
+        Set.of(schemas, queries, mutations).forEach(builder ->
+            builder.append(StringUtils.LF).append("# from upstream: ").append(service.upstream().name()).append(StringUtils.LF));
         try {
             for (EndpointDefinition def : service.graphqlDefinitions()) {
                 if (def.getName().contains(".ref.")) {
@@ -127,6 +127,19 @@ public class GraphqlSchemaParser {
             return;
         }
         builder.append(line).append(StringUtils.LF);
+    }
+
+    private void writeGraphqlContentToLocal(final String name, final String content) {
+        final Path path = Paths.get(SystemUtils.getUserDir().getAbsolutePath(), "local", name);
+        final File file = path.toFile();
+        try {
+            if (!java.nio.file.Files.exists(path)) {
+                Files.createParentDirs(file);
+            }
+            Files.write(content.getBytes(StandardCharsets.UTF_8), file);
+        } catch (IOException e) {
+            LOGGER.warn("Write graphql content to local file: " + e.getLocalizedMessage(), e);
+        }
     }
 
 }
