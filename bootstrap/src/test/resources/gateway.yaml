@@ -1,0 +1,28 @@
+server:
+  host: 0.0.0.0
+  port: 8080
+  env:
+    - name: 'hashids.length'
+      value: 8
+    - name: 'hashids.salt'
+      value: 'SALT'
+
+upstreams:
+  - name: metadata
+    protocol: grpc
+    nodes:
+      - host: localhost
+        port: 18080
+        weight: 1
+  - name: metadata-internal
+    internal: true
+    nodes:
+      - host: localhost
+        port: 18080
+        weight: 1
+
+inbound:
+  graphql:
+    path: "graphql"
+  restful:
+    path: "/api/v1/"

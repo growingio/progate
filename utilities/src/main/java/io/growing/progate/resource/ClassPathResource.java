@@ -17,6 +17,11 @@ public class ClassPathResource implements Resources.Resource {
     }
 
     @Override
+    public String uri() {
+        return "classpath://" + path;
+    }
+
+    @Override
     public byte[] bytes() throws IOException {
         try (final InputStream is = this.getClass().getResourceAsStream(path)) {
             if (Objects.isNull(is)) {

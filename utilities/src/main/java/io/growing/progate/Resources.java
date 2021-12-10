@@ -19,7 +19,9 @@ public final class Resources {
         return new URLResource(url);
     }
 
-    public static interface Resource {
+    public interface Resource {
+
+        String uri();
 
         byte[] bytes() throws IOException;
 

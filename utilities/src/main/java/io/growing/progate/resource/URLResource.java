@@ -15,6 +15,11 @@ public class URLResource implements Resources.Resource {
     }
 
     @Override
+    public String uri() {
+        return url;
+    }
+
+    @Override
     public byte[] bytes() throws IOException {
         return com.google.common.io.Resources.toByteArray(new URL(url));
     }

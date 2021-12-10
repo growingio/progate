@@ -16,6 +16,7 @@ import io.growing.progate.bootstrap.config.ConfigEntry;
 import io.growing.progate.bootstrap.config.ProgateConfig;
 import io.growing.progate.bootstrap.di.ProgateModule;
 import io.growing.progate.bootstrap.loader.InboundLoader;
+import io.growing.progate.bootstrap.utils.ConfigUtils;
 import io.growing.progate.context.GuiceRuntimeContext;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
@@ -37,7 +38,7 @@ public class ProgateBootstrap {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProgateBootstrap.class);
 
     public static void main(final String[] args) {
-        final String configPath = ProgateModule.getApplicationConfigFile(args);
+        final String configPath = ConfigUtils.getApplicationConfigFile(args);
         final Injector injector = Guice.createInjector(ProgateModule.create(configPath));
         final Vertx vertx = injector.getInstance(Vertx.class);
         final HttpServer server = vertx.createHttpServer();

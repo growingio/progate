@@ -50,10 +50,17 @@ dependencies {
         implementation("io.swagger.parser.v3:swagger-parser:2.0.28")
 
 
-
     }
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(true)
+        csv.required.set(false)
+        html.required.set(true)
+    }
 }
 
 tasks.test {
