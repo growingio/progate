@@ -1,3 +1,5 @@
+check-version: false
+
 plugins:
   sonar-java:
     enabled: true
