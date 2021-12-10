@@ -1,4 +1,4 @@
-package io.growing.gateway.config;
+package io.growing.progate.config;
 
 import org.junit.jupiter.api.Test;
 

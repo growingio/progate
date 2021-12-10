@@ -26,7 +26,7 @@ public class ConfigClusterDiscoveryService implements ClusterDiscoveryService {
     @Override
     public List<Upstream> discover() {
         final AppConfig config = configFactory.load(AppConfig.class);
-        return config.upstreams.stream().map(u -> u.toUpstream(healthService)).collect(Collectors.toList());
+        return config.getUpstreams().stream().map(u -> u.toUpstream(healthService)).collect(Collectors.toList());
     }
 
     public static class AppConfig {
