@@ -1,10 +1,11 @@
-package io.growing.gateway.grpc.transcode;
+package io.growing.progate.grpc.transcode;
 
 import com.google.protobuf.BoolValue;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.StringValue;
+import io.growing.gateway.grpc.transcode.DynamicMessageWrapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

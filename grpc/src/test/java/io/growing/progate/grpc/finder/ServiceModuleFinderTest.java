@@ -1,4 +1,4 @@
-package io.growing.gateway.grpc.finder;
+package io.growing.progate.grpc.finder;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Empty;
@@ -6,6 +6,7 @@ import io.growing.gateway.FileDescriptorDto;
 import io.growing.gateway.SchemeDto;
 import io.growing.gateway.SchemeServiceGrpc;
 import io.growing.gateway.grpc.ServiceResolver;
+import io.growing.gateway.grpc.finder.ServiceModuleFinder;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
@@ -18,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-public class ServiceModuleFinderTests {
+public class ServiceModuleFinderTest {
 
     private static Server server;
     private static String serverName;
