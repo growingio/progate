@@ -12,10 +12,10 @@ import java.nio.file.Paths;
  * @author AI
  */
 @Disabled
-public class ProtoCompileTests {
+class ProtoCompileTest {
 
     @Test
-    public void testGetName() {
+    void testGetName() {
         final ProtocProtoCompiler compiler = new ProtocProtoCompiler();
         final File userDir = SystemUtils.getUserDir();
         final Path pluginPath = Paths.get(userDir.getParentFile().getAbsolutePath(), "graphql-gateway-grpc-libs", "build", "plugins");

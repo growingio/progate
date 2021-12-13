@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -42,7 +43,7 @@ public class JdkJavaCompiler implements Compiler<JavaCompileSpec> {
         final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, StandardCharsets.UTF_8);
         final Set<Path> sources = FileUtilities.listAllFiles(spec.getSources());
-        final Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromPaths(sources);
+        final Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(asFiles(sources));
         final List<String> options = createCompileOptions(spec);
         return compiler.getTask(null, fileManager, null, options, options, compilationUnits);
     }
@@ -70,6 +71,28 @@ public class JdkJavaCompiler implements Compiler<JavaCompileSpec> {
             options.add(spec.getTargetCompatibility());
         }
         return options;
+    }
+
+    //copied from jdk13 javax.tools.StandardJavaFileManager
+    private Iterable<File> asFiles(final Iterable<? extends Path> paths) {
+        return () -> new Iterator<>() {
+            final Iterator<? extends Path> iter = paths.iterator();
+
+            @Override
+            public boolean hasNext() {
+                return iter.hasNext();
+            }
+
+            @Override
+            public File next() {
+                Path p = iter.next();
+                try {
+                    return p.toFile();
+                } catch (UnsupportedOperationException e) {
+                    throw new IllegalArgumentException(p.toString(), e);
+                }
+            }
+        };
     }
 
 }

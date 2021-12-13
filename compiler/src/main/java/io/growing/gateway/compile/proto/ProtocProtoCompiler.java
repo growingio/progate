@@ -76,9 +76,7 @@ public class ProtocProtoCompiler implements Compiler<ProtocCompileSpec> {
         args.add(String.format("--plugin=%s=%s", spec.getGrpcPluginName(), grpcPluginFilename));
         args.add(String.format("--grpc-java_out=%s", spec.getJavaOut().toAbsolutePath()));
         args.add(String.format("--proto_path=%s", spec.getSource().toAbsolutePath()));
-        sources.forEach(source -> {
-            args.add(source.toAbsolutePath().toString());
-        });
+        sources.forEach(source -> args.add(source.toAbsolutePath().toString()));
         return args.toArray(new String[0]);
     }
 
