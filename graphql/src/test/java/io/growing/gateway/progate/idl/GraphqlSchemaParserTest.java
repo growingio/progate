@@ -1,4 +1,4 @@
-package io.growing.gateway.graphql.idl;
+package io.growing.gateway.progate.idl;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -7,6 +7,7 @@ import graphql.language.ObjectTypeDefinition;
 import graphql.language.TypeDefinition;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import io.growing.gateway.cluster.LoadBalance;
+import io.growing.gateway.graphql.idl.GraphqlSchemaParser;
 import io.growing.gateway.meta.EndpointDefinition;
 import io.growing.gateway.meta.ServerNode;
 import io.growing.gateway.meta.ServiceMetadata;

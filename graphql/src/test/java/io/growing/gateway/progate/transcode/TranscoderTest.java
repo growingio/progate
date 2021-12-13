@@ -1,8 +1,9 @@
-package io.growing.gateway.graphql.transcode;
+package io.growing.gateway.progate.transcode;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.protobuf.ByteString;
+import io.growing.gateway.graphql.transcode.Transcoder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

@@ -1,4 +1,4 @@
-package io.growing.gateway.graphql.idl;
+package io.growing.gateway.progate.idl;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -8,6 +8,7 @@ import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
+import io.growing.gateway.graphql.idl.GlobalIdSchemaDirectiveWiring;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
