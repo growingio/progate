@@ -42,10 +42,8 @@ val coverageDataPath: Configuration by configurations.creating {
 // Task to gather code coverage from multiple subprojects
 val codeCoverageReport by tasks.registering(JacocoReport::class) {
     additionalClassDirs(configurations.runtimeClasspath.get().filter {
-        println(System.getProperty("user.dir"))
-        println(it);
-        println(it.startsWith(System.getProperty("user.dir")))
-        it.startsWith(System.getProperty("user.dir"))
+        val userDir = System.getProperty("user.dir")
+        it.startsWith(userDir) && !it.startsWith("$userDir/.gradle/caches")
     })
     additionalSourceDirs(sourcesPath.incoming.artifactView { lenient(true) }.files)
     executionData(coverageDataPath.incoming.artifactView { lenient(true) }.files.filter { it.exists() })
