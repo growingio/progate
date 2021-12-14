@@ -36,3 +36,15 @@ code_coverage:
   artifacts:
     reports:
       cobertura: build/cobertura.xml
+
+sonar:
+  image:
+    name: uhub.service.ucloud.cn/growing_public/sonar-scanner-cli:4.6
+    entrypoint: [ "" ]
+  stage: test
+  extends: .only-base
+  allow_failure: true
+  variables:
+    SONAR_HOST_URL: "https://sonar.growingio.cn"
+  script:
+    - sonar-scanner -Dsonar.qualitygate.wait=true -Dproject.key=$CI_PROJECT_NAME-$CI_COMMIT_BRANCH
