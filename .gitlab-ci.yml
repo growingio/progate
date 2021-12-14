@@ -20,8 +20,7 @@ check:
     reports:
       junit: "*/build/test-results/test/**/TEST-*.xml"
     paths:
-      - "*/build/reports/jacoco/test/jacocoTestReport.xml"
-      - "code-coverage-report/build/reports/jacoco/codeCoverageReport/codeCoverageReport.xml"
+      - "*/build/**"
 
 code_coverage:
   image: uhub.service.ucloud.cn/growing_public/jacoco2cobertura:1.0.7
@@ -42,7 +41,8 @@ sonar:
     name: uhub.service.ucloud.cn/growing_public/sonar-scanner-cli:4.6
     entrypoint: [ "" ]
   stage: test
-  needs: [ ]
+  needs:
+    - check
   extends: .only-base
   allow_failure: true
   variables:
