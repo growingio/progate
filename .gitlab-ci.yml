@@ -27,6 +27,8 @@ code_coverage:
   image: uhub.service.ucloud.cn/growing_public/jacoco2cobertura:1.0.7
   stage: test
   extends: .only-base
+  before_script:
+    - mkdir -p build
   needs:
     - check
   script:
