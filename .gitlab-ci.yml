@@ -6,26 +6,6 @@ include:
       - '/Code-Quality.gitlab-ci.yml'
       - '/Jobs/Gradle-Publish.gitlab-ci.yml'
 
-check:
-  stage: build
-  extends: .only-base
-  script: "./gradlew check"
-  cache:
-    - key: "gradle-$CI_COMMIT_REF_NAME"
-      policy: pull-push
-      paths:
-        - .gradle/wrapper
-    - key: "build-$CI_PIPELINE_ID-$CI_COMMIT_SHORT_SHA"
-      policy: push
-      paths:
-        - "*/build/**"
-  artifacts:
-    when: always
-    reports:
-      junit: "*/build/test-results/test/**/TEST-*.xml"
-    paths:
-      - "*/build/reports/jacoco/test/jacocoTestReport.xml"
-      - "code-coverage-report/build/reports/jacoco/codeCoverageReport/codeCoverageReport.xml"
 
 code_coverage:
   image: uhub.service.ucloud.cn/growing_public/jacoco2cobertura:1.0.7
@@ -41,21 +21,3 @@ code_coverage:
     reports:
       cobertura: build/cobertura.xml
 
-sonar:
-  image:
-    name: uhub.service.ucloud.cn/growing_public/sonar-scanner-cli:4.6
-    entrypoint: [ "" ]
-  stage: test
-  needs:
-    - check
-  extends: .only-base
-  allow_failure: true
-  variables:
-    SONAR_HOST_URL: "https://sonar.growingio.cn"
-  script:
-    - sonar-scanner -Dsonar.qualitygate.wait=true -Dsonar.projectKey=$CI_PROJECT_NAME-$CI_COMMIT_BRANCH
-  cache:
-    key: "build-$CI_PIPELINE_ID-$CI_COMMIT_SHORT_SHA"
-    policy: pull
-    paths:
-      - "*/build/**"
