@@ -16,6 +16,4 @@ dependencies {
     api("com.google.inject:guice")
     api("com.google.code.gson:gson")
 
-    testImplementation("org.mockito:mockito-core")
-
 }

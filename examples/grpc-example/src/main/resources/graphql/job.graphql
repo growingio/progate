@@ -1,9 +1,11 @@
+directive @fetch(from : String!) on FIELD_DEFINITION
 directive @grpc(endpoint: String!, values: [String!], mappings: [String!]) on FIELD_DEFINITION
 
 type Job {
     name: String!
     description: String
     tags: [String]
+    name2: String @fetch(from: "name")
 }
 
 input JobInput {

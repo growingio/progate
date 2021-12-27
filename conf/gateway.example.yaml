@@ -23,6 +23,6 @@ upstreams:
 
 inbound:
   graphql:
-    path: "graphql"
+    path: "/graphql"
   restful:
     path: "/api/v1/"

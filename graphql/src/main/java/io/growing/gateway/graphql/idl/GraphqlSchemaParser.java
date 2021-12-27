@@ -75,8 +75,6 @@ public class GraphqlSchemaParser {
         if (CollectionUtilities.isEmpty(service.graphqlDefinitions())) {
             return;
         }
-        Set.of(schemas, queries, mutations).forEach(builder ->
-            builder.append(StringUtils.LF).append("# from upstream: ").append(service.upstream().name()).append(StringUtils.LF));
         try {
             for (EndpointDefinition def : service.graphqlDefinitions()) {
                 if (def.getName().contains(".ref.")) {

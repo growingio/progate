@@ -18,6 +18,7 @@ import graphql.scalars.java.JavaPrimitives;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLScalarType;
 import graphql.schema.GraphQLSchema;
+import graphql.schema.idl.FetchSchemaDirectiveWiring;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.TypeDefinitionRegistry;
@@ -87,6 +88,7 @@ public class GraphqlBuilder {
         outbounds.forEach(handler -> handlers.put(handler.protocol(), handler));
         services.forEach(service -> bindDataFetcher(parser, runtimeWiringBuilder, service, handlers));
         runtimeWiringBuilder.directive(GlobalIdSchemaDirectiveWiring.NAME, new GlobalIdSchemaDirectiveWiring());
+        runtimeWiringBuilder.directive(FetchSchemaDirectiveWiring.FETCH,new FetchSchemaDirectiveWiring());
         scalars.forEach(runtimeWiringBuilder::scalar);
         plugins.forEach(plugin -> {
             plugin.resolvers().forEach(resolver -> {
