@@ -18,6 +18,6 @@ dependencies {
     // We use implementation instead of api for better compilation performance
     // https://docs.gradle.org/current/userguide/java_library_plugin.html#sec:java_library_separation
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.5")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
 
 }

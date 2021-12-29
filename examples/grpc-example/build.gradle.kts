@@ -21,7 +21,7 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java-util")
 
     if (JavaVersion.current().isJava9Compatible) {
-        compileOnly("javax.annotation:javax.annotation-api:1.3.2")
+        compileOnly("javax.annotation:javax.annotation-api:${ComponentVersions.annotationApi}")
     }
 }
 

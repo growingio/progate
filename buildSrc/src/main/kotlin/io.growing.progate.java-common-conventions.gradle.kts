@@ -14,46 +14,61 @@ repositories {
 dependencies {
 
     constraints {
+        // logging
+        implementation("org.apache.logging.log4j:log4j-api:${ComponentVersions.log4j}")
         implementation("org.slf4j:slf4j-api:${ComponentVersions.slf4j}")
+        implementation("org.apache.logging.log4j:log4j-core:${ComponentVersions.log4j}")
+        implementation("org.apache.logging.log4j:log4j-slf4j-impl:${ComponentVersions.log4j}")
+
+        // config
+        implementation("org.yaml:snakeyaml:${ComponentVersions.snakeyaml}")
         implementation("com.typesafe:config:${ComponentVersions.typesafeConfig}")
+
+        // tools
+        implementation("com.google.guava:guava:${ComponentVersions.guava}")
         implementation("com.github.os72:protoc-jar:${ComponentVersions.protocJar}")
+        implementation("org.apache.commons:commons-lang3:${ComponentVersions.commonsLang3}")
         implementation("org.apache.commons:commons-text:${ComponentVersions.commonsText}")
-//        implementation("com.github.ben-manes.caffeine:caffeine:3.0.3")
+
+        // json
+        implementation("com.google.code.gson:gson:${ComponentVersions.gson}")
+        implementation("com.fasterxml.jackson.core:jackson-databind:${ComponentVersions.jackson}")
+        implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${ComponentVersions.jackson}")
+
+
+        // cache
         implementation("com.github.ben-manes.caffeine:caffeine:${ComponentVersions.caffeine}")
+
+        // vertx
         implementation("io.vertx:vertx-web:${ComponentVersions.vertx}")
         implementation("io.vertx:vertx-core:${ComponentVersions.vertx}")
         implementation("io.vertx:vertx-web-client:${ComponentVersions.vertx}")
         implementation("io.vertx:vertx-web-openapi:${ComponentVersions.vertx}")
-        //implementation("io.vertx:vertx-auth-oauth2:${ComponentVersions.vertx}")
-        implementation("org.apache.logging.log4j:log4j-api:${ComponentVersions.log4j}")
-        implementation("org.apache.logging.log4j:log4j-core:${ComponentVersions.log4j}")
-        implementation("org.apache.logging.log4j:log4j-slf4j-impl:${ComponentVersions.log4j}")
 
-        implementation("com.google.code.gson:gson:2.8.7")
+        // grpc
         implementation("io.grpc:grpc-stub:${ComponentVersions.grpc}")
         implementation("io.grpc:grpc-protobuf:${ComponentVersions.grpc}")
         implementation("io.grpc:grpc-services:${ComponentVersions.grpc}")
-        implementation("com.google.protobuf:protobuf-java-util:3.17.3")
         implementation("io.grpc:grpc-netty-shaded:${ComponentVersions.grpc}")
+        implementation("com.google.protobuf:protobuf-java-util:${ComponentVersions.protobuf}")
 
+        // ioc
         implementation("com.google.inject:guice:${ComponentVersions.guice}")
 
-        implementation("com.jayway.jsonpath:json-path:2.6.0")
-        implementation("org.yaml:snakeyaml:1.28")
+        // graphql
+        implementation("com.graphql-java:graphql-java:${ComponentVersions.graphql}")
+        implementation("com.graphql-java:graphql-java-extended-scalars:${ComponentVersions.graphql}")
 
-        implementation("com.google.guava:guava:30.1.1-jre")
-        implementation("org.apache.commons:commons-lang3:3.12.0")
+        // rest
+        implementation("io.swagger.parser.v3:swagger-parser:${ComponentVersions.swagger}")
 
-        implementation("com.graphql-java:graphql-java:17.0")
-        implementation("com.graphql-java:graphql-java-extended-scalars:17.0")
-
-        implementation("io.swagger.parser.v3:swagger-parser:2.0.28")
+        // ext
 
 
     }
 
-    testImplementation("org.mockito:mockito-core:4.1.0")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.1")
+    testImplementation("org.mockito:mockito-core:${ComponentVersions.mockito}")
+    testImplementation("org.junit.jupiter:junit-jupiter:${ComponentVersions.junit}")
 }
 
 tasks.jacocoTestReport {

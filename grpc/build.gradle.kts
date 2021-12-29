@@ -16,7 +16,6 @@ dependencies {
     api(project(":core"))
     api(project(":utilities"))
     api(project(":grpc-proto"))
-//    implementation("io.vertx:vertx-grpc")
     api("io.grpc:grpc-stub")
     api("io.grpc:grpc-protobuf")
     api("io.grpc:grpc-services")
@@ -24,11 +23,12 @@ dependencies {
     implementation("io.grpc:grpc-netty-shaded")
     implementation("com.google.code.gson:gson")
     implementation("com.github.ben-manes.caffeine:caffeine")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.12.5")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.12.5")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
+
 
     if (JavaVersion.current().isJava9Compatible) {
-        compileOnly("javax.annotation:javax.annotation-api:1.3.2")
+        compileOnly("javax.annotation:javax.annotation-api:${ComponentVersions.annotationApi}")
     }
 
 }

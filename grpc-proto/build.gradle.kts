@@ -13,7 +13,7 @@ dependencies {
     api("io.grpc:grpc-stub")
     api("io.grpc:grpc-protobuf")
     if (JavaVersion.current().isJava9Compatible) {
-        compileOnly("javax.annotation:javax.annotation-api:1.3.2")
+        compileOnly("javax.annotation:javax.annotation-api:${ComponentVersions.annotationApi}")
     }
 
 }
