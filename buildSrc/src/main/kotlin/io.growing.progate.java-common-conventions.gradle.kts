@@ -14,12 +14,12 @@ repositories {
 dependencies {
 
     constraints {
-        implementation("org.slf4j:slf4j-api:1.7.31")
-        implementation("com.typesafe:config:1.4.1")
-        implementation("com.github.os72:protoc-jar:3.11.4")
-        implementation("org.apache.commons:commons-text:1.9")
+        implementation("org.slf4j:slf4j-api:${ComponentVersions.slf4j}")
+        implementation("com.typesafe:config:${ComponentVersions.typesafeConfig}")
+        implementation("com.github.os72:protoc-jar:${ComponentVersions.protocJar}")
+        implementation("org.apache.commons:commons-text:${ComponentVersions.commonsText}")
 //        implementation("com.github.ben-manes.caffeine:caffeine:3.0.3")
-        implementation("com.github.ben-manes.caffeine:caffeine:2.9.0")
+        implementation("com.github.ben-manes.caffeine:caffeine:${ComponentVersions.caffeine}")
         implementation("io.vertx:vertx-web:${ComponentVersions.vertx}")
         implementation("io.vertx:vertx-core:${ComponentVersions.vertx}")
         implementation("io.vertx:vertx-web-client:${ComponentVersions.vertx}")
