@@ -1,5 +1,6 @@
 package io.growing.gateway.grpc.ctrl;
 
+import io.growing.gateway.grpc.finder.TaggedChannel;
 import io.growing.progate.ctrl.AbstractScheduledHealthService;
 import io.growing.gateway.ctrl.HealthStatus;
 import io.growing.gateway.grpc.ChannelFactory;
@@ -27,8 +28,8 @@ public class GrpcHealthService extends AbstractScheduledHealthService {
     @Override
     protected Function<ServerNode, HealthStatus> createChecker() {
         return node -> {
-            final ManagedChannel channel = ChannelFactory.get(node);
-            final HealthGrpc.HealthBlockingStub stub = HealthGrpc.newBlockingStub(channel).withDeadline(Deadline.after(1, TimeUnit.MINUTES));
+            final TaggedChannel channel = ChannelFactory.get(node);
+            final HealthGrpc.HealthBlockingStub stub = HealthGrpc.newBlockingStub(channel.getChannel()).withDeadline(Deadline.after(1, TimeUnit.MINUTES));
             HealthStatus status;
             try {
                 final HealthCheckRequest request = HealthCheckRequest.getDefaultInstance();

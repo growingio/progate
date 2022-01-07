@@ -11,6 +11,7 @@ import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.util.JsonFormat;
 import io.growing.gateway.context.RequestContext;
 import io.growing.gateway.grpc.finder.ServiceModuleFinder;
+import io.growing.gateway.grpc.finder.TaggedChannel;
 import io.growing.gateway.grpc.interceptor.RequestLogInterceptor;
 import io.growing.gateway.grpc.json.Jackson;
 import io.growing.gateway.grpc.observer.CollectionObserver;
@@ -100,14 +101,14 @@ public class GrpcOutbound implements Outbound {
     }
 
     private ServiceResolver createServiceResolver(final Upstream upstream) {
-        final ManagedChannel channel = ChannelFactory.get(upstream, null);
+        final TaggedChannel channel = ChannelFactory.get(upstream, null);
         return finder.createServiceResolver(channel);
     }
 
     private Channel createChannel(final Upstream upstream, final RequestContext request) {
-        final ManagedChannel origin = ChannelFactory.get(upstream, request);
+        final TaggedChannel origin = ChannelFactory.get(upstream, request);
         final RequestLogInterceptor interceptor = new RequestLogInterceptor(request.id());
-        return ClientInterceptors.intercept(origin, interceptor);
+        return ClientInterceptors.intercept(origin.getChannel(), interceptor);
     }
 
     private Object transcodeResponse(final DynamicMessage dm, final List<Descriptors.Descriptor> descriptors) {

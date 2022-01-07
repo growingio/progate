@@ -16,17 +16,18 @@ import java.util.Set;
 
 public class ServiceModuleFinder {
 
-    public SchemeDto loadScheme(final Channel channel) {
-        final SchemeServiceGrpc.SchemeServiceFutureStub stub = SchemeServiceGrpc.newFutureStub(channel);
+    public SchemeDto loadScheme(final TaggedChannel channel) {
+        final SchemeServiceGrpc.SchemeServiceFutureStub stub = SchemeServiceGrpc.newFutureStub(channel.getChannel());
         try {
             return stub.getScheme(Empty.getDefaultInstance()).get();
         } catch (Exception e) {
-            throw new ServiceResolveException("Cannot load module scheme", e);
+            final String message = String.format("Cannot load module scheme on node %s:%d", channel.getNode().host(), channel.getNode().port());
+            throw new ServiceResolveException(message, e);
         }
     }
 
-    public ServiceResolver createServiceResolver(final Channel channel) {
-        final ServerReflectionGrpc.ServerReflectionStub stub = ServerReflectionGrpc.newStub(channel);
+    public ServiceResolver createServiceResolver(final TaggedChannel channel) {
+        final ServerReflectionGrpc.ServerReflectionStub stub = ServerReflectionGrpc.newStub(channel.getChannel());
         final ServerReflectionObserver observer = new ServerReflectionObserver();
         final StreamObserver<ServerReflectionRequest> requestStreamObserver = stub.serverReflectionInfo(observer);
         observer.request(requestStreamObserver);
@@ -34,7 +35,8 @@ public class ServiceModuleFinder {
             final Set<DescriptorProtos.FileDescriptorProto> fileDescriptorProtos = observer.getCompletionFuture().get();
             return FileDescriptorServiceResolver.fromFileDescriptorProtoSet(fileDescriptorProtos);
         } catch (Exception e) {
-            throw new ServiceResolveException("Cannot load service descriptors", e);
+            final String message = String.format("Cannot load service descriptors on node %s:%d", channel.getNode().host(), channel.getNode().port());
+            throw new ServiceResolveException(message, e);
         }
     }
 

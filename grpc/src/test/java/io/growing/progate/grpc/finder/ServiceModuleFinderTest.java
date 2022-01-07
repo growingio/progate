@@ -7,6 +7,8 @@ import io.growing.gateway.SchemeDto;
 import io.growing.gateway.SchemeServiceGrpc;
 import io.growing.gateway.grpc.ServiceResolver;
 import io.growing.gateway.grpc.finder.ServiceModuleFinder;
+import io.growing.gateway.grpc.finder.TaggedChannel;
+import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
@@ -49,7 +51,8 @@ public class ServiceModuleFinderTest {
     @Test
     void testLoadScheme() {
         final ServiceModuleFinder finder = new ServiceModuleFinder();
-        final SchemeDto scheme = finder.loadScheme(InProcessChannelBuilder.forName(serverName).build());
+        final TaggedChannel channel = TaggedChannel.from(InProcessChannelBuilder.forName(serverName).build(), null);
+        final SchemeDto scheme = finder.loadScheme(channel);
         Assertions.assertEquals(1, scheme.getGraphqlDefinitionsCount());
         Assertions.assertEquals(GRAPHQL_NAME, scheme.getGraphqlDefinitions(0).getName());
     }
@@ -57,7 +60,8 @@ public class ServiceModuleFinderTest {
     @Test
     void testCreateServiceResolver() {
         final ServiceModuleFinder finder = new ServiceModuleFinder();
-        final ServiceResolver resolver = finder.createServiceResolver(InProcessChannelBuilder.forName(serverName).build());
+        final TaggedChannel channel = TaggedChannel.from(InProcessChannelBuilder.forName(serverName).build(), null);
+        final ServiceResolver resolver = finder.createServiceResolver(channel);
         final Descriptors.MethodDescriptor methodDescriptor = resolver.getMethodDescriptor(SchemeServiceGrpc.getGetSchemeMethod().getFullMethodName());
         Assertions.assertNotNull(methodDescriptor);
         Assertions.assertEquals("growing.gateway.SchemeService.GetScheme", methodDescriptor.getFullName());

@@ -3,6 +3,7 @@ package io.growing.gateway.grpc;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import io.growing.gateway.grpc.finder.TaggedChannel;
 import io.growing.gateway.meta.ServerNode;
 import io.growing.gateway.meta.Upstream;
 import io.grpc.ManagedChannel;
@@ -29,17 +30,17 @@ public final class ChannelFactory {
     private ChannelFactory() {
     }
 
-    public static ManagedChannel get(final ServerNode node) {
+    public static TaggedChannel get(final ServerNode node) {
         final ManagedChannel channel = CHANNELS.get(node);
         assert Objects.nonNull(channel);
         if (channel.isShutdown() || channel.isTerminated()) {
             CHANNELS.invalidate(node);
-            return CHANNELS.get(node);
+            return TaggedChannel.from(CHANNELS.get(node), node);
         }
-        return channel;
+        return TaggedChannel.from(channel, node);
     }
 
-    public static ManagedChannel get(final Upstream upstream, final Object context) {
+    public static TaggedChannel get(final Upstream upstream, final Object context) {
         final ServerNode node = upstream.balancer().select(upstream.getAvailableNodes(), context);
         return get(node);
     }
