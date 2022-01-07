@@ -70,18 +70,14 @@ public class Restlet implements Handler<HttpServerRequest>, Directive {
                             //
                         }
                     } catch (Exception e) {
-                        LOGGER.error(e.getLocalizedMessage(), e);
-                        request.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
-                        request.response().end(HttpResponseStatus.INTERNAL_SERVER_ERROR.reasonPhrase());
+                        handleError(LOGGER, e, request.response());
                     }
                 });
             } else {
                 sendRequest(request, null);
             }
         } catch (Exception e) {
-            LOGGER.error(e.getLocalizedMessage(), e);
-            request.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
-            request.response().end(HttpResponseStatus.INTERNAL_SERVER_ERROR.reasonPhrase());
+            handleError(LOGGER, e, request.response());
         }
     }
 
@@ -95,11 +91,13 @@ public class Restlet implements Handler<HttpServerRequest>, Directive {
         final RequestContext context = new RestletRequestContext(getRequestId(request), arguments);
         outbound.handle(upstream, endpoint, context).whenComplete((result, t) -> {
             if (Objects.nonNull(t)) {
-                LOGGER.error(t.getLocalizedMessage(), t);
-                request.response().setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code());
-                request.response().end(HttpResponseStatus.INTERNAL_SERVER_ERROR.reasonPhrase());
+                handleError(LOGGER, t, request.response());
             } else {
-                sendResponse(request, result);
+                try {
+                    sendResponse(request, result);
+                } catch (Throwable e) {
+                    handleError(LOGGER, e, request.response());
+                }
             }
         });
     }
