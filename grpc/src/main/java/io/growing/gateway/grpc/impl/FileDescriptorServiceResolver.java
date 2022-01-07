@@ -30,10 +30,15 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
 
     public static FileDescriptorServiceResolver fromFileDescriptorProtoSet(final List<DescriptorProtos.FileDescriptorProto> fileDescriptorProtoSet) {
         final Map<String, DescriptorProtos.FileDescriptorProto> fileDescriptorProtoMap = new HashMap<>();
+        LOGGER.info("Find proto size: {}", fileDescriptorProtoSet.size());
         for (DescriptorProtos.FileDescriptorProto proto : fileDescriptorProtoSet) {
             LOGGER.info("Find proto file: {}", proto.getName());
-            fileDescriptorProtoMap.put(proto.getName(), proto);
+            final String key = proto.getPackage() + "::" + proto.getName();
+            if (!fileDescriptorProtoMap.containsKey(key)) {
+                fileDescriptorProtoMap.put(key, proto);
+            }
         }
+        LOGGER.info("Mapped proto size: {}", fileDescriptorProtoMap.size());
         return new FileDescriptorServiceResolver(fileDescriptorProtoMap);
     }
 
@@ -44,7 +49,8 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
             for (Map.Entry<String, DescriptorProtos.FileDescriptorProto> entry : fileDescriptorProtoSet.entrySet()) {
                 final Descriptors.FileDescriptor fileDescriptor = buildFormProto(entry.getValue(), fileDescriptorProtoSet, fileDescriptors);
                 typeSet.addAll(fileDescriptor.getMessageTypes());
-                fileDescriptors.put(fileDescriptor.getName(), fileDescriptor);
+                final String key = fileDescriptor.getPackage() + "::" + fileDescriptor.getName();
+                fileDescriptors.put(key, fileDescriptor);
             }
             typeDescriptors = typeSet.build();
         } catch (Descriptors.DescriptorValidationException e) {
@@ -108,14 +114,19 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
     private Descriptors.FileDescriptor buildFormProto(final DescriptorProtos.FileDescriptorProto proto,
                                                       final Map<String, DescriptorProtos.FileDescriptorProto> fileDescriptorProtoSet,
                                                       final Map<String, Descriptors.FileDescriptor> fileDescriptors) throws Descriptors.DescriptorValidationException {
-        final String name = proto.getName();
-        if (fileDescriptors.containsKey(name)) {
-            return fileDescriptors.get(name);
+        final String key = proto.getPackage() + "::" + proto.getName();
+        if (fileDescriptors.containsKey(key)) {
+            return fileDescriptors.get(key);
         }
         final ImmutableList.Builder<Descriptors.FileDescriptor> dependencies = ImmutableList.builder();
         for (String dependencyName : proto.getDependencyList()) {
-            final DescriptorProtos.FileDescriptorProto dependencyProto = fileDescriptorProtoSet.get(dependencyName);
-            dependencies.add(buildFormProto(dependencyProto, fileDescriptorProtoSet, fileDescriptors));
+            for (Map.Entry<String, DescriptorProtos.FileDescriptorProto> entry : fileDescriptorProtoSet.entrySet()) {
+                if (dependencyName.equals(entry.getValue().getName())) {
+                    final String dependencyKey = entry.getValue().getPackage() + "::" + entry.getValue().getName();
+                    final DescriptorProtos.FileDescriptorProto dependencyProto = fileDescriptorProtoSet.get(dependencyKey);
+                    dependencies.add(buildFormProto(dependencyProto, fileDescriptorProtoSet, fileDescriptors));
+                }
+            }
         }
         return Descriptors.FileDescriptor.buildFrom(proto, dependencies.build().toArray(new Descriptors.FileDescriptor[0]));
     }
