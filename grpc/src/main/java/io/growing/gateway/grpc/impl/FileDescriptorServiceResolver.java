@@ -10,8 +10,11 @@ import io.growing.gateway.grpc.ServiceResolver;
 import io.growing.gateway.grpc.marshaller.DynamicMessageMarshaller;
 import io.grpc.MethodDescriptor;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,13 +24,14 @@ import java.util.Set;
  * @author AI
  */
 public class FileDescriptorServiceResolver implements ServiceResolver {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileDescriptorServiceResolver.class);
     private final Set<Descriptors.Descriptor> typeDescriptors;
     private final Map<String, Descriptors.FileDescriptor> fileDescriptors;
 
-    public static FileDescriptorServiceResolver fromFileDescriptorProtoSet(final Set<DescriptorProtos.FileDescriptorProto> fileDescriptorProtoSet) {
+    public static FileDescriptorServiceResolver fromFileDescriptorProtoSet(final List<DescriptorProtos.FileDescriptorProto> fileDescriptorProtoSet) {
         final Map<String, DescriptorProtos.FileDescriptorProto> fileDescriptorProtoMap = new HashMap<>();
         for (DescriptorProtos.FileDescriptorProto proto : fileDescriptorProtoSet) {
+            LOGGER.info("Find proto file: {}", proto.getName());
             fileDescriptorProtoMap.put(proto.getName(), proto);
         }
         return new FileDescriptorServiceResolver(fileDescriptorProtoMap);

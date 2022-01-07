@@ -1,6 +1,6 @@
 package io.growing.gateway.grpc.finder;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.ByteString;
@@ -9,19 +9,19 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.reflection.v1alpha.ServerReflectionResponse;
 import io.grpc.stub.StreamObserver;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * @author AI
  */
 public class FileDescriptorProtoSetObserver implements StreamObserver<ServerReflectionResponse> {
 
-    private final SettableFuture<Set<DescriptorProtos.FileDescriptorProto>> future;
-    private final ImmutableSet.Builder<DescriptorProtos.FileDescriptorProto> fileDescriptorSet;
+    private final SettableFuture<List<DescriptorProtos.FileDescriptorProto>> future;
+    private final ImmutableList.Builder<DescriptorProtos.FileDescriptorProto> fileDescriptorSet;
 
     public FileDescriptorProtoSetObserver() {
         this.future = SettableFuture.create();
-        this.fileDescriptorSet = ImmutableSet.builder();
+        this.fileDescriptorSet = ImmutableList.builder();
     }
 
     @Override
@@ -46,7 +46,7 @@ public class FileDescriptorProtoSetObserver implements StreamObserver<ServerRefl
         future.set(fileDescriptorSet.build());
     }
 
-    public ListenableFuture<Set<DescriptorProtos.FileDescriptorProto>> getCompletionFuture() {
+    public ListenableFuture<List<DescriptorProtos.FileDescriptorProto>> getCompletionFuture() {
         return future;
     }
 

@@ -12,6 +12,7 @@ import io.grpc.reflection.v1alpha.ServerReflectionGrpc;
 import io.grpc.reflection.v1alpha.ServerReflectionRequest;
 import io.grpc.stub.StreamObserver;
 
+import java.util.List;
 import java.util.Set;
 
 public class ServiceModuleFinder {
@@ -32,7 +33,7 @@ public class ServiceModuleFinder {
         final StreamObserver<ServerReflectionRequest> requestStreamObserver = stub.serverReflectionInfo(observer);
         observer.request(requestStreamObserver);
         try {
-            final Set<DescriptorProtos.FileDescriptorProto> fileDescriptorProtos = observer.getCompletionFuture().get();
+            final List<DescriptorProtos.FileDescriptorProto> fileDescriptorProtos = observer.getCompletionFuture().get();
             return FileDescriptorServiceResolver.fromFileDescriptorProtoSet(fileDescriptorProtos);
         } catch (Exception e) {
             final String message = String.format("Cannot load service descriptors on node %s:%d", channel.getNode().host(), channel.getNode().port());
