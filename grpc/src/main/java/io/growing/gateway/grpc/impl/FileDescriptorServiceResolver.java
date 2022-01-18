@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
+import io.growing.gateway.grpc.ProtoDependencyReferences;
 import io.growing.gateway.grpc.ServiceResolveException;
 import io.growing.gateway.grpc.ServiceResolver;
 import io.growing.gateway.grpc.marshaller.DynamicMessageMarshaller;
@@ -32,8 +33,8 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
         final Map<String, DescriptorProtos.FileDescriptorProto> fileDescriptorProtoMap = new HashMap<>();
         LOGGER.info("Find proto size: {}", fileDescriptorProtoSet.size());
         for (DescriptorProtos.FileDescriptorProto proto : fileDescriptorProtoSet) {
-            LOGGER.info("Find proto file: {}", proto.getName());
             final String key = proto.getPackage() + "::" + proto.getName();
+            LOGGER.info("Find proto file: {}", key);
             if (!fileDescriptorProtoMap.containsKey(key)) {
                 fileDescriptorProtoMap.put(key, proto);
             }
@@ -119,7 +120,8 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
             return fileDescriptors.get(key);
         }
         final ImmutableList.Builder<Descriptors.FileDescriptor> dependencies = ImmutableList.builder();
-        for (String dependencyName : proto.getDependencyList()) {
+        for (String dependency : proto.getDependencyList()) {
+            final String dependencyName = ProtoDependencyReferences.find(proto.getPackage(), dependency).orElseGet(() -> dependency);
             for (Map.Entry<String, DescriptorProtos.FileDescriptorProto> entry : fileDescriptorProtoSet.entrySet()) {
                 if (dependencyName.equals(entry.getValue().getName())) {
                     final String dependencyKey = entry.getValue().getPackage() + "::" + entry.getValue().getName();
