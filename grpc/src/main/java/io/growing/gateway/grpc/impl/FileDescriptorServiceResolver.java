@@ -33,10 +33,10 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
         final Map<String, DescriptorProtos.FileDescriptorProto> fileDescriptorProtoMap = new HashMap<>();
         LOGGER.info("Find proto size: {}", fileDescriptorProtoSet.size());
         for (DescriptorProtos.FileDescriptorProto proto : fileDescriptorProtoSet) {
-            final String key = proto.getPackage() + "::" + proto.getName();
-            LOGGER.info("Find proto file: {}", key);
-            if (!fileDescriptorProtoMap.containsKey(key)) {
-                fileDescriptorProtoMap.put(key, proto);
+            final String name = proto.getName();
+            LOGGER.info("Find proto file: {}", name);
+            if (!fileDescriptorProtoMap.containsKey(name)) {
+                fileDescriptorProtoMap.put(name, proto);
             }
         }
         LOGGER.info("Mapped proto size: {}", fileDescriptorProtoMap.size());
@@ -50,8 +50,7 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
             for (Map.Entry<String, DescriptorProtos.FileDescriptorProto> entry : fileDescriptorProtoSet.entrySet()) {
                 final Descriptors.FileDescriptor fileDescriptor = buildFormProto(entry.getValue(), fileDescriptorProtoSet, fileDescriptors);
                 typeSet.addAll(fileDescriptor.getMessageTypes());
-                final String key = fileDescriptor.getPackage() + "::" + fileDescriptor.getName();
-                fileDescriptors.put(key, fileDescriptor);
+                fileDescriptors.put(fileDescriptor.getName(), fileDescriptor);
             }
             typeDescriptors = typeSet.build();
         } catch (Descriptors.DescriptorValidationException e) {
@@ -115,20 +114,20 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
     private Descriptors.FileDescriptor buildFormProto(final DescriptorProtos.FileDescriptorProto proto,
                                                       final Map<String, DescriptorProtos.FileDescriptorProto> fileDescriptorProtoSet,
                                                       final Map<String, Descriptors.FileDescriptor> fileDescriptors) throws Descriptors.DescriptorValidationException {
-        final String key = proto.getPackage() + "::" + proto.getName();
-        if (fileDescriptors.containsKey(key)) {
-            return fileDescriptors.get(key);
+        final String name = proto.getName();
+        if (fileDescriptors.containsKey(name)) {
+            return fileDescriptors.get(name);
         }
         final ImmutableList.Builder<Descriptors.FileDescriptor> dependencies = ImmutableList.builder();
         for (String dependency : proto.getDependencyList()) {
-            final String dependencyName = ProtoDependencyReferences.find(proto.getPackage(), dependency).orElseGet(() -> dependency);
-            for (Map.Entry<String, DescriptorProtos.FileDescriptorProto> entry : fileDescriptorProtoSet.entrySet()) {
-                if (dependencyName.equals(entry.getValue().getName())) {
-                    final String dependencyKey = entry.getValue().getPackage() + "::" + entry.getValue().getName();
-                    final DescriptorProtos.FileDescriptorProto dependencyProto = fileDescriptorProtoSet.get(dependencyKey);
-                    dependencies.add(buildFormProto(dependencyProto, fileDescriptorProtoSet, fileDescriptors));
-                }
+            final Optional<String> refOpt = ProtoDependencyReferences.find(proto.getPackage(), dependency);
+            DescriptorProtos.FileDescriptorProto dependencyProto = null;
+            if (refOpt.isPresent() && fileDescriptorProtoSet.containsKey(refOpt.get())) {
+                dependencyProto = fileDescriptorProtoSet.get(refOpt.get());
+            } else {
+                dependencyProto = fileDescriptorProtoSet.get(dependency);
             }
+            dependencies.add(buildFormProto(dependencyProto, fileDescriptorProtoSet, fileDescriptors));
         }
         return Descriptors.FileDescriptor.buildFrom(proto, dependencies.build().toArray(new Descriptors.FileDescriptor[0]));
     }
