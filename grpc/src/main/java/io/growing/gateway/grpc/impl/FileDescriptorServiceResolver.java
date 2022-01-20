@@ -35,9 +35,7 @@ public class FileDescriptorServiceResolver implements ServiceResolver {
         for (DescriptorProtos.FileDescriptorProto proto : fileDescriptorProtoSet) {
             final String name = proto.getName();
             LOGGER.info("Find proto file: {}", name);
-            if (!fileDescriptorProtoMap.containsKey(name)) {
-                fileDescriptorProtoMap.put(name, proto);
-            }
+            fileDescriptorProtoMap.putIfAbsent(name, proto);
         }
         LOGGER.info("Mapped proto size: {}", fileDescriptorProtoMap.size());
         return new FileDescriptorServiceResolver(fileDescriptorProtoMap);
