@@ -1,6 +1,7 @@
 # Progate
 
 Progate 是一款面向 Pipeline 设计的高拓展网络 API 网关，它能方便地将 gRPC, Dubbo 等接口转换成 GraphQL 与 RESTful 接口。
+![](https://github.com/growingio/progate/raw/main/docs/pipeline.png)
 
 ## 状态
 
