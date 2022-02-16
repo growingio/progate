@@ -5,6 +5,7 @@ pluginManagement {
         maven {
             url = uri("https://nexus.growingio.cn/repository/maven-public/")
         }
+        gradlePluginPortal()
         mavenCentral()
     }
 }
